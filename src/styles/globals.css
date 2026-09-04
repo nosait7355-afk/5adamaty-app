@@ -1,0 +1,258 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   خدماتي الفيوم — Design Tokens
+   مستخرجة من الصور المرجعية الـ29. المرجع: UI_ANALYSIS.md §1.1 – §1.3
+   ممنوع إدخال أي لون أو مقاس خارج هذه القائمة داخل المكوّنات.
+   ========================================================================== */
+
+@theme {
+  /* ---- Brand (White + Blue identity) ---- */
+  --color-brand-50: #eaf1fe;
+  --color-brand-100: #d6e4fd;
+  --color-brand-200: #b9d0fb;
+  --color-brand-500: #2b7fff;
+  --color-brand-600: #1156e0;
+  --color-brand-700: #0b3fa8;
+  --color-brand-800: #093283;
+
+  /* ---- Ink (text) ---- */
+  --color-ink-900: #0f172a;
+  --color-ink-700: #334155;
+  --color-ink-600: #475569;
+  --color-ink-400: #94a3b8;
+  --color-ink-300: #cbd5e1;
+
+  /* ---- Surfaces ---- */
+  --color-surface: #ffffff;
+  --color-bg: #f7f9fc;
+  --color-border: #e7ebf3;
+
+  /* ---- Semantic / status ---- */
+  --color-success: #16a34a;
+  --color-success-bg: #e9f7ef;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3e2;
+  --color-danger: #ef4444;
+  --color-danger-bg: #feecec;
+  --color-info: #1156e0;
+  --color-info-bg: #eef4ff;
+  --color-star: #facc15;
+  --color-purple: #8b5cf6;
+  --color-purple-bg: #f3eeff;
+  --color-whatsapp: #25d366;
+
+  /* ---- Typography ---- */
+  --font-sans: 'Cairo', 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-screen-title: 1.75rem; /* 28px — عنوان الشاشة */
+  --text-screen-title--line-height: 2.375rem;
+  --text-section: 1.125rem; /* 18px — عنوان قسم */
+  --text-section--line-height: 1.75rem;
+  --text-card-title: 1.0625rem; /* 17px — عنوان بطاقة */
+  --text-card-title--line-height: 1.625rem;
+  --text-body: 0.9375rem; /* 15px */
+  --text-body--line-height: 1.625rem;
+  --text-label: 0.875rem; /* 14px */
+  --text-label--line-height: 1.375rem;
+  --text-meta: 0.8125rem; /* 13px */
+  --text-meta--line-height: 1.25rem;
+  --text-badge: 0.75rem; /* 12px */
+  --text-badge--line-height: 1.125rem;
+
+  /* ---- Radius ---- */
+  --radius-field: 0.75rem; /* 12px — حقل / زر */
+  --radius-card: 1rem; /* 16px — بطاقة */
+  --radius-pill: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 4px 14px rgba(15, 23, 42, 0.1);
+  --shadow-brand: 0 6px 16px rgba(17, 86, 224, 0.24);
+  --shadow-nav: 0 -2px 12px rgba(15, 23, 42, 0.06);
+
+  /* ---- Sizing (من قياسات الصور) ---- */
+  --spacing-control: 3.5rem; /* 56px — ارتفاع الحقل والزر الأساسي */
+  --spacing-nav: 4.5rem; /* 72px — ارتفاع Bottom Nav */
+  --spacing-header: 5.625rem; /* 90px — ارتفاع الهيدر */
+  --spacing-page: 1rem; /* 16px — padding أفقي للصفحة */
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* منع التمرير الأفقي — قاعدة Mobile-first */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  figure {
+    margin: 0;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* إزالة أسهم input[type=number] */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::placeholder {
+    color: var(--color-ink-400);
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+@layer utilities {
+  /*
+   * الأرقام والتواريخ والأسعار تُعرض بأرقام لاتينية داخل نص عربي (UI_ANALYSIS §1.2).
+   * `plaintext` يمنع محرك BiDi من قلب ترتيبها داخل السياق RTL.
+   */
+  .num {
+    unicode-bidi: plaintext;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Safe areas — ضروري لـ iPhone notch/home-indicator (viewport-fit=cover) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .h-nav-safe {
+    height: calc(var(--spacing-nav) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* تمرير أفقي بلا شريط ظاهر — للـ carousels والفلاتر */
+  .scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  .line-clamp-1,
+  .line-clamp-2,
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-1 {
+    -webkit-line-clamp: 1;
+  }
+  .line-clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+  .line-clamp-3 {
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 1s linear infinite;
+}
+
+/* Skeleton — يعتمد اتجاه RTL */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-border);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.4s infinite;
+}

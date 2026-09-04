@@ -1,0 +1,26 @@
+import { withErrorHandler } from '@/server/middleware/with-error-handler';
+import { validateQuery } from '@/server/middleware/with-validation';
+import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-limit';
+import { requireRole } from '@/server/middleware/with-auth';
+import { ok } from '@/server/lib/api-response';
+import { listAdminServicesQuerySchema } from '@/shared/schemas/admin.schema';
+import { listServices } from '@/server/services/admin.service';
+
+export const dynamic = 'force-dynamic';
+
+/** GET /api/v1/admin/services — إشراف على الخدمات المنشورة. */
+export const GET = withErrorHandler(async (request) => {
+  enforceRateLimit(request, RATE_LIMITS.READ, 'admin-services');
+  await requireRole(request, 'ADMIN');
+
+  const query = validateQuery(request, listAdminServicesQuerySchema);
+  const { items, total } = await listServices({
+    page: query.page,
+    limit: query.limit,
+    q: query.q,
+    isActive: query.isActive === undefined ? undefined : query.isActive === 'true',
+    providerId: query.providerId,
+  });
+
+  return ok(items, { page: query.page, limit: query.limit, total });
+});

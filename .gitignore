@@ -1,0 +1,58 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+
+# البيئة — أي ملف env حقيقي ممنوع رفعه
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+!.env.example
+
+# testing
+coverage/
+.vitest/
+.dev-db-uri
+.dev-db.log
+.cache/mongodb-binaries/
+
+# android (Capacitor — Phase 10)
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+*.keystore
+*.jks
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editors / os
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# misc
+*.pem
+.vercel
+tsconfig.tsbuildinfo
+.tmp-test-db/
+
+# مرجع تصميم شخصي — صور مرجعية فقط، ليست جزءًا من الكود
+تصمم صفحات التطبيق/
