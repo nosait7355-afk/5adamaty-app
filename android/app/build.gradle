@@ -1,5 +1,23 @@
 apply plugin: 'com.android.application'
 
+/*
+ * توقيع الإصدار (release signing) — Phase 10 متابعة.
+ *
+ * يقرأ من `android/keystore.properties` (ملف محلي مُستبعَد من Git — انظر
+ * .gitignore) أو من متغيرات بيئة (يُستخدَمان في GitHub Actions، انظر
+ * .github/workflows/android-release-apk.yml). **لا سرّ حقيقي هنا في الكود**
+ * — القيم كلها تُقرأ وقت البناء فقط، ولا افتراضي يعمل بلا توقيع فعلي.
+ */
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def resolveSigningProp = { key, envName ->
+    keystoreProperties.getProperty(key) ?: System.getenv(envName)
+}
+
 android {
     namespace = "com.khadamaty.elfayoum"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +34,26 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def storeFilePath = resolveSigningProp('storeFile', 'RELEASE_STORE_FILE')
+            if (storeFilePath) {
+                storeFile rootProject.file(storeFilePath)
+                storePassword resolveSigningProp('storePassword', 'RELEASE_STORE_PASSWORD')
+                keyAlias resolveSigningProp('keyAlias', 'RELEASE_KEY_ALIAS')
+                keyPassword resolveSigningProp('keyPassword', 'RELEASE_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // بلا keystore مُعدّ (تطوير محلي بلا أسرار) يبقى بلا توقيع — يفشل
+            // البناء بوضوح بدل توقيع صامت بمفتاح تجريبي مضمَّن في الكود.
+            if (resolveSigningProp('storeFile', 'RELEASE_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
