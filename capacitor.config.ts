@@ -9,16 +9,16 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * فوقه (شاشة بداية، أيقونة، زر الرجوع، إشعارات Push) — نفس نمط WebView حول
  * تطبيق مُستضاف، شائع لتطبيقات SSR الثقيلة.
  *
- * ⚠️ `server.url` أدناه عنصر نائب. يجب استبداله برابط الإنتاج الفعلي بعد
- * النشر قبل أي بناء AAB — انظر PHASE_10_REVIEW.md لتفاصيل حاجز البيئة
- * (لا JDK مثبّتًا في صندوق التطوير هذا، فبناء AAB فعلي غير ممكن هنا).
+ * انظر PHASE_10_REVIEW.md لتفاصيل حاجز البيئة (لا JDK مثبّتًا في صندوق
+ * التطوير هذا، فبناء AAB/APK فعلي يتم عبر GitHub Actions بدلًا من محليًا —
+ * `.github/workflows/android-debug-apk.yml`).
  */
 const config: CapacitorConfig = {
   appId: 'com.khadamaty.elfayoum',
   appName: 'خدماتي الفيوم',
   webDir: 'public',
   server: {
-    url: process.env.CAPACITOR_SERVER_URL ?? 'https://REPLACE-WITH-PRODUCTION-URL.example',
+    url: process.env.CAPACITOR_SERVER_URL ?? 'https://5adamaty-app.vercel.app',
     cleartext: false,
   },
   android: {
