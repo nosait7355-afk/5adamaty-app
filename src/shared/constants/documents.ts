@@ -99,7 +99,10 @@ function requirement(
  *   - PERSONAL_PHOTO   → دائمًا Required
  *   - PROFESSIONAL_CERT→ يظهر Required فقط عند requiresQualification، وإلا يختفي تمامًا
  *   - PRACTICE_LICENSE → يظهر Required فقط عند requiresLicense، وإلا يختفي تمامًا
- *   - ADDRESS_PROOF    → دائمًا Optional
+ *
+ * ملاحظة: `ADDRESS_PROOF` كان يُضاف تلقائيًا (Optional) لكل مهنة — أُزيل من
+ * القائمة الافتراضية بقرار صريح، ويبقى مفتاحًا صالحًا في `DOCUMENT_KEYS`
+ * لأي استخدام لاحق، لكن لا شيء يُنشئه تلقائيًا بعد الآن.
  */
 export function buildDocumentRequirements(options: {
   requiresQualification: boolean;
@@ -122,11 +125,9 @@ export function buildDocumentRequirements(options: {
     order += 1;
   }
 
-  list.push(requirement('ADDRESS_PROOF', false, order));
-
   if (options.custom?.length) {
     options.custom.forEach((item, index) => {
-      list.push({ ...item, order: order + 1 + index });
+      list.push({ ...item, order: order + index });
     });
   }
 
@@ -161,11 +162,6 @@ export function validateRequirementsConsistency(
     violations.push({ key: 'PERSONAL_PHOTO', message: 'الصورة الشخصية مطلوبة في كل المهن.' });
   } else if (!photo.required) {
     violations.push({ key: 'PERSONAL_PHOTO', message: 'الصورة الشخصية يجب أن تكون إلزامية.' });
-  }
-
-  const addressProof = byKey.get('ADDRESS_PROOF');
-  if (addressProof?.required) {
-    violations.push({ key: 'ADDRESS_PROOF', message: 'إثبات العنوان يجب أن يكون اختياريًا.' });
   }
 
   const cert = byKey.get('PROFESSIONAL_CERT');

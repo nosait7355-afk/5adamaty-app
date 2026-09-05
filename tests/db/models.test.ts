@@ -212,20 +212,19 @@ describe('User', () => {
 });
 
 describe('Profession — محرّك المستندات الديناميكية', () => {
-  it('مهنة حرفية: 3 مستندات (2 إلزامي + 1 اختياري)', async () => {
+  it('مهنة حرفية: مستندان إلزاميان فقط', async () => {
     const category = await makeCategory();
     const profession = await makeProfession(category._id, 'CRAFT');
 
     const keys = profession.documentRequirements.map((r) => r.key);
-    expect(keys).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO', 'ADDRESS_PROOF']);
+    expect(keys).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
     expect(profession.documentRequirements.filter((r) => r.required)).toHaveLength(2);
-    expect(profession.documentRequirements.find((r) => r.key === 'ADDRESS_PROOF')?.required).toBe(false);
     // المؤهل والترخيص يختفيان تمامًا
     expect(keys).not.toContain('PROFESSIONAL_CERT');
     expect(keys).not.toContain('PRACTICE_LICENSE');
   });
 
-  it('مهنة منظَّمة: 5 مستندات (4 إلزامي + 1 اختياري)', async () => {
+  it('مهنة منظَّمة: 4 مستندات، كلها إلزامية', async () => {
     const category = await makeCategory();
     const profession = await makeProfession(category._id, 'REGULATED');
 
@@ -235,12 +234,11 @@ describe('Profession — محرّك المستندات الديناميكية', 
       'PERSONAL_PHOTO',
       'PROFESSIONAL_CERT',
       'PRACTICE_LICENSE',
-      'ADDRESS_PROOF',
     ]);
     expect(profession.documentRequirements.filter((r) => r.required)).toHaveLength(4);
   });
 
-  it('مهنة بمؤهل بلا ترخيص: 4 مستندات بلا رخصة (مثل مدرّس خصوصي)', async () => {
+  it('مهنة بمؤهل بلا ترخيص: 3 مستندات بلا رخصة (مثل مدرّس خصوصي)', async () => {
     const category = await makeCategory();
     const profession = await Profession.create({
       categoryId: category._id,
@@ -257,7 +255,7 @@ describe('Profession — محرّك المستندات الديناميكية', 
     });
 
     const keys = profession.documentRequirements.map((r) => r.key);
-    expect(keys).toHaveLength(4);
+    expect(keys).toHaveLength(3);
     expect(keys).toContain('PROFESSIONAL_CERT');
     expect(keys).not.toContain('PRACTICE_LICENSE');
   });
@@ -300,24 +298,9 @@ describe('Profession — محرّك المستندات الديناميكية', 
     ).rejects.toThrow(/غير متسق/);
   });
 
-  it('يرفض جعل إثبات العنوان إلزاميًا', async () => {
-    const category = await makeCategory();
+  it('لا تُنشئ المهنة الحرفية إثبات عنوان تلقائيًا بعد الآن', () => {
     const reqs = buildDocumentRequirements({ requiresQualification: false, requiresLicense: false });
-    const addressProof = reqs.find((r) => r.key === 'ADDRESS_PROOF');
-    if (addressProof) addressProof.required = true;
-
-    await expect(
-      Profession.create({
-        categoryId: category._id,
-        name: 'كهربائي',
-        slug: 'electrician-bad',
-        icon: 'zap',
-        professionKind: 'CRAFT',
-        requiresQualification: false,
-        requiresLicense: false,
-        documentRequirements: reqs,
-      })
-    ).rejects.toThrow(/اختياريًا/);
+    expect(reqs.find((r) => r.key === 'ADDRESS_PROOF')).toBeUndefined();
   });
 
   it('يرفض جعل بطاقة الرقم القومي اختيارية', async () => {

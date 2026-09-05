@@ -41,23 +41,20 @@ describe('البذر', () => {
     expect(regulated).toBeGreaterThan(0);
   });
 
-  it('كل مهنة حرفية لها 3 مستندات بالضبط بالتوزيع الصحيح', async () => {
+  it('كل مهنة حرفية لها مستندان إلزاميان بالضبط، ولا إثبات عنوان', async () => {
     await runSeed();
     const crafts = await Profession.find({ professionKind: 'CRAFT' }).lean();
 
     for (const profession of crafts) {
       const keys = profession.documentRequirements.map((r) => r.key);
-      expect(keys, profession.name).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO', 'ADDRESS_PROOF']);
+      expect(keys, profession.name).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
 
       const required = profession.documentRequirements.filter((r) => r.required).map((r) => r.key);
       expect(required, profession.name).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
-
-      const optional = profession.documentRequirements.filter((r) => !r.required).map((r) => r.key);
-      expect(optional, profession.name).toEqual(['ADDRESS_PROOF']);
     }
   });
 
-  it('المهن المنظَّمة بترخيص لها 5 مستندات (4 إلزامي)', async () => {
+  it('المهن المنظَّمة بترخيص لها 4 مستندات، كلها إلزامية', async () => {
     await runSeed();
     const regulated = await Profession.find({
       professionKind: 'REGULATED',
@@ -73,7 +70,6 @@ describe('البذر', () => {
         'PERSONAL_PHOTO',
         'PROFESSIONAL_CERT',
         'PRACTICE_LICENSE',
-        'ADDRESS_PROOF',
       ]);
       expect(profession.documentRequirements.filter((r) => r.required)).toHaveLength(4);
     }
@@ -85,7 +81,7 @@ describe('البذر', () => {
 
     expect(tutor).not.toBeNull();
     const keys = tutor!.documentRequirements.map((r) => r.key);
-    expect(keys).toHaveLength(4);
+    expect(keys).toHaveLength(3);
     expect(keys).toContain('PROFESSIONAL_CERT');
     expect(keys).not.toContain('PRACTICE_LICENSE');
   });

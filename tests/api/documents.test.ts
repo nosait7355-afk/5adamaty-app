@@ -264,7 +264,7 @@ describe('قائمة المستندات', () => {
     mockCloudinaryAsset(publicId);
 
     const before = await listMyDocuments(session);
-    expect(before.requirements).toHaveLength(3);
+    expect(before.requirements).toHaveLength(2);
     expect(before.isComplete).toBe(false);
     expect(before.missingRequired).toEqual(['الهوية الشخصية', 'صورة شخصية']);
 
@@ -276,7 +276,7 @@ describe('قائمة المستندات', () => {
     expect(after.missingRequired).toEqual([]);
   });
 
-  it('إثبات العنوان الاختياري لا يمنع الاكتمال', async () => {
+  it('مهنة حرفية تكتمل بمستندين فقط، ولا إثبات عنوان في القائمة', async () => {
     const { session } = await makeProvider({ kind: 'CRAFT', slug: 'plumber11' });
     const publicId = documentPublicId(session.id);
     mockCloudinaryAsset(publicId);
@@ -286,8 +286,7 @@ describe('قائمة المستندات', () => {
 
     const result = await listMyDocuments(session);
     expect(result.isComplete).toBe(true);
-    // إثبات العنوان معروض لكنه غير مرفوع
-    expect(result.requirements.some((r) => r.key === 'ADDRESS_PROOF' && !r.required)).toBe(true);
+    expect(result.requirements.some((r) => r.key === 'ADDRESS_PROOF')).toBe(false);
   });
 
   it('مهنة منظَّمة تحتاج 4 مستندات للاكتمال', async () => {

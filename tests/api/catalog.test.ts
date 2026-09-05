@@ -173,7 +173,7 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
     };
   }
 
-  it('سبّاك (حرفية): 3 مستندات — 2 إلزامي و1 اختياري', async () => {
+  it('سبّاك (حرفية): مستندان، كلاهما إلزامي', async () => {
     const { response, data } = await requirementsFor('plumber');
 
     expect(response.status).toBe(200);
@@ -181,25 +181,16 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
     expect(data.requiresQualification).toBe(false);
     expect(data.requiresLicense).toBe(false);
 
-    expect(data.requirements.map((r) => r.key)).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'ADDRESS_PROOF',
-    ]);
+    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
     expect(data.requirements.filter((r) => r.required)).toHaveLength(2);
-    expect(data.requirements.find((r) => r.key === 'ADDRESS_PROOF')?.required).toBe(false);
   });
 
   it('كهربائي (حرفية): نفس مستندات السبّاك', async () => {
     const { data } = await requirementsFor('electrician');
-    expect(data.requirements.map((r) => r.key)).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'ADDRESS_PROOF',
-    ]);
+    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
   });
 
-  it('طبيب (منظَّمة): 5 مستندات — 4 إلزامي و1 اختياري', async () => {
+  it('طبيب (منظَّمة): 4 مستندات، كلها إلزامية', async () => {
     const { data } = await requirementsFor('doctor');
 
     expect(data.requiresQualification).toBe(true);
@@ -209,23 +200,22 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
       'PERSONAL_PHOTO',
       'PROFESSIONAL_CERT',
       'PRACTICE_LICENSE',
-      'ADDRESS_PROOF',
     ]);
     expect(data.requirements.filter((r) => r.required)).toHaveLength(4);
   });
 
   it('محامٍ (منظَّمة): نفس مستندات الطبيب', async () => {
     const { data } = await requirementsFor('lawyer');
-    expect(data.requirements).toHaveLength(5);
+    expect(data.requirements).toHaveLength(4);
     expect(data.requirements.map((r) => r.key)).toContain('PRACTICE_LICENSE');
   });
 
-  it('مدرّس خصوصي: مؤهل بلا ترخيص — 4 مستندات', async () => {
+  it('مدرّس خصوصي: مؤهل بلا ترخيص — 3 مستندات', async () => {
     const { data } = await requirementsFor('private-tutor');
 
     expect(data.requiresQualification).toBe(true);
     expect(data.requiresLicense).toBe(false);
-    expect(data.requirements).toHaveLength(4);
+    expect(data.requirements).toHaveLength(3);
     expect(data.requirements.map((r) => r.key)).toContain('PROFESSIONAL_CERT');
     expect(data.requirements.map((r) => r.key)).not.toContain('PRACTICE_LICENSE');
   });

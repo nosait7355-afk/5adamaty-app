@@ -271,15 +271,8 @@ describe('قاعدة اتساق المستندات', () => {
     expect(violations.map((v) => v.key)).toContain('NATIONAL_ID');
   });
 
-  it('يرصد إثبات عنوان إلزامي', () => {
+  it('لا يُنشئ إثبات عنوان تلقائيًا بعد الآن', () => {
     const reqs = buildDocumentRequirements({ requiresQualification: false, requiresLicense: false });
-    const proof = reqs.find((r) => r.key === 'ADDRESS_PROOF');
-    if (proof) proof.required = true;
-
-    const violations = validateRequirementsConsistency(reqs, {
-      requiresQualification: false,
-      requiresLicense: false,
-    });
-    expect(violations.map((v) => v.key)).toContain('ADDRESS_PROOF');
+    expect(reqs.find((r) => r.key === 'ADDRESS_PROOF')).toBeUndefined();
   });
 });

@@ -403,7 +403,7 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     expect(response.status).toBe(201);
     const body = await json(response);
     const data = body.data as { id: string; documentRequirements: Array<{ key: string; required: boolean }> };
-    expect(data.documentRequirements).toHaveLength(3);
+    expect(data.documentRequirements).toHaveLength(2);
     expect(data.documentRequirements.filter((r) => r.required)).toHaveLength(2);
   });
 
@@ -434,13 +434,13 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     const createdBody = await json(created);
     const professionId = (createdBody.data as { id: string }).id;
 
-    // قبل التعديل: 3 مستندات عبر المسار العام (نفس ما تراه شاشة التسجيل)
+    // قبل التعديل: مستندان عبر المسار العام (نفس ما تراه شاشة التسجيل)
     const before = await publicDocRequirementsRoute(
       req(`/api/v1/professions/${professionId}/document-requirements`),
       ctx(professionId)
     );
     const beforeBody = await json(before);
-    expect((beforeBody.data as { requirements: unknown[] }).requirements).toHaveLength(3);
+    expect((beforeBody.data as { requirements: unknown[] }).requirements).toHaveLength(2);
 
     // الإدارة تحوّلها إلى مهنة منظَّمة تتطلب مؤهلًا وترخيصًا
     const upgraded = buildDocumentRequirements({ requiresQualification: true, requiresLicense: true });
@@ -459,7 +459,7 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     );
     expect(updateResponse.status).toBe(200);
 
-    // بعد التعديل مباشرة — بلا أي نشر كود — المسار العام يعكس 5 مستندات
+    // بعد التعديل مباشرة — بلا أي نشر كود — المسار العام يعكس 4 مستندات
     const after = await publicDocRequirementsRoute(
       req(`/api/v1/professions/${professionId}/document-requirements`),
       ctx(professionId)
@@ -472,7 +472,7 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     };
     expect(afterData.requiresQualification).toBe(true);
     expect(afterData.requiresLicense).toBe(true);
-    expect(afterData.requirements).toHaveLength(5);
+    expect(afterData.requirements).toHaveLength(4);
     expect(afterData.requirements.filter((r) => r.required)).toHaveLength(4);
   });
 
