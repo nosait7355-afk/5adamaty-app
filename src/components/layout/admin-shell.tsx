@@ -54,33 +54,44 @@ export function AdminShell({ children, banner }: AdminShellProps) {
 
   return (
     <>
-      <AppHeader notificationsHref="/admin/notifications" locationLabel="لوحة الإدارة" />
+      {/*
+        الهيدر وشريط التبويبات في غلاف sticky واحد لا اثنان مستقلان.
+        سبب حاسم: تكديس عنصرين sticky كلٌّ بإزاحة top منفصلة يتطلب رقمًا
+        ثابتًا يطابق ارتفاع الأول تمامًا — هش وينكسر مع أي فرق فعلي في
+        الارتفاع (تحميل خط، عرض شاشة، إلخ)، وهو ما كان يحدث فعلًا: الارتفاع
+        الحقيقي لـ`AppHeader` لا يطابق `--spacing-header` المُقدَّر، فيتراكب
+        الشريطان مع محتوى الصفحة. الغلاف الواحد يزيل الحاجة لأي رقم مُقدَّر
+        إطلاقًا — يلتصق بأعلى الشاشة كوحدة، بأي ارتفاع فعلي كان.
+      */}
+      <div className="sticky top-0 z-30 bg-surface">
+        <AppHeader notificationsHref="/admin/notifications" locationLabel="لوحة الإدارة" />
 
-      <nav
-        aria-label="أقسام لوحة الإدارة"
-        className="scroll-x sticky top-[var(--spacing-header)] z-20 flex gap-2 border-b border-border bg-surface px-page py-2"
-      >
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-2 text-badge font-semibold transition-colors',
-                active
-                  ? 'bg-brand-600 text-white'
-                  : 'border border-border bg-surface text-ink-600 hover:bg-brand-50'
-              )}
-            >
-              <Icon size={14} aria-hidden="true" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+        <nav
+          aria-label="أقسام لوحة الإدارة"
+          className="scroll-x flex gap-2 border-b border-border bg-surface px-page py-2"
+        >
+          {NAV_ITEMS.map((item) => {
+            const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-2 text-badge font-semibold transition-colors',
+                  active
+                    ? 'bg-brand-600 text-white'
+                    : 'border border-border bg-surface text-ink-600 hover:bg-brand-50'
+                )}
+              >
+                <Icon size={14} aria-hidden="true" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       <PageContainer withBottomNav={false} className="flex flex-col gap-4 pb-10 pt-4">
         {banner}
