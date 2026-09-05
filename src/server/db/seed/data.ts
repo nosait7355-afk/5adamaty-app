@@ -121,6 +121,10 @@ export const SEED_PROFESSIONS: SeedProfession[] = [
 
   /* ---- مهنة منظَّمة بمؤهل بلا ترخيص — تثبت أن الرخصة تختفي تلقائيًا ---- */
   { categorySlug: 'education-training', name: 'مدرّس خصوصي', slug: 'private-tutor', icon: 'graduation-cap', professionKind: 'REGULATED', requiresQualification: true, requiresLicense: false, order: 18 },
+
+  /* ---- مناسبات وفعاليات — كانت بلا مهن ---- */
+  { categorySlug: 'events', name: 'منظّم مناسبات', slug: 'event-planner', icon: 'party-popper', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 19 },
+  { categorySlug: 'events', name: 'مصوّر فوتوغرافي', slug: 'photographer', icon: 'camera', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 20 },
 ];
 
 /** يبني قائمة المستندات لمهنة من مفاتيح تحكّمها. */
