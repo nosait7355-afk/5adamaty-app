@@ -121,8 +121,8 @@ export default function AccountPage() {
             label="عناويني"
             value={formatNumber(stats.addresses)}
           />
-          {/* «وسائل الدفع» — قيمته «—» في التصميم نفسه */}
-          <StatCell href="/account/payment" icon={<Wallet size={18} />} label="وسائل الدفع" value="—" />
+          {/* «وسائل الدفع» — عنصر معلوماتي غير قابل للنقر، قيمته «—» في التصميم نفسه */}
+          <StatCellStatic icon={<Wallet size={18} />} label="وسائل الدفع" value="—" />
           <StatCell
             href="/notifications"
             icon={<MessageSquare size={18} />}
@@ -232,6 +232,27 @@ function StatCell({
       <span className="num text-label font-extrabold text-ink-900">{value}</span>
       <span className="text-badge text-ink-400">{label}</span>
     </Link>
+  );
+}
+
+/** نسخة غير قابلة للنقر من `StatCell` — لعنصر «وسائل الدفع» المعلوماتي فقط. */
+function StatCellStatic({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-1 py-3 text-center">
+      <span className="text-brand-600" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="num text-label font-extrabold text-ink-900">{value}</span>
+      <span className="text-badge text-ink-400">{label}</span>
+    </div>
   );
 }
 
