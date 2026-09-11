@@ -226,3 +226,64 @@ export const adminProvidersQuerySchema = paginationSchema
     status: z.enum(VERIFICATION_STATUSES).default('PENDING_REVIEW'),
   })
   .strict();
+
+/* ================================================================== */
+/* خدمات مقدم الخدمة («خدماتي») — إدارة قوائم الخدمات المعروضة للعملاء   */
+/* ================================================================== */
+
+/**
+ * الحد الأقصى لعدد الخدمات لكل مزوّد — يمنع إنشاء أعداد غير معقولة من
+ * القوائم (ARCHITECTURE §7: كل حد أعلى مفروض على الخادم لا الواجهة فقط).
+ */
+export const MAX_SERVICES_PER_PROVIDER = 20;
+
+const serviceAreasSchema = z
+  .array(
+    z
+      .string()
+      .trim()
+      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'منطقة غير صالحة.' })
+  )
+  .max(20, 'الحد الأقصى 20 منطقة.')
+  .default([]);
+
+const providerServiceBaseSchema = z.object({
+  title: safeString(120).refine((value) => value.length >= 3, {
+    message: 'عنوان الخدمة قصير جدًا.',
+  }),
+  description: safeString(500).refine((value) => value.length >= 10, {
+    message: 'وصف الخدمة قصير جدًا.',
+  }),
+  priceFrom: z.coerce.number().min(0).max(1_000_000),
+  priceTo: z.coerce.number().min(0).max(1_000_000).optional(),
+  areas: serviceAreasSchema,
+  isActive: z.boolean().default(true),
+});
+
+function refinePriceOrder<T extends { priceFrom?: number; priceTo?: number }>(
+  data: T,
+  ctx: z.RefinementCtx
+) {
+  if (data.priceTo != null && data.priceFrom != null && data.priceTo < data.priceFrom) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'السعر الأقصى يجب ألا يقل عن السعر الأدنى.',
+      path: ['priceTo'],
+    });
+  }
+}
+
+export const createProviderServiceSchema = providerServiceBaseSchema
+  .strict()
+  .superRefine(refinePriceOrder);
+
+export type CreateProviderServiceInput = z.output<typeof createProviderServiceSchema>;
+
+export const updateProviderServiceSchema = providerServiceBaseSchema
+  .partial()
+  .strict()
+  .superRefine(refinePriceOrder);
+
+export type UpdateProviderServiceInput = z.output<typeof updateProviderServiceSchema>;
+
+export const listMyServicesQuerySchema = paginationSchema.strict();
