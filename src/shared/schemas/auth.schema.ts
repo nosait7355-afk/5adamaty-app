@@ -82,6 +82,12 @@ export type LoginInput = z.output<typeof loginSchema>;
 export const googleAuthSchema = z
   .object({
     idToken: z.string().min(1, 'رمز جوجل مفقود.').max(4096),
+    /**
+     * 'register' (من `/register`) يجوز أن ينشئ حساب عميل جديد.
+     * 'login' (من `/login`) يدخل فقط لحساب موجود — لا ينشئ أبدًا، حتى لا
+     * يتحوّل زائر يقصد الدخول لحساب موجود إلى عميل جديد بالخطأ.
+     */
+    intent: z.enum(['login', 'register']),
   })
   .strict();
 

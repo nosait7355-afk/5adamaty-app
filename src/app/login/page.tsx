@@ -122,7 +122,10 @@ export default function LoginPage() {
       {GOOGLE_SIGN_IN_ENABLED && (
         <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
           <p className="text-center text-badge text-ink-400">أو</p>
-          <GoogleSignInButton onSuccess={(user) => router.replace(resolveHomeRoute(user))} />
+          <GoogleSignInButton
+            intent="login"
+            onSuccess={(user) => router.replace(resolveHomeRoute(user))}
+          />
         </div>
       )}
     </AuthShell>

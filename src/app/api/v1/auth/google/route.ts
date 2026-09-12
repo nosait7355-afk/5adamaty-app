@@ -20,9 +20,11 @@ export const POST = withErrorHandler(async (request) => {
 
   const input = await validateBody(request, googleAuthSchema);
 
-  const { user, tokens } = await loginWithGoogle(input.idToken, {
-    userAgent: request.headers.get('user-agent') ?? undefined,
-  });
+  const { user, tokens } = await loginWithGoogle(
+    input.idToken,
+    { userAgent: request.headers.get('user-agent') ?? undefined },
+    { allowCreate: input.intent === 'register' }
+  );
 
   await setSessionCookies({ ...tokens, remember: true });
 

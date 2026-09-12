@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { SocialLogin } from '@capgo/capacitor-social-login';
 import { Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ensureGoogleInitialized, signInWithGoogle } from '@/lib/google-social-login';
 import { extractErrorMessage, useGoogleAuth } from '@/lib/queries/auth';
 import type { AuthUserDto } from '@/server/services/auth.service';
 
@@ -16,28 +16,24 @@ import type { AuthUserDto } from '@/server/services/auth.service';
  * يتحقق منه السيرفر عبر `/api/v1/auth/google` (نفس المسار لكلا المنصّتين).
  */
 
-let initPromise: Promise<void> | null = null;
-
-function ensureInitialized(): Promise<void> {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  if (!clientId) return Promise.resolve();
-
-  initPromise ??= SocialLogin.initialize({ google: { webClientId: clientId } });
-  return initPromise;
-}
-
 export interface GoogleSignInButtonProps {
   onSuccess: (user: AuthUserDto) => void;
+  /**
+   * 'register': يجوز إنشاء حساب عميل جديد (`/register`).
+   * 'login': يدخل لحساب موجود فقط، لا يُنشئ أبدًا (`/login`) — يمنع تحوّل
+   * زائر بلا حساب لعميل جديد بالخطأ من صفحة الدخول.
+   */
+  intent: 'login' | 'register';
 }
 
-export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ onSuccess, intent }: GoogleSignInButtonProps) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const googleAuth = useGoogleAuth();
 
   useEffect(() => {
-    void ensureInitialized();
+    void ensureGoogleInitialized();
   }, []);
 
   if (!clientId) return null;
@@ -46,15 +42,8 @@ export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
     setError('');
     setPending(true);
     try {
-      await ensureInitialized();
-      const { result } = await SocialLogin.login({
-        provider: 'google',
-        options: { scopes: ['email', 'profile'] },
-      });
-      const idToken = 'idToken' in result ? result.idToken : null;
-      if (!idToken) throw new Error('لم يصل رمز تعريف من جوجل.');
-
-      const user = await googleAuth.mutateAsync({ idToken });
+      const { idToken } = await signInWithGoogle();
+      const user = await googleAuth.mutateAsync({ idToken, intent });
       onSuccess(user);
     } catch (signInError) {
       setError(extractErrorMessage(signInError));
@@ -73,7 +62,7 @@ export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
         onClick={() => void signIn()}
         iconStart={<Chrome size={20} />}
       >
-        المتابعة عبر جوجل
+        {intent === 'register' ? 'إنشاء حساب عبر جوجل' : 'تسجيل الدخول عبر جوجل'}
       </Button>
       {error && (
         <p className="text-badge text-danger" role="alert">

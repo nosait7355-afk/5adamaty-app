@@ -140,11 +140,18 @@ export async function registerCustomer(
  *
  * الترتيب: بحث بـ`googleId` أولًا (دخول متكرر) ← ثم بالبريد (ربط حساب
  * موجود أُنشئ سابقًا بالهاتف/كلمة مرور بنفس البريد) ← وإلا إنشاء عميل جديد.
- * مقدّمو الخدمة والإدارة لا يُنشؤون بهذا المسار.
+ * مقدّمو الخدمة والإدارة لا يُنشؤون بهذا المسار — التسجيل كمقدم خدمة يبقى
+ * حصرًا عبر `/register/provider` (مستندات ومهنة ومراجعة يدوية).
+ *
+ * `allowCreate`: يفرّق بين زر «إنشاء حساب» في `/register` (يجوز أن يُنشئ)
+ * وزر «تسجيل الدخول» في `/login` (لا يجوز أن يُنشئ) — بدونه كان أي حساب
+ * جديد يُسجَّل بالخطأ من صفحة الدخول يتحوّل عميلًا صامتًا، حتى لو كان
+ * يقصد الدخول لحساب مقدم خدمة موجود بإيميل مختلف عن جوجل.
  */
 export async function loginWithGoogle(
   idToken: string,
-  meta: { userAgent?: string }
+  meta: { userAgent?: string },
+  options: { allowCreate: boolean }
 ): Promise<{ user: AuthUserDto; tokens: SessionTokens }> {
   const profile = await verifyGoogleIdToken(idToken);
   if (!profile) throw unauthorized('تعذّر التحقق من حساب جوجل. حاول مرة أخرى.');
@@ -160,6 +167,10 @@ export async function loginWithGoogle(
   }
 
   if (!user) {
+    if (!options.allowCreate) {
+      throw unauthorized('لا يوجد حساب مرتبط بهذا البريد. أنشئ حسابًا أولًا من شاشة التسجيل.');
+    }
+
     user = await createUser({
       role: 'CUSTOMER',
       fullName: profile.fullName,

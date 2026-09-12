@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Send } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Chrome, Send } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
@@ -21,16 +21,19 @@ import {
 import { DocumentsStep } from '@/components/features/provider/documents-step';
 import { ReviewStep } from '@/components/features/provider/review-step';
 import { ApiClientError } from '@/lib/api-client';
+import { extractErrorMessage } from '@/lib/queries/auth';
 import { useCategories, useProfessions } from '@/lib/queries/catalog';
 import {
   useMyProviderProfile,
   useRegisterProvider,
   useSubmitVerification,
 } from '@/lib/queries/provider';
+import { signInWithGoogle } from '@/lib/google-social-login';
 import {
   providerStep1Schema,
   providerStep2Schema,
 } from '@/shared/schemas/provider.schema';
+import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 
 /**
  * معالج تسجيل مقدم الخدمة — الصور 19 إلى 22.
@@ -68,6 +71,8 @@ export default function ProviderRegistrationPage() {
   const [accepted, setAccepted] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [googleFillPending, setGoogleFillPending] = useState(false);
+  const [googleFillError, setGoogleFillError] = useState('');
 
   const categories = useCategories();
   const professions = useProfessions(profession.categoryId || undefined);
@@ -81,6 +86,28 @@ export default function ProviderRegistrationPage() {
    */
   const profile = useMyProviderProfile();
   const hasAccount = Boolean(profile.data);
+
+  /**
+   * تعبئة تلقائية للاسم والبريد من جوجل — لا تُنشئ حسابًا ولا جلسة.
+   * الحساب الفعلي لمقدم الخدمة يُنشأ لاحقًا بالمسار المعتاد (هاتف + كلمة
+   * مرور) عند الانتقال من الخطوة 2 إلى 3، كما هو الحال بلا جوجل تمامًا.
+   */
+  const fillFromGoogle = async () => {
+    setGoogleFillError('');
+    setGoogleFillPending(true);
+    try {
+      const { fullName, email } = await signInWithGoogle();
+      setBasic((current) => ({
+        ...current,
+        ...(fullName ? { fullName } : {}),
+        ...(email ? { email } : {}),
+      }));
+    } catch (fillError) {
+      setGoogleFillError(extractErrorMessage(fillError));
+    } finally {
+      setGoogleFillPending(false);
+    }
+  };
 
   /* ---- استعادة المسودة ---- */
   /*
@@ -355,12 +382,34 @@ export default function ProviderRegistrationPage() {
         )}
 
         {step === 1 && (
-          <BasicInfoStep
-            values={basic}
-            errors={errors}
-            mode={hasAccount ? 'edit' : 'create'}
-            onChange={(patch) => setBasic((current) => ({ ...current, ...patch }))}
-          />
+          <>
+            {GOOGLE_SIGN_IN_ENABLED && !hasAccount && (
+              <div className="mb-4 flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  loading={googleFillPending}
+                  onClick={() => void fillFromGoogle()}
+                  iconStart={<Chrome size={20} />}
+                >
+                  تعبئة الاسم والبريد من جوجل
+                </Button>
+                {googleFillError && (
+                  <p className="text-badge text-danger" role="alert">
+                    {googleFillError}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <BasicInfoStep
+              values={basic}
+              errors={errors}
+              mode={hasAccount ? 'edit' : 'create'}
+              onChange={(patch) => setBasic((current) => ({ ...current, ...patch }))}
+            />
+          </>
         )}
 
         {step === 2 && (
