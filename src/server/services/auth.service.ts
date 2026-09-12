@@ -214,6 +214,12 @@ export async function login(
     throw forbidden(`تم قفل الحساب مؤقتًا بسبب محاولات دخول متكررة. حاول بعد ${minutes} دقيقة.`);
   }
 
+  // حساب أُنشئ عبر جوجل فقط ولا كلمة مرور له — نفس رسالة الفشل الموحّدة
+  if (!user.passwordHash) {
+    await verifyPassword(input.password, await getDummyHash());
+    throw unauthorized(INVALID_CREDENTIALS);
+  }
+
   const passwordOk = await verifyPassword(input.password, user.passwordHash);
 
   if (!passwordOk) {
