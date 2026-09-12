@@ -3,7 +3,7 @@
 > المراجع الملزمة: [`UI_ANALYSIS.md`](UI_ANALYSIS.md) · [`ARCHITECTURE.md`](ARCHITECTURE.md)
 ## قواعد عابرة لكل المراحل (Global Constraints)
 
-**المصادقة:** ❌ لا OTP (SMS أو بريد) · ❌ لا Social Login (Google / Facebook / Apple) — الدخول برقم هاتف أو بريد + كلمة مرور فقط.
+**المصادقة:** ❌ لا OTP (SMS أو بريد) · ❌ لا Social Login غير جوجل (Facebook / Apple ممنوعان) — الدخول برقم هاتف أو بريد + كلمة مرور، أو عبر **جوجل** (قرار لاحق، منفَّذ في `/api/v1/auth/google`).
 
 **الدفع — NON-NEGOTIABLE:** ❌ لا Online Payment · لا Payment Gateway · لا Visa/Mastercard · لا Stripe · لا PayPal · لا Paymob · لا Fawry · لا Wallet Payment · لا Card Input · لا Checkout · لا Payment Transactions · لا أي Collection أو Service أو SDK مالي.
 ✅ المسموح فقط: عرض قيمة الخدمة المتفق عليها · `paymentMethod` بقيمة ثابتة واحدة `CASH_ON_DELIVERY_OFFLINE` · **علامة حالة** `cashReceivedConfirmed` تسجّل تأكيد المزوّد استلام المبلغ عند الإكمال. الدفع يتم مباشرة بين العميل ومقدم الخدمة **خارج التطبيق**.
@@ -111,7 +111,7 @@
 
 **Frontend:** RHF + Zod (نفس الـschemas) · رسائل خطأ عربية تحت الحقول · حالات Loading/Disabled للأزرار · Route guards + إعادة توجيه حسب الدور والحالة (Provider غير معتمد → `pending-review`).
 
-**Security:** httpOnly cookies · CSRF عبر SameSite + فحص Origin · Rate limit 5/دقيقة على auth · رسالة موحّدة عند فشل الدخول (لا تكشف وجود الحساب) · **تأكيد عدم وجود أي مسار OTP أو Social**.
+**Security:** httpOnly cookies · CSRF عبر SameSite + فحص Origin · Rate limit 5/دقيقة على auth · رسالة موحّدة عند فشل الدخول (لا تكشف وجود الحساب) · **تأكيد عدم وجود أي مسار OTP، ولا Social غير جوجل**.
 
 **Testing:** وحدة: hashing، JWT، rotation · API: تسجيل/دخول/refresh/logout/إعادة تعيين + حالات الفشل + القفل + rate limit · E2E: تسجيل عميل ← دخول ← وصول للرئيسية ← خروج.
 
@@ -299,7 +299,7 @@
 3. Lighthouse Mobile ≥90 في Performance وAccessibility.
 4. صفر ثغرات حرجة/عالية في التدقيق الأمني.
 5. **الشاشات الـ29 كلها مربوطة فعليًا بالـBackend وقاعدة البيانات — لا صفحة ثابتة واحدة.**
-6. **فحص سلبي نهائي يمرّ:** صفر نتائج في الكود و`package.json` لـ OTP · Google/Facebook/Apple Login · Stripe/PayPal/Paymob/Fawry/Visa/Mastercard · Payment Gateway/Checkout/Card Input · Wallet · payments/transactions/invoices · Google Maps/Mapbox/OpenStreetMap/Leaflet/Maps SDK · GPS/geolocation/Live Location/Tracking/ETA/Route/Distance · `lat`/`lng`/`coordinates`/`2dsphere`.
+6. **فحص سلبي نهائي يمرّ:** صفر نتائج في الكود و`package.json` لـ OTP · Facebook/Apple Login (جوجل مسموح ومنفَّذ عمدًا) · Stripe/PayPal/Paymob/Fawry/Visa/Mastercard · Payment Gateway/Checkout/Card Input · Wallet · payments/transactions/invoices · Google Maps/Mapbox/OpenStreetMap/Leaflet/Maps SDK · GPS/geolocation/Live Location/Tracking/ETA/Route/Distance · `lat`/`lng`/`coordinates`/`2dsphere`.
 7. مراجعة بصرية نهائية للشاشات الـ29 واحدة واحدة مقابل صورها المرجعية.
 8. **بريد إعادة تعيين كلمة المرور يصل فعليًا** إلى صندوق بريد حقيقي (حاجز إطلاق).
 

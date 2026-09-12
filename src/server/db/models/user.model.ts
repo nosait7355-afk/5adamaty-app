@@ -16,7 +16,10 @@ export interface UserDocument {
   fullName: string;
   phone?: string;
   email?: string;
-  passwordHash: string;
+  /** غائب لحساب أُنشئ عبر جوجل فقط ولم يضبط كلمة مرور بعد. */
+  passwordHash?: string;
+  /** معرّف `sub` من حساب جوجل — يوجد فقط لحسابات أنشئت أو رُبطت بجوجل. */
+  googleId?: string;
   avatar?: MediaRef;
   status: UserStatus;
   /**
@@ -72,7 +75,15 @@ const userSchema = new Schema<UserDocument>(
 
     // `select: false` = لا يخرج في أي استعلام ما لم يُطلب صراحةً.
     // خط الدفاع الأول ضد تسريب بيانات الاعتماد (ARCHITECTURE §7).
-    passwordHash: { type: String, required: true, select: false },
+    // غير إلزامي لحساب جوجل بلا كلمة مرور — إلزامي لأي حساب آخر (الشرط أدناه).
+    passwordHash: {
+      type: String,
+      required: [function requiresPassword(this: UserDocument) { return !this.googleId; }, 'كلمة المرور مطلوبة.'],
+      select: false,
+    },
+
+    // فريد لكل حساب جوجل مربوط؛ غائب لحسابات الهاتف/البريد التقليدية.
+    googleId: { type: String, select: false },
 
     avatar: { type: mediaRefSchema, required: false },
     status: { type: String, enum: USER_STATUSES, default: 'ACTIVE', index: true },
@@ -104,6 +115,7 @@ const userSchema = new Schema<UserDocument>(
 // sparse: يسمح بعدة مستندات بلا هاتف/بريد مع بقاء التفرّد للقيم الموجودة
 userSchema.index({ phone: 1 }, { unique: true, sparse: true });
 userSchema.index({ email: 1 }, { unique: true, sparse: true });
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 userSchema.index({ role: 1, status: 1 });
 
 /** يجب وجود هاتف أو بريد على الأقل — لأن الدخول بأحدهما. */

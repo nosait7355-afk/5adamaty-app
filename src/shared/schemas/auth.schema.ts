@@ -11,9 +11,9 @@ import { ALL_FAYOUM_AREAS, FAYOUM_CITIES, GOVERNORATE } from '@/shared/constants
 /**
  * مخططات المصادقة.
  *
- * NON-NEGOTIABLE (PROJECT_PLAN — المصادقة):
- * لا OTP · لا Social Login. الدخول برقم هاتف أو بريد + كلمة مرور فقط.
- * لا يوجد في هذا الملف — ولن يوجد — أي حقل `otp` أو `provider` أو `idToken`.
+ * الدخول برقم هاتف أو بريد + كلمة مرور، أو عبر جوجل (`googleAuthSchema`
+ * أدناه). لا OTP في أي مسار — لا هنا ولا في تسجيل الدخول بجوجل، الذي
+ * يعتمد على تحقّق Google نفسها من الهوية بدل رمز يرسله التطبيق.
  */
 
 /* ---- تسجيل عميل جديد (الصورة 05) ---- */
@@ -68,6 +68,20 @@ export const loginSchema = z
 
 export type LoginFormValues = z.input<typeof loginSchema>;
 export type LoginInput = z.output<typeof loginSchema>;
+
+/* ---- تسجيل الدخول/الحساب عبر جوجل ---- */
+
+/**
+ * `idToken` من Google Identity Services (استجابة زر «الدخول عبر جوجل» في
+ * المتصفح) — يتحقق منه السيرفر (`verifyGoogleIdToken`) قبل أي استخدام.
+ */
+export const googleAuthSchema = z
+  .object({
+    idToken: z.string().min(1, 'رمز جوجل مفقود.').max(4096),
+  })
+  .strict();
+
+export type GoogleAuthInput = z.output<typeof googleAuthSchema>;
 
 /** يميّز نوع المعرّف ويطبّعه. */
 export function normalizeIdentifier(raw: string): { phone?: string; email?: string } | null {

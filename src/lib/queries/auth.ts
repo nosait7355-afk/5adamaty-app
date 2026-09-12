@@ -7,6 +7,7 @@ import { queryKeys } from '@/lib/query-keys';
 import type { AuthUserDto } from '@/server/services/auth.service';
 import type {
   ForgotPasswordInput,
+  GoogleAuthInput,
   LoginInput,
   RegisterCustomerInput,
   ResetPasswordInput,
@@ -51,6 +52,20 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (input: RegisterCustomerInput) => {
       const { data } = await api.post<{ user: AuthUserDto }>('/auth/register', input);
+      return data.user;
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.account.me, user);
+    },
+  });
+}
+
+export function useGoogleAuth() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: GoogleAuthInput) => {
+      const { data } = await api.post<{ user: AuthUserDto }>('/auth/google', input);
       return data.user;
     },
     onSuccess: (user) => {

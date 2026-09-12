@@ -20,11 +20,13 @@ import {
   applyPasswordReset,
   createUser,
   existsByPhoneOrEmail,
+  findUserByGoogleId,
   findUserById,
   findUserByIdentifier,
   findUserByResetTokenHash,
   findUserWithPassword,
   getRefreshSessions,
+  linkGoogleId,
   pruneExpiredSessions,
   recordFailedLogin,
   recordSuccessfulLogin,
@@ -34,6 +36,7 @@ import {
   setPasswordResetToken,
   type UserLean,
 } from '@/server/repositories/user.repository';
+import { verifyGoogleIdToken } from '@/server/lib/google-auth';
 import { normalizeIdentifier, type RegisterCustomerInput } from '@/shared/schemas/auth.schema';
 import { GOVERNORATE } from '@/shared/constants/fayoum-areas';
 import type { UserRole } from '@/shared/constants/roles';
@@ -125,6 +128,59 @@ export async function registerCustomer(
   const tokens = await issueSession(user, { userAgent: meta.userAgent, remember: true });
   logger.info('تم إنشاء حساب عميل', { userId: String(user._id) });
 
+  return { user: toAuthUserDto(user), tokens };
+}
+
+/* ================================================================== */
+/* الدخول/التسجيل عبر جوجل                                             */
+/* ================================================================== */
+
+/**
+ * يدخل أو يُنشئ حساب عميل من `idToken` جوجل — لا كلمة مرور، لا OTP.
+ *
+ * الترتيب: بحث بـ`googleId` أولًا (دخول متكرر) ← ثم بالبريد (ربط حساب
+ * موجود أُنشئ سابقًا بالهاتف/كلمة مرور بنفس البريد) ← وإلا إنشاء عميل جديد.
+ * مقدّمو الخدمة والإدارة لا يُنشؤون بهذا المسار.
+ */
+export async function loginWithGoogle(
+  idToken: string,
+  meta: { userAgent?: string }
+): Promise<{ user: AuthUserDto; tokens: SessionTokens }> {
+  const profile = await verifyGoogleIdToken(idToken);
+  if (!profile) throw unauthorized('تعذّر التحقق من حساب جوجل. حاول مرة أخرى.');
+
+  let user = await findUserByGoogleId(profile.googleId);
+
+  if (!user && profile.email) {
+    const existing = await findUserByIdentifier({ email: profile.email });
+    if (existing) {
+      await linkGoogleId(String(existing._id), profile.googleId);
+      user = existing;
+    }
+  }
+
+  if (!user) {
+    user = await createUser({
+      role: 'CUSTOMER',
+      fullName: profile.fullName,
+      googleId: profile.googleId,
+      ...(profile.email ? { email: profile.email } : {}),
+      status: 'ACTIVE',
+      emailVerified: profile.emailVerified,
+      governorate: GOVERNORATE,
+    });
+    if (!user) throw conflict('تعذّر إنشاء الحساب. برجاء المحاولة مرة أخرى.');
+    logger.info('تم إنشاء حساب عميل عبر جوجل', { userId: String(user._id) });
+  }
+
+  if (user.status === 'SUSPENDED') {
+    throw forbidden('تم إيقاف حسابك. برجاء التواصل مع الدعم.');
+  }
+
+  await recordSuccessfulLogin(String(user._id));
+  const tokens = await issueSession(user, { userAgent: meta.userAgent, remember: true });
+
+  logger.info('تسجيل دخول ناجح عبر جوجل', { userId: String(user._id) });
   return { user: toAuthUserDto(user), tokens };
 }
 

@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LogIn, Lock, Mail, Smartphone, UserPlus } from 'lucide-react';
 import { AuthShell } from '@/components/features/auth/auth-shell';
+import { GoogleSignInButton } from '@/components/features/auth/google-sign-in-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
@@ -23,6 +24,7 @@ import {
   resolveHomeRoute,
   useLogin,
 } from '@/lib/queries/auth';
+import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 
 type IdentifierMode = 'phone' | 'email';
 
@@ -30,12 +32,14 @@ type IdentifierMode = 'phone' | 'email';
  * تسجيل الدخول — الصورة 03 (المعتمدة) مع تبويبَي الهاتف/البريد ومفتاح
  * الدولة +20 المأخوذَين من الصورة 04.
  *
- * NON-NEGOTIABLE: لا OTP · لا Google · لا Facebook (PROJECT_PLAN §المصادقة).
- * كتل الدخول الاجتماعي وكود التحقق الظاهرة في الصورة 04 محذوفة عمدًا.
+ * زر «الدخول عبر جوجل» هو المسار الظاهر افتراضيًا. نموذج الهاتف/البريد +
+ * كلمة المرور الأصلي لا يزال يعمل بالكامل في الـbackend، لكنه مطويّ خلف
+ * رابط ثانوي بقرار من صاحب المنتج (إخفاء من الواجهة فقط، لا حذف).
  */
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<IdentifierMode>('phone');
+  const [showPhoneForm, setShowPhoneForm] = useState(!GOOGLE_SIGN_IN_ENABLED);
   const loginMutation = useLogin();
 
   const {
@@ -77,7 +81,24 @@ export default function LoginPage() {
         </div>
       }
     >
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      {GOOGLE_SIGN_IN_ENABLED && (
+        <div className="flex flex-col gap-5">
+          <GoogleSignInButton onSuccess={(user) => router.replace(resolveHomeRoute(user))} />
+
+          {!showPhoneForm && (
+            <button
+              type="button"
+              onClick={() => setShowPhoneForm(true)}
+              className="text-center text-label font-semibold text-brand-600"
+            >
+              تسجيل الدخول برقم الهاتف أو البريد بدلًا من ذلك
+            </button>
+          )}
+        </div>
+      )}
+
+      {showPhoneForm && (
+      <form onSubmit={onSubmit} noValidate className={GOOGLE_SIGN_IN_ENABLED ? 'mt-5 flex flex-col gap-5 border-t border-border pt-5' : 'flex flex-col gap-5'}>
         {/* تبويبا الهاتف/البريد — من الصورة 04 */}
         <div className="flex border-b border-border" role="tablist">
           <TabButton
@@ -161,6 +182,7 @@ export default function LoginPage() {
           تسجيل الدخول
         </Button>
       </form>
+      )}
     </AuthShell>
   );
 }

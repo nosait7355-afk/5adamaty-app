@@ -78,10 +78,15 @@ const RULES = [
     reason: 'آلية OTP — ممنوعة نهائيًا',
   },
   {
-    id: 'SOCIAL_LOGIN',
+    /*
+     * قرار لاحق: الدخول عبر جوجل مسموح ومُنفَّذ فعليًا
+     * (`/api/v1/auth/google`, `verifyGoogleIdToken`, `GoogleSignInButton`).
+     * القيد المتبقي هو فيسبوك وآبل تحديدًا — لا مزوّد اجتماعي آخر.
+     */
+    id: 'SOCIAL_LOGIN_OTHER',
     pattern:
-      /\b(signInWithGoogle|signInWithFacebook|googleOAuth|facebookLogin|appleSignIn|next-auth\/providers\/(google|facebook|apple))\b/i,
-    reason: 'تسجيل دخول اجتماعي — ممنوع نهائيًا',
+      /\b(signInWithFacebook|facebookLogin|appleSignIn|next-auth\/providers\/(facebook|apple))\b/i,
+    reason: 'تسجيل دخول اجتماعي غير جوجل — ممنوع نهائيًا',
   },
 
   // ---- 4) الأسرار ----

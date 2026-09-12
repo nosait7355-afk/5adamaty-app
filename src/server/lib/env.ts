@@ -67,10 +67,19 @@ const serverEnvSchema = z.object({
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   APP_URL: z.string().url().default('http://localhost:3000'),
+
+  /**
+   * تسجيل الدخول بجوجل — يتحقق السيرفر من `idToken` مقابل هذا الـClient ID
+   * (نفس القيمة العامة `NEXT_PUBLIC_GOOGLE_CLIENT_ID` المرسلة للمتصفح؛
+   * لا سرّ هنا لأن التحقق بتوقيع Google العام عبر JWKS لا بمفتاح سري).
+   * اختياري: بدونه يفشل مسار جوجل بوضوح، وتبقى بقية المصادقة تعمل.
+   */
+  GOOGLE_CLIENT_ID: optionalString(z.string().min(1)),
 });
 
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -123,6 +132,7 @@ export function getEnv(): ServerEnv {
 /** المتغيرات العامة الآمنة للمتصفح. */
 export const clientEnv = clientEnvSchema.parse({
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
 });
 
 export const isProduction = process.env.NODE_ENV === 'production';

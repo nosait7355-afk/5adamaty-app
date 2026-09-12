@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Mail, MapPin, Smartphone, User } from 'lucide-react';
 import { AuthShell } from '@/components/features/auth/auth-shell';
+import { GoogleSignInButton } from '@/components/features/auth/google-sign-in-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
@@ -19,19 +21,20 @@ import {
 } from '@/shared/schemas/auth.schema';
 import { ALL_FAYOUM_AREAS, GOVERNORATE } from '@/shared/constants/fayoum-areas';
 import { extractErrorMessage, resolveHomeRoute, useRegister } from '@/lib/queries/auth';
+import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 
 /**
  * إنشاء حساب جديد (عميل) — الصورة 05.
  *
- * الحقول كما في التصميم حرفيًا: الاسم الكامل · رقم الهاتف ·
- * البريد الإلكتروني (اختياري) · المنطقة/الحي · كلمة المرور · تأكيدها ·
- * الموافقة على الشروط · زر «إنشاء حساب» · رابط «تسجيل الدخول».
- *
- * لا OTP: الحساب يصبح فعّالًا فور الإنشاء.
+ * زر «إنشاء حساب عبر جوجل» هو المسار الظاهر افتراضيًا. نموذج الهاتف/كلمة
+ * المرور الأصلي لم يُحذف — لا يزال يعمل بالكامل في الـbackend لأي حساب
+ * قديم — لكنه مطويّ خلف رابط ثانوي بقرار من صاحب المنتج (إخفاء من الواجهة
+ * فقط، لا حذف).
  */
 export default function RegisterPage() {
   const router = useRouter();
   const registerMutation = useRegister();
+  const [showPhoneForm, setShowPhoneForm] = useState(!GOOGLE_SIGN_IN_ENABLED);
 
   const {
     register,
@@ -73,7 +76,26 @@ export default function RegisterPage() {
         </p>
       }
     >
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      {GOOGLE_SIGN_IN_ENABLED && (
+        <div className="flex flex-col gap-5">
+          <GoogleSignInButton
+            onSuccess={(user) => router.replace(resolveHomeRoute(user))}
+          />
+
+          {!showPhoneForm && (
+            <button
+              type="button"
+              onClick={() => setShowPhoneForm(true)}
+              className="text-center text-label font-semibold text-brand-600"
+            >
+              إنشاء حساب برقم الهاتف بدلًا من ذلك
+            </button>
+          )}
+        </div>
+      )}
+
+      {showPhoneForm && (
+      <form onSubmit={onSubmit} noValidate className={GOOGLE_SIGN_IN_ENABLED ? 'mt-5 flex flex-col gap-4 border-t border-border pt-5' : 'flex flex-col gap-4'}>
         <Field label="الاسم الكامل" required htmlFor="fullName" error={errors.fullName?.message}>
           <Input
             id="fullName"
@@ -197,6 +219,7 @@ export default function RegisterPage() {
           إنشاء حساب
         </Button>
       </form>
+      )}
     </AuthShell>
   );
 }

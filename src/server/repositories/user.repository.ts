@@ -29,6 +29,12 @@ export async function findUserByIdentifier(identifier: { phone?: string; email?:
   return User.findOne(filter).lean<UserLean | null>();
 }
 
+/** يبحث بمعرّف حساب جوجل — لتسجيل الدخول/الربط عبر جوجل. */
+export async function findUserByGoogleId(googleId: string) {
+  await connectToDatabase();
+  return User.findOne({ googleId }).select('+googleId').lean<UserLean | null>();
+}
+
 /** يجلب المستخدم مع تجزئة كلمة المرور — للتحقق عند الدخول فقط. */
 export async function findUserWithPassword(identifier: { phone?: string; email?: string }) {
   await connectToDatabase();
@@ -53,6 +59,12 @@ export async function existsByPhoneOrEmail(params: {
   ]);
 
   return { phone: Boolean(phoneTaken), email: Boolean(emailTaken) };
+}
+
+/** يربط حساب جوجل بحساب موجود عثر عليه بنفس البريد — لا يُنشئ حسابًا مكررًا. */
+export async function linkGoogleId(userId: string, googleId: string): Promise<void> {
+  await connectToDatabase();
+  await User.updateOne({ _id: new Types.ObjectId(userId) }, { $set: { googleId } });
 }
 
 export async function createUser(data: Partial<UserDocument>) {
