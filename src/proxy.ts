@@ -110,10 +110,10 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://res.cloudinary.com",
     "font-src 'self' data:",
-    // https://accounts.google.com: زر «الدخول عبر جوجل» (GSI) يستدعيها من
-    // نفس صفحتنا لعرض الزر وإصدار التوكن — لا استضافة/تخزين لدينا.
-    "connect-src 'self' https://api.cloudinary.com https://accounts.google.com",
-    "frame-src https://accounts.google.com",
+    // https://accounts.google.com و https://www.googleapis.com: زر «المتابعة
+    // عبر جوجل» — نافذة OAuth منبثقة على الويب تستدعيهما لإصدار/فحص التوكن.
+    // لا استضافة ولا تخزين لدينا.
+    "connect-src 'self' https://api.cloudinary.com https://accounts.google.com https://www.googleapis.com",
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",

@@ -9,4 +9,4 @@
  * عمدًا لحين اكتمال إعداد Google Cloud Console (Client ID) واختباره.
  * فعّله بتغيير هذه القيمة إلى `true` — لا حاجة لأي تعديل آخر.
  */
-export const GOOGLE_SIGN_IN_ENABLED = false;
+export const GOOGLE_SIGN_IN_ENABLED = true;

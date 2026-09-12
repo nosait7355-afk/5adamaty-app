@@ -35,6 +35,20 @@ const config: CapacitorConfig = {
       style: 'DARK',
       backgroundColor: '#1156e0',
     },
+    /*
+     * تسجيل الدخول بجوجل (ويب + أندرويد) — خلف GOOGLE_SIGN_IN_ENABLED
+     * (`src/shared/constants/feature-flags.ts`)، معطَّل حاليًا.
+     * جوجل فقط مفعَّل هنا لتقليل حجم الـAPK — Facebook/Apple/Twitter
+     * ممنوعون أصلًا (PROJECT_PLAN — المصادقة).
+     */
+    SocialLogin: {
+      providers: {
+        google: true,
+        facebook: false,
+        apple: false,
+        twitter: false,
+      },
+    },
   },
 };
 

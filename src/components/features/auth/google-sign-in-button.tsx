@@ -1,32 +1,29 @@
 'use client';
 
-import Script from 'next/script';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { SocialLogin } from '@capgo/capacitor-social-login';
+import { Chrome } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { extractErrorMessage, useGoogleAuth } from '@/lib/queries/auth';
 import type { AuthUserDto } from '@/server/services/auth.service';
 
 /**
- * زر «الدخول عبر جوجل» — Google Identity Services (GSI).
+ * زر «المتابعة عبر جوجل» — ويب وأندرويد بنفس الكود.
  *
- * يعرض واجهة Google الرسمية داخل `<div id>` بدل زر مخصّص: زر مرسوم يدويًا
- * يخالف شروط استخدام جوجل، والـGSI هو من يرسم الزر ويستدعي `callback`
- * بـ`idToken` جاهز للتحقّق في السيرفر (`/api/v1/auth/google`).
+ * `@capgo/capacitor-social-login` يوجّه تلقائيًا: نافذة OAuth منبثقة على
+ * الويب، أو Credential Manager الأصلي داخل تطبيق أندرويد — حسب البيئة التي
+ * يعمل بها Capacitor، بلا أي تفريع يدوي هنا. النتيجة في الحالتين `idToken`
+ * يتحقق منه السيرفر عبر `/api/v1/auth/google` (نفس المسار لكلا المنصّتين).
  */
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-          }) => void;
-          renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
-        };
-      };
-    };
-  }
+let initPromise: Promise<void> | null = null;
+
+function ensureInitialized(): Promise<void> {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  if (!clientId) return Promise.resolve();
+
+  initPromise ??= SocialLogin.initialize({ google: { webClientId: clientId } });
+  return initPromise;
 }
 
 export interface GoogleSignInButtonProps {
@@ -35,52 +32,49 @@ export interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const containerId = useId().replace(/:/g, '');
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scriptReady, setScriptReady] = useState(false);
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
   const googleAuth = useGoogleAuth();
 
   useEffect(() => {
-    if (!scriptReady || !clientId || !containerRef.current || !window.google) return;
-
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (response) => {
-        setError('');
-        googleAuth.mutate(
-          { idToken: response.credential },
-          {
-            onSuccess,
-            onError: (mutationError) => setError(extractErrorMessage(mutationError)),
-          }
-        );
-      },
-    });
-
-    window.google.accounts.id.renderButton(containerRef.current, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      width: 320,
-      text: 'continue_with',
-      locale: 'ar',
-    });
-    // `googleAuth`/`onSuccess` تتغيّر كل تصيير — التهيئة تعتمد فقط على جاهزية السكربت والـclientId
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scriptReady, clientId]);
+    void ensureInitialized();
+  }, []);
 
   if (!clientId) return null;
 
+  const signIn = async () => {
+    setError('');
+    setPending(true);
+    try {
+      await ensureInitialized();
+      const { result } = await SocialLogin.login({
+        provider: 'google',
+        options: { scopes: ['email', 'profile'] },
+      });
+      const idToken = 'idToken' in result ? result.idToken : null;
+      if (!idToken) throw new Error('لم يصل رمز تعريف من جوجل.');
+
+      const user = await googleAuth.mutateAsync({ idToken });
+      onSuccess(user);
+    } catch (signInError) {
+      setError(extractErrorMessage(signInError));
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-2">
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onReady={() => setScriptReady(true)}
-      />
-      <div id={containerId} ref={containerRef} className="flex justify-center" />
+      <Button
+        type="button"
+        variant="secondary"
+        fullWidth
+        loading={pending}
+        onClick={() => void signIn()}
+        iconStart={<Chrome size={20} />}
+      >
+        المتابعة عبر جوجل
+      </Button>
       {error && (
         <p className="text-badge text-danger" role="alert">
           {error}
