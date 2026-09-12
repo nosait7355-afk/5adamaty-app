@@ -17,12 +17,16 @@ import { ALL_FAYOUM_AREAS, FAYOUM_CITIES, GOVERNORATE } from '@/shared/constants
  */
 
 /* ---- تسجيل عميل جديد (الصورة 05) ---- */
+/**
+ * قرار لاحق: البريد صار الحقل الإلزامي والهاتف اختياري — عكس الصورة 05
+ * الأصلية (هاتف إلزامي، بريد اختياري) — بقرار من صاحب المنتج بإخفاء
+ * التسجيل برقم الهاتف من الواجهة نهائيًا لصالح البريد/جوجل.
+ */
 export const registerCustomerSchema = z
   .object({
     fullName: fullNameSchema,
-    phone: egyptPhoneSchema,
-    // البريد اختياري في شاشة التسجيل — كما هو مكتوب حرفيًا في التصميم
-    email: emailSchema.optional().or(z.literal('').transform(() => undefined)),
+    phone: egyptPhoneSchema.optional().or(z.literal('').transform(() => undefined)),
+    email: emailSchema,
     area: z
       .string()
       .trim()

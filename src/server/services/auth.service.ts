@@ -113,8 +113,8 @@ export async function registerCustomer(
   const user = await createUser({
     role: 'CUSTOMER',
     fullName: input.fullName,
-    phone: input.phone,
-    ...(input.email ? { email: input.email } : {}),
+    ...(input.phone ? { phone: input.phone } : {}),
+    email: input.email,
     passwordHash,
     status: 'ACTIVE',
     governorate: GOVERNORATE,

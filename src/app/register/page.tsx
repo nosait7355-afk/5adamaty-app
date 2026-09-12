@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Lock, Mail, MapPin, Smartphone, User } from 'lucide-react';
+import { Lock, Mail, MapPin, User } from 'lucide-react';
 import { AuthShell } from '@/components/features/auth/auth-shell';
 import { GoogleSignInButton } from '@/components/features/auth/google-sign-in-button';
 import { Button } from '@/components/ui/button';
@@ -24,17 +23,13 @@ import { extractErrorMessage, resolveHomeRoute, useRegister } from '@/lib/querie
 import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 
 /**
- * إنشاء حساب جديد (عميل) — الصورة 05.
- *
- * زر «إنشاء حساب عبر جوجل» هو المسار الظاهر افتراضيًا. نموذج الهاتف/كلمة
- * المرور الأصلي لم يُحذف — لا يزال يعمل بالكامل في الـbackend لأي حساب
- * قديم — لكنه مطويّ خلف رابط ثانوي بقرار من صاحب المنتج (إخفاء من الواجهة
- * فقط، لا حذف).
+ * إنشاء حساب جديد (عميل) — الصورة 05 مع تعديل لاحق بقرار صاحب المنتج:
+ * لا حقل هاتف — البريد هو الإلزامي، وزر «إنشاء حساب عبر جوجل» أسفل النموذج
+ * مباشرة (لا طيّ ولا رابط ثانوي، الاثنان ظاهران معًا دائمًا).
  */
 export default function RegisterPage() {
   const router = useRouter();
   const registerMutation = useRegister();
-  const [showPhoneForm, setShowPhoneForm] = useState(!GOOGLE_SIGN_IN_ENABLED);
 
   const {
     register,
@@ -44,7 +39,6 @@ export default function RegisterPage() {
     resolver: zodResolver(registerCustomerSchema),
     defaultValues: {
       fullName: '',
-      phone: '',
       email: '',
       area: '',
       city: GOVERNORATE,
@@ -76,26 +70,7 @@ export default function RegisterPage() {
         </p>
       }
     >
-      {GOOGLE_SIGN_IN_ENABLED && (
-        <div className="flex flex-col gap-5">
-          <GoogleSignInButton
-            onSuccess={(user) => router.replace(resolveHomeRoute(user))}
-          />
-
-          {!showPhoneForm && (
-            <button
-              type="button"
-              onClick={() => setShowPhoneForm(true)}
-              className="text-center text-label font-semibold text-brand-600"
-            >
-              إنشاء حساب برقم الهاتف بدلًا من ذلك
-            </button>
-          )}
-        </div>
-      )}
-
-      {showPhoneForm && (
-      <form onSubmit={onSubmit} noValidate className={GOOGLE_SIGN_IN_ENABLED ? 'mt-5 flex flex-col gap-4 border-t border-border pt-5' : 'flex flex-col gap-4'}>
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <Field label="الاسم الكامل" required htmlFor="fullName" error={errors.fullName?.message}>
           <Input
             id="fullName"
@@ -107,26 +82,7 @@ export default function RegisterPage() {
           />
         </Field>
 
-        <Field label="رقم الهاتف" required htmlFor="phone" error={errors.phone?.message}>
-          <Input
-            id="phone"
-            inputMode="tel"
-            autoComplete="tel"
-            /* dir=ltr يمنع قلب مجموعات الأرقام؛ text-end يبقيها يمينًا */
-            dir="ltr"
-            className="[&_input]:text-end"
-            placeholder="01012345678"
-            icon={<Smartphone size={20} />}
-            invalid={Boolean(errors.phone)}
-            {...register('phone')}
-          />
-        </Field>
-
-        <Field
-          label="البريد الإلكتروني (اختياري)"
-          htmlFor="email"
-          error={errors.email?.message}
-        >
+        <Field label="البريد الإلكتروني" required htmlFor="email" error={errors.email?.message}>
           <Input
             id="email"
             type="email"
@@ -219,6 +175,12 @@ export default function RegisterPage() {
           إنشاء حساب
         </Button>
       </form>
+
+      {GOOGLE_SIGN_IN_ENABLED && (
+        <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+          <p className="text-center text-badge text-ink-400">أو</p>
+          <GoogleSignInButton onSuccess={(user) => router.replace(resolveHomeRoute(user))} />
+        </div>
       )}
     </AuthShell>
   );
