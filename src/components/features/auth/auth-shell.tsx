@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { BrandIcon } from '@/components/layout/brand-icon';
 import { CitySkyline } from './city-skyline';
+import { LegalLinks } from '@/components/features/legal/legal-page';
 
 export interface AuthShellProps {
   title: string;
@@ -78,6 +79,8 @@ export function AuthShell({
         <div className="mt-6 flex flex-col gap-5">{children}</div>
 
         {footer && <div className="mt-6">{footer}</div>}
+
+        <LegalLinks className="mt-4 justify-center" />
 
         <div className="flex-1" />
       </div>

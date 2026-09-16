@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Chrome, Send } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Stepper } from '@/components/common/stepper';
 import { InfoAlert } from '@/components/common/info-alert';
 import {
@@ -68,6 +70,7 @@ export default function ProviderRegistrationPage() {
   const [basic, setBasic] = useState<BasicInfoValues>(EMPTY_BASIC_INFO);
   const [profession, setProfession] = useState<ProfessionValues>(EMPTY_PROFESSION);
   const [errors, setErrors] = useState<Errors>({});
+  const [accepted, setAccepted] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [googleFillPending, setGoogleFillPending] = useState(false);
@@ -425,11 +428,25 @@ export default function ProviderRegistrationPage() {
         )}
 
         {step === 3 && (
-          <p className="mt-6 text-meta text-ink-400">
-            بإرسال الطلب تُقرّ بأن جميع البيانات والمستندات المرفقة صحيحة وتخصّك، وتوافق على{' '}
-            <span className="font-semibold text-brand-600">الشروط والأحكام</span> و
-            <span className="font-semibold text-brand-600">سياسة الخصوصية</span>.
-          </p>
+          <Checkbox
+            id="provider-pledge"
+            className="mt-6"
+            checked={accepted}
+            onChange={(event) => setAccepted(event.target.checked)}
+            label={
+              <>
+                أُقرّ بأن جميع البيانات والمستندات المرفقة صحيحة وتخصّني، وأوافق على{' '}
+                <Link href="/terms" target="_blank" className="font-semibold text-brand-600">
+                  الشروط والأحكام
+                </Link>{' '}
+                و
+                <Link href="/privacy" target="_blank" className="font-semibold text-brand-600">
+                  سياسة الخصوصية
+                </Link>
+                .
+              </>
+            }
+          />
         )}
 
         {/* ---- أزرار التنقّل ---- */}
@@ -478,7 +495,7 @@ export default function ProviderRegistrationPage() {
             <Button
               className="flex-[2]"
               loading={submitMutation.isPending}
-              disabled={!documents.isComplete || busy}
+              disabled={!documents.isComplete || !accepted || busy}
               onClick={() => void submitRequest()}
               iconEnd={<Send size={20} />}
             >

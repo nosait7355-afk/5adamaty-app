@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { LegalLinks } from '@/components/features/legal/legal-page';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -278,6 +279,7 @@ export default function HelpPage() {
             </Button>
           </Card>
         </section>
+        <LegalLinks className="justify-center pt-2" />
       </PageContainer>
 
       <BottomNav />
