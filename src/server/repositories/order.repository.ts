@@ -393,13 +393,6 @@ export async function refreshProviderCompletionStats(providerId: string): Promis
 export interface ProviderDashboardStats {
   counts: Record<string, number>;
   completedThisMonth: number;
-  /**
-   * «الأرباح» = مجموع قيم الطلبات **المكتملة** المحصّلة كاش خارج التطبيق.
-   * تقرير إحصائي مشتق من الطلبات — لا سجل مالي ولا معاملة (ARCHITECTURE §0.1).
-   */
-  earningsTotal: number;
-  earningsThisMonth: number;
-  earningsPreviousMonth: number;
 }
 
 export async function getProviderDashboardStats(
@@ -410,47 +403,17 @@ export async function getProviderDashboardStats(
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const [byStatus, earnings] = await Promise.all([
+  const [byStatus, completed] = await Promise.all([
     ServiceRequest.aggregate<{ _id: OrderStatus; count: number }>([
       { $match: { providerId: objectId } },
       { $group: { _id: '$status', count: { $sum: 1 } } },
     ]),
-    ServiceRequest.aggregate<{
-      total: number;
-      thisMonth: number;
-      previousMonth: number;
-      completedThisMonth: number;
-    }>([
+    ServiceRequest.aggregate<{ completedThisMonth: number }>([
       { $match: { providerId: objectId, status: 'COMPLETED' } },
       {
         $group: {
           _id: null,
-          total: { $sum: { $ifNull: ['$agreedPrice', 0] } },
-          thisMonth: {
-            $sum: {
-              $cond: [
-                { $gte: ['$completedAt', monthStart] },
-                { $ifNull: ['$agreedPrice', 0] },
-                0,
-              ],
-            },
-          },
-          previousMonth: {
-            $sum: {
-              $cond: [
-                {
-                  $and: [
-                    { $gte: ['$completedAt', previousMonthStart] },
-                    { $lt: ['$completedAt', monthStart] },
-                  ],
-                },
-                { $ifNull: ['$agreedPrice', 0] },
-                0,
-              ],
-            },
-          },
           completedThisMonth: {
             $sum: { $cond: [{ $gte: ['$completedAt', monthStart] }, 1, 0] },
           },
@@ -462,13 +425,8 @@ export async function getProviderDashboardStats(
   const counts: Record<string, number> = {};
   for (const row of byStatus) counts[row._id] = row.count;
 
-  const summary = earnings[0];
-
   return {
     counts,
-    completedThisMonth: summary?.completedThisMonth ?? 0,
-    earningsTotal: summary?.total ?? 0,
-    earningsThisMonth: summary?.thisMonth ?? 0,
-    earningsPreviousMonth: summary?.previousMonth ?? 0,
+    completedThisMonth: completed[0]?.completedThisMonth ?? 0,
   };
 }

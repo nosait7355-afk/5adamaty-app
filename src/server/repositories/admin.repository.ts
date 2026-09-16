@@ -35,7 +35,6 @@ export interface DashboardCounts {
   pendingVerifications: number;
   activeProviders: number;
   ordersByStatus: Record<OrderStatus, number>;
-  completedOrdersTotalValue: number;
   reviewsCount: number;
   avgPlatformRating: number;
   servicesActive: number;
@@ -52,7 +51,6 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     pendingVerifications,
     activeProviders,
     orderStatusAgg,
-    completedValueAgg,
     reviewsCount,
     avgRatingAgg,
     servicesActive,
@@ -65,12 +63,6 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     ServiceProvider.countDocuments({ isActive: true }),
     ServiceRequest.aggregate<{ _id: OrderStatus; count: number }>([
       { $group: { _id: '$status', count: { $sum: 1 } } },
-    ]),
-    // مجموع قيم الطلبات المكتملة — تقرير إحصائي بحت، لا معاملة مالية
-    // (ARCHITECTURE §0.1). الدفع يتم كاشًا خارج التطبيق دائمًا.
-    ServiceRequest.aggregate<{ total: number }>([
-      { $match: { status: 'COMPLETED', cashReceivedConfirmed: true } },
-      { $group: { _id: null, total: { $sum: { $ifNull: ['$agreedPrice', 0] } } } },
     ]),
     Review.countDocuments({ isVisible: true }),
     ServiceProvider.aggregate<{ avg: number }>([
@@ -94,7 +86,6 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     pendingVerifications,
     activeProviders,
     ordersByStatus,
-    completedOrdersTotalValue: completedValueAgg[0]?.total ?? 0,
     reviewsCount,
     avgPlatformRating: Math.round((avgRatingAgg[0]?.avg ?? 0) * 10) / 10,
     servicesActive,

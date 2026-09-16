@@ -372,11 +372,6 @@ export interface ProviderDashboardDto {
     isActive: boolean;
   };
   kpis: { newOrders: number; inProgress: number; completedThisMonth: number; rating: number };
-  /**
-   * تقرير الأرباح: مجموع قيم الطلبات المكتملة المحصّلة **كاش خارج التطبيق**.
-   * إحصاء مشتق من الطلبات لحظة القراءة — لا رصيد ولا محفظة ولا سجل مالي.
-   */
-  earnings: { total: number; thisMonth: number; previousMonth: number; changePercent: number };
   recentOrders: ProviderOrderDto[];
 }
 
@@ -387,17 +382,6 @@ export async function getProviderDashboard(user: SessionUser): Promise<ProviderD
   const stats = await getProviderDashboardStats(providerId);
   const recent = await findProviderOrders({ providerId, sort: 'newest', page: 1, limit: 3 });
   const party = await loadProviderParty(providerId);
-
-  /* نسبة التغيّر عن الشهر الماضي — بلا قسمة على صفر */
-  const changePercent =
-    stats.earningsPreviousMonth > 0
-      ? Math.round(
-          ((stats.earningsThisMonth - stats.earningsPreviousMonth) / stats.earningsPreviousMonth) *
-            100
-        )
-      : stats.earningsThisMonth > 0
-        ? 100
-        : 0;
 
   return {
     provider: {
@@ -414,12 +398,6 @@ export async function getProviderDashboard(user: SessionUser): Promise<ProviderD
       inProgress: (stats.counts.IN_PROGRESS ?? 0) + (stats.counts.ON_THE_WAY ?? 0),
       completedThisMonth: stats.completedThisMonth,
       rating: provider.ratingAvg,
-    },
-    earnings: {
-      total: stats.earningsTotal,
-      thisMonth: stats.earningsThisMonth,
-      previousMonth: stats.earningsPreviousMonth,
-      changePercent,
     },
     recentOrders: recent.items.map((order) => toProviderOrderDto(order, party)),
   };

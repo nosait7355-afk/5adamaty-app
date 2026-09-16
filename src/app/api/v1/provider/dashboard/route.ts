@@ -10,8 +10,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/v1/provider/dashboard
  * لوحة تحكم مقدم الخدمة — الصورة 24.
  *
- * «الأرباح» تقرير إحصائي مشتق من الطلبات المكتملة المحصّلة كاش خارج
- * التطبيق — لا رصيد ولا محفظة ولا سجل مالي (ARCHITECTURE §0.1).
+ * مؤشرات عددية فقط — لا أرباح ولا رصيد ولا أي قيمة مالية.
  */
 export const GET = withErrorHandler(async (request) => {
   const user = await requireRole(request, 'PROVIDER');

@@ -9,8 +9,6 @@ import {
   MapPin,
   Settings,
   Star,
-  TrendingDown,
-  TrendingUp,
   UserRound,
   Users,
   Wrench,
@@ -24,16 +22,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { InfoAlert } from '@/components/common/info-alert';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { ProviderOrderCard } from '@/components/features/orders/provider-order-card';
-import { formatNumber, formatPrice, formatRating } from '@/lib/format';
+import { formatNumber, formatRating } from '@/lib/format';
 import { useProviderDashboard } from '@/lib/queries/provider-orders';
 import { cn } from '@/lib/cn';
 
 /**
  * لوحة تحكم مقدم الخدمة — الصورة 24.
  *
- * ⚠️ «أرباحك» تقرير إحصائي بحت: مجموع قيم الطلبات المكتملة التي حُصّلت
- * **كاش خارج التطبيق**. لا رصيد ولا محفظة ولا سحب ولا أي سجل مالي
- * (ARCHITECTURE §0.1).
+ * بطاقة «أرباحك» أُزيلت: التسعير أُزيل من المنصة، فلا قيمة تُجمع.
  */
 export default function ProviderDashboardPage() {
   const dashboard = useProviderDashboard();
@@ -72,8 +68,7 @@ export default function ProviderDashboardPage() {
     );
   }
 
-  const { provider, kpis, earnings, recentOrders } = dashboard.data;
-  const earningsUp = earnings.changePercent >= 0;
+  const { provider, kpis, recentOrders } = dashboard.data;
 
   return (
     <>
@@ -118,39 +113,6 @@ export default function ProviderDashboardPage() {
             tone="star"
           />
         </div>
-
-        {/* ---- بطاقة الأرباح ---- */}
-        <section
-          className="rounded-card bg-linear-to-l from-brand-500 to-brand-700 p-4 text-white shadow-brand"
-          aria-label="أرباحك"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-label font-semibold opacity-90">أرباحك</p>
-              <p className="num mt-1 text-screen-title font-extrabold">
-                {formatPrice(earnings.total)}
-              </p>
-            </div>
-
-            <span
-              className={cn(
-                'num inline-flex items-center gap-1 rounded-pill bg-white/20 px-2.5 py-1 text-badge font-bold'
-              )}
-            >
-              {earningsUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              {formatNumber(Math.abs(earnings.changePercent))}%
-            </span>
-          </div>
-
-          <p className="num mt-2 text-meta opacity-90">
-            هذا الشهر: {formatPrice(earnings.thisMonth)}
-          </p>
-
-          <p className="mt-3 rounded-field bg-white/15 px-3 py-2 text-badge leading-5">
-            تقرير إحصائي للطلبات المكتملة المحصّلة كاش خارج التطبيق — لا يوجد دفع أونلاين ولا
-            رصيد داخل التطبيق.
-          </p>
-        </section>
 
         {/* ---- اكتمال الملف ---- */}
         <Card className="flex items-center gap-4">

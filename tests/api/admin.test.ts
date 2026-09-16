@@ -197,8 +197,8 @@ describe('لوحة القيادة', () => {
 
     expect(response.status).toBe(200);
     const data = body.data as Record<string, unknown>;
-    expect(data).toHaveProperty('completedOrdersTotalValue');
-    expect(typeof data.completedOrdersTotalValue).toBe('number');
+    // بطاقة قيمة الطلبات أُزيلت مع إزالة التسعير
+    expect(data).not.toHaveProperty('completedOrdersTotalValue');
     // لا حقل باسم يوحي بمعاملة مالية أو رصيد محفظة
     expect(JSON.stringify(data)).not.toMatch(/transaction|wallet|balance|payment/i);
   });

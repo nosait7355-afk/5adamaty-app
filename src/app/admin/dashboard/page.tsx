@@ -16,15 +16,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/common/states';
 import { OrderStatusBadge } from '@/components/common/status-badge';
 import { useAdminDashboard } from '@/lib/queries/admin';
-import { formatNumber, formatPrice, formatRating } from '@/lib/format';
+import { formatNumber, formatRating } from '@/lib/format';
 import type { OrderStatus } from '@/shared/constants/order-status';
 
 /**
  * لوحة القيادة — نظرة شاملة على المنصة.
  *
- * «إجمالي قيمة الطلبات المكتملة» تقرير إحصائي بحت (مجموع `agreedPrice` لكل
- * طلب أكّد مقدّم الخدمة استلام مبلغه نقدًا) — **ليست** معاملة مالية ولا
- * تمثّل أي تدفّق نقدي داخل التطبيق (ARCHITECTURE §0.1). لا دفع إلكتروني.
+ * لا بطاقة لقيمة الطلبات: التسعير أُزيل من المنصة، فلا قيمة تُجمع.
  */
 export default function AdminDashboardPage() {
   const dashboard = useAdminDashboard();
@@ -100,18 +98,6 @@ export default function AdminDashboardPage() {
             </ul>
           </Card>
 
-          <Card>
-            <h2 className="mb-1 text-label font-bold text-ink-900">
-              إجمالي قيمة الطلبات المكتملة
-            </h2>
-            <p className="mb-2 text-meta text-ink-400">
-              تقرير إحصائي فقط — لا دفع إلكتروني ولا معاملات مالية داخل التطبيق. الدفع كاش
-              مباشرة بين العميل ومقدم الخدمة.
-            </p>
-            <p className="num text-screen-title font-extrabold text-brand-600">
-              {formatPrice(dashboard.data.completedOrdersTotalValue)}
-            </p>
-          </Card>
         </>
       )}
     </AdminShell>

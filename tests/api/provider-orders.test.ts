@@ -739,7 +739,6 @@ describe('GET /api/v1/provider/dashboard', () => {
     );
     const data = (await json(response)).data as unknown as {
       kpis: { newOrders: number; inProgress: number; completedThisMonth: number; rating: number };
-      earnings: { total: number; changePercent: number };
       recentOrders: unknown[];
       provider: { profileCompletion: number };
     };
@@ -751,39 +750,10 @@ describe('GET /api/v1/provider/dashboard', () => {
       'newOrders',
       'rating',
     ]);
-    expect(data.earnings.total).toBeGreaterThanOrEqual(0);
+    // بطاقة الأرباح أُزيلت مع إزالة التسعير
+    expect(data).not.toHaveProperty('earnings');
     expect(data.recentOrders.length).toBeLessThanOrEqual(3);
     expect(data.provider.profileCompletion).toBeTypeOf('number');
-  });
-
-  it('الأرباح = مجموع قيم الطلبات المكتملة لا كل الطلبات', async () => {
-    const order = await orderInProgress();
-    const stored = await ServiceRequest.findById(order.id);
-
-    const before = await dashboardRoute(
-      req('/api/v1/provider/dashboard', { token: providerToken }),
-      undefined
-    );
-    const beforeTotal = ((await json(before)).data as unknown as { earnings: { total: number } })
-      .earnings.total;
-
-    await completeRoute(
-      req(`/api/v1/orders/${order.id}/complete`, {
-        method: 'POST',
-        token: providerToken,
-        body: { serviceCompleted: true, cashReceivedConfirmed: true },
-      }),
-      ctx(order.id)
-    );
-
-    const after = await dashboardRoute(
-      req('/api/v1/provider/dashboard', { token: providerToken }),
-      undefined
-    );
-    const afterTotal = ((await json(after)).data as unknown as { earnings: { total: number } })
-      .earnings.total;
-
-    expect(afterTotal - beforeTotal).toBe(stored?.agreedPrice ?? 0);
   });
 
   it('لا يحوي أي مصطلح مالي أو رصيد أو محفظة', async () => {
