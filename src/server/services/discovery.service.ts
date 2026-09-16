@@ -40,7 +40,7 @@ export interface ProviderCardDto {
   professionId: string;
   professionName?: string;
   professionIcon?: string;
-  yearsOfExperience: number;
+  yearsOfExperience?: number;
   /** المنطقة الأولى — هي المعروضة بجانب 📍 في البطاقة. */
   area?: string;
   coverageAreas: string[];
@@ -128,7 +128,7 @@ function toProviderCard(row: ProviderRow): ProviderCardDto {
     professionId: String(row.professionId),
     ...(row.professionName ? { professionName: row.professionName } : {}),
     ...(row.professionIcon ? { professionIcon: row.professionIcon } : {}),
-    yearsOfExperience: row.yearsOfExperience,
+    ...(row.yearsOfExperience != null ? { yearsOfExperience: row.yearsOfExperience } : {}),
     ...(row.coverageAreas?.[0] ? { area: row.coverageAreas[0] } : {}),
     coverageAreas: row.coverageAreas ?? [],
     isVerifiedBadge: row.isVerifiedBadge,

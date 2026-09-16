@@ -151,10 +151,12 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
                 {data.area}
               </span>
             )}
-            <span className="num inline-flex items-center gap-1 text-ink-400">
-              <ShieldCheck size={15} className="text-success" aria-hidden="true" />
-              {formatExperience(data.yearsOfExperience)}
-            </span>
+            {data.yearsOfExperience != null && (
+              <span className="num inline-flex items-center gap-1 text-ink-400">
+                <ShieldCheck size={15} className="text-success" aria-hidden="true" />
+                {formatExperience(data.yearsOfExperience)}
+              </span>
+            )}
           </div>
 
           {data.professionName && (

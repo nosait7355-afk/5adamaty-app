@@ -180,6 +180,18 @@ describe('الخطوة 1/3 — البيانات الأساسية', () => {
 });
 
 describe('الخطوة 2/3 — المهنة والخدمة', () => {
+  it('سنوات الخبرة اختيارية — الفراغ يصبح undefined لا صفرًا', () => {
+    const { yearsOfExperience: _omit, ...withoutYears } = VALID_STEP2;
+    const missing = providerStep2Schema.parse(withoutYears);
+    expect(missing.yearsOfExperience).toBeUndefined();
+
+    const empty = providerStep2Schema.parse({ ...VALID_STEP2, yearsOfExperience: '' });
+    expect(empty.yearsOfExperience).toBeUndefined();
+
+    expect(providerStep2Schema.parse({ ...VALID_STEP2, yearsOfExperience: '8' }).yearsOfExperience).toBe(8);
+    expect(providerStep2Schema.safeParse({ ...VALID_STEP2, yearsOfExperience: -1 }).success).toBe(false);
+  });
+
   it('تقبل البيانات الصحيحة', () => {
     expect(providerStep2Schema.safeParse(VALID_STEP2).success).toBe(true);
   });

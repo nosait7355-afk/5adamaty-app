@@ -232,7 +232,7 @@ export interface ProviderRow {
   accountType: string;
   categoryId: Types.ObjectId;
   professionId: Types.ObjectId;
-  yearsOfExperience: number;
+  yearsOfExperience?: number;
   bio: string;
   coverageAreas: string[];
   isVerifiedBadge: boolean;

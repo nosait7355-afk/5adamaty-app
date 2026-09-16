@@ -51,7 +51,7 @@ export const DOCUMENT_DEFAULTS: Record<
   },
 };
 
-/** القيود الظاهرة في الصورة 21: «JPG, PNG حتى 5MB» (+ PDF للمستندات الرسمية). */
+/** قيود الرفع: «JPG, PNG حتى 3MB» (+ PDF للمستندات الرسمية). */
 export const DOCUMENT_ACCEPTED_MIME = [
   'image/jpeg',
   'image/png',
@@ -59,7 +59,7 @@ export const DOCUMENT_ACCEPTED_MIME = [
   'application/pdf',
 ] as const;
 
-export const DOCUMENT_MAX_SIZE_MB = 5;
+export const DOCUMENT_MAX_SIZE_MB = 3;
 
 export interface DocumentRequirement {
   key: DocumentKey;

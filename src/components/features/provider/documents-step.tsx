@@ -16,7 +16,9 @@ import { ErrorState } from '@/components/common/states';
 import { Skeleton } from '@/components/ui/skeleton';
 import { saveProviderDocument } from '@/lib/upload-client';
 import { useDocumentRequirements } from '@/lib/queries/catalog';
+import { useMyDocuments } from '@/lib/queries/provider';
 import type { DocumentRequirementDto } from '@/server/services/catalog.service';
+import { DOCUMENT_MAX_SIZE_MB } from '@/shared/constants/documents';
 
 /**
  * خطوة المستندات (3/4) — الصورة 21.
@@ -60,6 +62,26 @@ export function DocumentsStep({
   const [uploaded, setUploaded] = useState<Record<string, UploadedFileInfo>>({});
 
   /*
+   * المستندات المحفوظة على الخادم. بدونها تبدأ البطاقات فارغة عند العودة
+   * للخطوة، فيبدو كأن المستند الإلزامي لم يُرفع ويظل تنبيه «ناقص» ظاهرًا
+   * رغم أن زر الإرسال يقرأ الحالة الصحيحة من الخادم.
+   */
+  const serverDocuments = useMyDocuments(persist);
+  const savedByKey = useMemo(() => {
+    const map: Record<string, { format: string; bytes: number; status: string; rejectionReason?: string; publicId: string }> = {};
+    for (const doc of serverDocuments.data?.documents ?? []) {
+      map[`${doc.requirementKey}:${doc.customKey ?? ''}`] = {
+        format: doc.format,
+        bytes: doc.bytes,
+        status: doc.status,
+        ...(doc.rejectionReason ? { rejectionReason: doc.rejectionReason } : {}),
+        publicId: doc.id,
+      };
+    }
+    return map;
+  }, [serverDocuments.data]);
+
+  /*
    * `useMemo` ضروري لا تحسين: `?? []` ينتج مصفوفة جديدة كل رسم، فتتغيّر
    * اعتماديات الـhooks أدناه في كل مرة ويعاد بناء الدوال بلا داع.
    */
@@ -71,9 +93,14 @@ export function DocumentsStep({
   const keyOf = (requirement: DocumentRequirementDto) =>
     `${requirement.key}:${requirement.customKey ?? ''}`;
 
+  const isPresent = useCallback(
+    (item: DocumentRequirementDto) => Boolean(uploaded[keyOf(item)] ?? savedByKey[keyOf(item)]),
+    [uploaded, savedByKey]
+  );
+
   const missingRequired = useMemo(
-    () => requirements.filter((item) => item.required && !uploaded[keyOf(item)]),
-    [requirements, uploaded]
+    () => requirements.filter((item) => item.required && !isPresent(item)),
+    [requirements, isPresent]
   );
 
   const handleUploaded = useCallback(
@@ -91,13 +118,15 @@ export function DocumentsStep({
         onDocumentsChange?.(next);
 
         const stillMissing = requirements.filter(
-          (item) => item.required && !next[keyOf(item)]
+          (item) => item.required && !next[keyOf(item)] && !savedByKey[keyOf(item)]
         );
         onCompletionChange?.(stillMissing.length === 0);
         return next;
       });
+
+      if (persist) void serverDocuments.refetch();
     },
-    [persist, requirements, onCompletionChange, onDocumentsChange]
+    [persist, requirements, savedByKey, serverDocuments, onCompletionChange, onDocumentsChange]
   );
 
   const handleRemove = useCallback(
@@ -113,7 +142,7 @@ export function DocumentsStep({
     [onCompletionChange, onDocumentsChange]
   );
 
-  if (query.isPending) {
+  if (query.isPending || (persist && serverDocuments.isPending)) {
     return (
       <div className="flex flex-col gap-3" role="status" aria-label="جاري تحميل المستندات المطلوبة">
         {[0, 1, 2].map((index) => (
@@ -164,7 +193,8 @@ export function DocumentsStep({
             description={requirement.description}
             required={requirement.required}
             accept={requirement.accept}
-            maxSizeMB={requirement.maxSizeMB}
+            maxSizeMB={Math.min(requirement.maxSizeMB, DOCUMENT_MAX_SIZE_MB)}
+            {...(savedByKey[keyOf(requirement)] ? { existing: savedByKey[keyOf(requirement)] } : {})}
             purpose="PROVIDER_DOCUMENT"
             onUploaded={(asset) => handleUploaded(requirement, asset)}
             onRemove={() => handleRemove(requirement)}
@@ -173,7 +203,7 @@ export function DocumentsStep({
       </div>
 
       <InfoAlert tone="info">
-        سيتم مراجعة مستنداتك خلال 24 ساعة عمل، وستصلك إشعارة بنتيجة المراجعة.
+        الهوية الشخصية إلزامية، وباقي المستندات اختيارية. الحد الأقصى لكل ملف {DOCUMENT_MAX_SIZE_MB}MB.
       </InfoAlert>
 
       {missingRequired.length > 0 && (

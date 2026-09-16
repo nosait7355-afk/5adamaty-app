@@ -14,6 +14,7 @@
     "check:constraints": "node scripts/check-constraints.mjs",
     "db:seed": "tsx scripts/seed.mts",
     "db:migrate-cities": "tsx scripts/migrate-cities.mts",
+    "db:migrate-professions": "tsx scripts/migrate-professions.mts",
     "db:dev": "node scripts/dev-db.mjs",
     "verify": "npm run typecheck && npm run lint && npm run check:constraints && npm run test && npm run build",
     "check:cloudinary": "node scripts/check-cloudinary.mjs"

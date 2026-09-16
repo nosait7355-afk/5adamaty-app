@@ -196,7 +196,8 @@ export default function ProviderRegistrationPage() {
       ...current,
       categoryId: loaded.categoryId,
       professionId: loaded.professionId,
-      yearsOfExperience: String(loaded.yearsOfExperience),
+      yearsOfExperience:
+        loaded.yearsOfExperience != null ? String(loaded.yearsOfExperience) : '',
       bio: loaded.bio,
       coverageAreas: loaded.coverageAreas,
     }));
@@ -284,7 +285,9 @@ export default function ProviderRegistrationPage() {
         step2: {
           categoryId: profession.categoryId,
           professionId: profession.professionId,
-          yearsOfExperience: Number(profession.yearsOfExperience),
+          ...(profession.yearsOfExperience.trim()
+            ? { yearsOfExperience: Number(profession.yearsOfExperience) }
+            : {}),
           bio: profession.bio,
           coverageAreas: profession.coverageAreas,
         },
@@ -410,6 +413,12 @@ export default function ProviderRegistrationPage() {
           <InfoAlert tone="danger" title="تعذّر إتمام الخطوة" className="mt-4">
             {submitError}
           </InfoAlert>
+        )}
+
+        {step === 3 && hasAccount && !documents.isComplete && documents.missingRequired.length > 0 && (
+          <p className="mt-6 text-meta font-semibold text-danger" role="status">
+            لا يمكن الإرسال قبل رفع: {documents.missingRequired.join('، ')}
+          </p>
         )}
 
         {step === 3 && (

@@ -19,7 +19,7 @@ export interface ServiceProviderDocument {
   displayName: string;
   categoryId: Types.ObjectId;
   professionId: Types.ObjectId;
-  yearsOfExperience: number;
+  yearsOfExperience?: number;
   bio: string;
   /** مناطق التغطية — أسماء نصية من قائمة الفيوم الثابتة، لا إحداثيات. */
   coverageAreas: string[];
@@ -58,7 +58,8 @@ const serviceProviderSchema = new Schema<ServiceProviderDocument>(
 
     categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     professionId: { type: Schema.Types.ObjectId, ref: 'Profession', required: true },
-    yearsOfExperience: { type: Number, required: true, min: 0, max: 70 },
+    // اختيارية — انظر `yearsOfExperienceSchema`
+    yearsOfExperience: { type: Number, min: 0, max: 70 },
 
     // سقف 300 حرف بلا حدّ أدنى — انظر `providerStep2Schema`
     bio: { type: String, default: '', trim: true, maxlength: 300 },

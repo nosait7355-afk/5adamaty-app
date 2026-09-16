@@ -206,7 +206,11 @@ function ProviderReviewPanel({ providerId }: { providerId: string }) {
         <h4 className="mb-2 text-label font-bold text-ink-900">بيانات المهنة</h4>
         <dl className="flex flex-col gap-1 text-meta">
           <Row label="التخصص" value={data.professionName} />
-          <Row label="سنوات الخبرة" value={String(data.yearsOfExperience)} numeric />
+          <Row
+            label="سنوات الخبرة"
+            value={data.yearsOfExperience != null ? String(data.yearsOfExperience) : '—'}
+            numeric
+          />
           <Row label="الوصف" value={data.bio} />
           <Row label="المركز" value={data.contact.city ?? '—'} />
           <Row label="العنوان" value={data.contact.addressLine ?? '—'} />

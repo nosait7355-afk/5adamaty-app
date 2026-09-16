@@ -99,7 +99,7 @@ export const UPLOAD_RULES: Record<UploadPurpose, UploadRule> = {
    */
   PROVIDER_DOCUMENT: {
     accept: DOCUMENT_MIME_TYPES,
-    maxSizeMB: 5,
+    maxSizeMB: 3,
     folder: 'khadamaty/documents',
     accessMode: 'authenticated',
     resourceType: 'image',

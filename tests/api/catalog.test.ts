@@ -238,7 +238,7 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
   it('يعيد قيود الملفات مع كل مستند', async () => {
     const { data } = await requirementsFor('plumber');
     for (const requirement of data.requirements) {
-      expect(requirement.maxSizeMB).toBe(5);
+      expect(requirement.maxSizeMB).toBe(3);
       expect(requirement.label.length).toBeGreaterThan(0);
     }
   });

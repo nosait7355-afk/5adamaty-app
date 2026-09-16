@@ -418,7 +418,7 @@ describe('قواعد الرفع', () => {
     expect(UPLOAD_RULES.ORDER_ATTACHMENT.maxFiles).toBe(5);
   });
 
-  it('حد المستندات 5MB — مطابق للصورة 21', () => {
-    expect(UPLOAD_RULES.PROVIDER_DOCUMENT.maxSizeMB).toBe(5);
+  it('حد المستندات 3MB', () => {
+    expect(UPLOAD_RULES.PROVIDER_DOCUMENT.maxSizeMB).toBe(3);
   });
 });

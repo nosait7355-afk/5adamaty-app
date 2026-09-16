@@ -41,7 +41,8 @@ export default function ProviderProfilePage() {
     setValues({
       categoryId: loaded.categoryId,
       professionId: loaded.professionId,
-      yearsOfExperience: String(loaded.yearsOfExperience),
+      yearsOfExperience:
+        loaded.yearsOfExperience != null ? String(loaded.yearsOfExperience) : '',
       bio: loaded.bio,
       coverageAreas: loaded.coverageAreas,
     });

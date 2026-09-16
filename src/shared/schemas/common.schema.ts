@@ -39,12 +39,24 @@ export const egyptPhoneSchema = z
     return `+20${digits}`;
   });
 
+/**
+ * بريد إلكتروني صحيح.
+ *
+ * `z.email()` وحده يقبل دومينات مثل `name@gmail.37.com` لأن شكلها سليم
+ * تقنيًا. نشترط فوق ذلك أن يحتوي **كل** مقطع من الدومين حرفًا واحدًا على
+ * الأقل (فلا مقاطع رقمية بحتة)، وأن ينتهي بامتداد حروف فقط (.com، .eg…).
+ */
+const EMAIL_PATTERN = /^[a-z0-9._%+-]+@(?:[a-z0-9-]*[a-z][a-z0-9-]*\.)+[a-z]{2,}$/;
+
 export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
   .email('البريد الإلكتروني غير صالح.')
-  .max(160);
+  .max(160)
+  .refine((value) => EMAIL_PATTERN.test(value), {
+    message: 'البريد الإلكتروني غير صالح. مثال: name@gmail.com',
+  });
 
 /**
  * كلمة المرور: 8 أحرف على الأقل + حرف + رقم (ARCHITECTURE §7).

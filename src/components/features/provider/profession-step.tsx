@@ -119,7 +119,7 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
       <Field
         htmlFor={ids.years}
         label="سنوات الخبرة"
-        required
+        hint="اختياري"
         error={errors.yearsOfExperience}
       >
         <Input
@@ -153,6 +153,11 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
           onChange={(event) => onChange({ bio: event.target.value })}
         />
       </Field>
+
+      {/* السعر لا يُحدَّد في التطبيق — يُتفق عليه مباشرة */}
+      <p className="rounded-field bg-brand-50 px-3 py-2 text-meta font-semibold text-brand-700">
+        السعر يتم الاتفاق عليه هاتفيًا بينك وبين العميل.
+      </p>
 
       {/* ---- مناطق التغطية ---- */}
       <Field

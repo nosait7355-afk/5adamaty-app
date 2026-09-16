@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer } from '@/components/layout/page-container';
@@ -107,14 +107,15 @@ export default function CategoryProfessionsPage({
           </LinkButton>
         )}
 
+        {/* إخلاء مسؤولية — المنصة دليل إعلانات لا وسيط */}
         <section className="flex items-center gap-3 rounded-card bg-brand-50 p-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-success">
-            <ShieldCheck size={26} aria-hidden="true" />
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-brand-600">
+            <Info size={26} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-card-title font-bold text-ink-900">جودة مضمونة</h2>
+            <h2 className="text-card-title font-bold text-ink-900">بيانات مقدمة من مقدم الخدمة</h2>
             <p className="text-meta text-ink-600">
-              مقدمو الخدمات المعروضون هنا معتمدون بعد مراجعة مستنداتهم.
+              نحن وسيط إعلانات فقط. التواصل والدفع مباشر بينك وبين مقدم الخدمة.
             </p>
           </div>
         </section>

@@ -14,6 +14,34 @@ import type {
 } from '@/shared/schemas/provider.schema';
 import type { VerificationStatus } from '@/shared/constants/roles';
 
+export interface MyDocumentDto {
+  id: string;
+  requirementKey: string;
+  customKey?: string;
+  status: string;
+  rejectionReason?: string;
+  format: string;
+  bytes: number;
+}
+
+/**
+ * مستندات المزوّد المرفوعة فعلًا على الخادم — تجعل بطاقات الرفع تبدأ بحالتها
+ * الحقيقية بدل أن تظهر فارغة عند العودة لخطوة المستندات.
+ */
+export function useMyDocuments(enabled = true) {
+  return useQuery({
+    queryKey: ['provider', 'documents'] as const,
+    queryFn: async () =>
+      (
+        await api.get<{ documents: MyDocumentDto[]; missingRequired: string[]; isComplete: boolean }>(
+          '/provider/documents'
+        )
+      ).data,
+    enabled,
+    retry: false,
+  });
+}
+
 /** ملف مقدم الخدمة الحالي — يغذّي شاشتي المراجعة (22) وقيد المراجعة (23). */
 export function useMyProviderProfile(enabled = true) {
   return useQuery({
@@ -92,7 +120,7 @@ export interface AdminProviderDetail {
   professionName: string;
   bio: string;
   coverageAreas: string[];
-  yearsOfExperience: number;
+  yearsOfExperience?: number;
   profileCompletion: number;
   verification: {
     status: VerificationStatus;

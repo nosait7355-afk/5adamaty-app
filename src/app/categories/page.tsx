@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Flame, ShieldCheck } from 'lucide-react';
+import { Flame, Info } from 'lucide-react';
 import { AppHeader } from '@/components/layout/app-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
@@ -70,15 +70,18 @@ export default function CategoriesPage() {
           <PopularServices limit={4} />
         </section>
 
-        {/* ---- بانر «جودة مضمونة» — الصورة 07 ---- */}
+        {/*
+         * إخلاء مسؤولية (Google Play): المنصة دليل إعلانات لا وسيط، فلا نَعِد
+         * بجودة ولا باعتماد — البيانات من مقدم الخدمة نفسه.
+         */}
         <section className="flex items-center gap-3 rounded-card bg-brand-50 p-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-success">
-            <ShieldCheck size={26} aria-hidden="true" />
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-brand-600">
+            <Info size={26} aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-card-title font-bold text-ink-900">جودة مضمونة</h3>
+            <h3 className="text-card-title font-bold text-ink-900">بيانات مقدمة من مقدم الخدمة</h3>
             <p className="text-meta text-ink-600">
-              كل مقدم خدمة يظهر هنا مرّت مستنداته بمراجعة الإدارة واعتُمدت.
+              نحن وسيط إعلانات فقط. التواصل والدفع مباشر بينك وبين مقدم الخدمة.
             </p>
           </div>
         </section>

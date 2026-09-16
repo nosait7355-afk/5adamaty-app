@@ -49,7 +49,7 @@ export interface ProviderProfileDto {
   accountType: string;
   categoryId: string;
   professionId: string;
-  yearsOfExperience: number;
+  yearsOfExperience?: number;
   bio: string;
   coverageAreas: string[];
   /** حالة التوثيق — للقراءة فقط من جهة المزوّد. */
@@ -300,7 +300,9 @@ export async function getMyProviderProfile(userId: string): Promise<ProviderProf
     accountType: provider.accountType,
     categoryId: String(provider.categoryId),
     professionId: String(provider.professionId),
-    yearsOfExperience: provider.yearsOfExperience,
+    ...(provider.yearsOfExperience != null
+      ? { yearsOfExperience: provider.yearsOfExperience }
+      : {}),
     bio: provider.bio,
     coverageAreas: provider.coverageAreas ?? [],
     verification: {

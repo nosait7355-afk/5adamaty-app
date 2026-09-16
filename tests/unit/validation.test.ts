@@ -3,6 +3,7 @@ import { assertNoOperatorKeys, validateQuery } from '@/server/middleware/with-va
 import { checkRateLimit, resetRateLimitStore } from '@/server/middleware/with-rate-limit';
 import {
   egyptPhoneSchema,
+  emailSchema,
   passwordSchema,
   paginationSchema,
   textAddressSchema,
@@ -73,6 +74,24 @@ describe('egyptPhoneSchema', () => {
     expect(() => egyptPhoneSchema.parse('+12025551234')).toThrow();
     expect(() => egyptPhoneSchema.parse('02012345678')).toThrow();
     expect(() => egyptPhoneSchema.parse('123')).toThrow();
+  });
+});
+
+describe('emailSchema', () => {
+  it('يقبل أي بريد صحيح بامتداد حروف', () => {
+    for (const input of ['name@gmail.com', 'a.b+c@yahoo.com', 'user@company.com.eg', 'x@mail-server.org']) {
+      expect(emailSchema.safeParse(input).success, input).toBe(true);
+    }
+  });
+
+  it('يطبّع إلى أحرف صغيرة بلا مسافات', () => {
+    expect(emailSchema.parse('  Name@Gmail.COM ')).toBe('name@gmail.com');
+  });
+
+  it('يرفض مقاطع دومين رقمية بحتة وامتدادات غير حرفية', () => {
+    for (const input of ['name@gmail.37.com', 'name@37.com', 'name@gmail.c0m', 'name@gmail.1', 'gmail.37.com', 'name@gmail']) {
+      expect(emailSchema.safeParse(input).success, input).toBe(false);
+    }
   });
 });
 

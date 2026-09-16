@@ -29,7 +29,7 @@ export type AccountType = (typeof ACCOUNT_TYPES)[number];
 
 export const ACCOUNT_TYPE_LABELS_AR: Record<AccountType, string> = {
   INDIVIDUAL: 'شخصي',
-  COMPANY: 'شركة أو مؤسسة',
+  COMPANY: 'شركة',
 };
 
 export const GENDERS = ['MALE', 'FEMALE'] as const;
@@ -83,6 +83,21 @@ export type ProviderStep1Values = z.input<typeof providerStep1Schema>;
 /* الخطوة 2/3 — المهنة والخدمة (الصورة 20)                             */
 /* ================================================================== */
 
+/**
+ * سنوات الخبرة — اختيارية. الحقل الفارغ في النموذج يصل نصًّا فارغًا، و
+ * `z.coerce` كان سيحوّله إلى صفر فيُعرض «+0 سنوات خبرة»؛ لذلك نحوّله إلى
+ * `undefined` أولًا.
+ */
+const yearsOfExperienceSchema = z.preprocess(
+  (value) => (value === '' || value === null ? undefined : value),
+  z.coerce
+    .number({ message: 'أدخل رقمًا صحيحًا.' })
+    .int('أدخل رقمًا صحيحًا.')
+    .min(0, 'القيمة لا يمكن أن تكون سالبة.')
+    .max(70, 'القيمة أكبر من المسموح.')
+    .optional()
+);
+
 /** مناطق التغطية: اختيار متعدد من قائمة الفيوم الثابتة — لا خريطة ولا نطاق. */
 const coverageAreasSchema = z
   .array(
@@ -98,7 +113,7 @@ export const providerStep2Schema = z
   .object({
     categoryId: objectIdSchema,
     professionId: objectIdSchema,
-    yearsOfExperience: z.coerce.number().int().min(0).max(70),
+    yearsOfExperience: yearsOfExperienceSchema,
     /*
      * عدّاد 0/300 في الصورة 20. لا حدّ أدنى لعدد الحروف بقرار صريح: السقف
      * وحده محفوظ لأنه قيد تخزين وعرض، أما الطول الأدنى فكان يعرقل التسجيل
@@ -153,7 +168,7 @@ export const updateProviderProfileSchema = z
 
     categoryId: objectIdSchema.optional(),
     professionId: objectIdSchema.optional(),
-    yearsOfExperience: z.coerce.number().int().min(0).max(70).optional(),
+    yearsOfExperience: yearsOfExperienceSchema,
     bio: safeString(300).optional(),
     coverageAreas: coverageAreasSchema.optional(),
   })
