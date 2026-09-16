@@ -218,8 +218,8 @@ export async function createOrder(
 
   /*
    * لا سعر عند الإنشاء: التسعير أُزيل من المنصة، فالقيمة تُتفق عليها بين
-   * العميل والمزوّد خارج التطبيق. `agreedPrice` يُدخله المزوّد عند إكمال
-   * الطلب (`completeOrder`) وهو مصدر تقارير القيمة.
+   * العميل والمزوّد خارج التطبيق. `agreedPrice` يبقى في النموذج لأنه
+   * مصدر تقارير الإدارة، لكنه لا يُملأ من أي مصدر معلن.
    */
   const agreedPrice: number | undefined = undefined;
   let serviceType = input.serviceType;

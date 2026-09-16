@@ -316,7 +316,6 @@ export async function completeOrder(
           cashReceivedConfirmed: true,
           cashConfirmedAt: completedAt,
           completedAt,
-          ...(input.agreedPrice != null ? { agreedPrice: input.agreedPrice } : {}),
         },
       },
       session
@@ -342,11 +341,7 @@ export async function completeOrder(
       entityType: 'ServiceRequest',
       entityId: orderId,
       before: { status: order.status, cashReceivedConfirmed: false },
-      after: {
-        status: 'COMPLETED',
-        cashReceivedConfirmed: true,
-        ...(input.agreedPrice != null ? { agreedPrice: input.agreedPrice } : {}),
-      },
+      after: { status: 'COMPLETED', cashReceivedConfirmed: true },
       ...(meta.ip ? { ip: meta.ip } : {}),
       ...(meta.userAgent ? { userAgent: meta.userAgent } : {}),
     });

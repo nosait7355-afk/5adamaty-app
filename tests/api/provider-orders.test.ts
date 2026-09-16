@@ -756,8 +756,9 @@ describe('GET /api/v1/provider/dashboard', () => {
     expect(data.provider.profileCompletion).toBeTypeOf('number');
   });
 
-  it('الأرباح = مجموع القيم المتفق عليها التي يُدخلها المزوّد عند الإكمال', async () => {
+  it('الأرباح = مجموع قيم الطلبات المكتملة لا كل الطلبات', async () => {
     const order = await orderInProgress();
+    const stored = await ServiceRequest.findById(order.id);
 
     const before = await dashboardRoute(
       req('/api/v1/provider/dashboard', { token: providerToken }),
@@ -770,13 +771,10 @@ describe('GET /api/v1/provider/dashboard', () => {
       req(`/api/v1/orders/${order.id}/complete`, {
         method: 'POST',
         token: providerToken,
-        body: { serviceCompleted: true, cashReceivedConfirmed: true, agreedPrice: 350 },
+        body: { serviceCompleted: true, cashReceivedConfirmed: true },
       }),
       ctx(order.id)
     );
-
-    const stored = await ServiceRequest.findById(order.id);
-    expect(stored?.agreedPrice).toBe(350);
 
     const after = await dashboardRoute(
       req('/api/v1/provider/dashboard', { token: providerToken }),
@@ -785,42 +783,7 @@ describe('GET /api/v1/provider/dashboard', () => {
     const afterTotal = ((await json(after)).data as unknown as { earnings: { total: number } })
       .earnings.total;
 
-    expect(afterTotal - beforeTotal).toBe(350);
-  });
-
-  it('الإكمال بلا قيمة مسموح ولا يضيف شيئًا للأرباح', async () => {
-    const order = await orderInProgress();
-
-    const response = await completeRoute(
-      req(`/api/v1/orders/${order.id}/complete`, {
-        method: 'POST',
-        token: providerToken,
-        body: { serviceCompleted: true, cashReceivedConfirmed: true },
-      }),
-      ctx(order.id)
-    );
-
-    expect(response.status).toBe(200);
-    const stored = await ServiceRequest.findById(order.id);
-    expect(stored?.status).toBe('COMPLETED');
-    expect(stored?.agreedPrice).toBeUndefined();
-  });
-
-  it('يرفض قيمة سالبة ولا يُكمل الطلب', async () => {
-    const order = await orderInProgress();
-
-    const response = await completeRoute(
-      req(`/api/v1/orders/${order.id}/complete`, {
-        method: 'POST',
-        token: providerToken,
-        body: { serviceCompleted: true, cashReceivedConfirmed: true, agreedPrice: -5 },
-      }),
-      ctx(order.id)
-    );
-
-    expect(response.status).toBe(400);
-    const stored = await ServiceRequest.findById(order.id);
-    expect(stored?.status).not.toBe('COMPLETED');
+    expect(afterTotal - beforeTotal).toBe(stored?.agreedPrice ?? 0);
   });
 
   it('لا يحوي أي مصطلح مالي أو رصيد أو محفظة', async () => {

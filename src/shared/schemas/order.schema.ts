@@ -251,16 +251,6 @@ export const completeOrderSchema = z
     serviceCompleted: z.boolean().optional(),
     cashReceivedConfirmed: z.boolean().optional(),
     note: safeString(300).optional(),
-    /**
-     * القيمة التي اتفق عليها الطرفان ودُفعت نقدًا — يُدخلها المزوّد عند
-     * الإكمال لأن المنصة لم تعد تعرض أسعارًا يُشتق منها. اختيارية كي لا
-     * تعطّل الإكمال، لكنها المصدر الوحيد لتقارير القيمة.
-     */
-    agreedPrice: z.coerce
-      .number({ message: 'أدخل قيمة رقمية صحيحة.' })
-      .min(0, 'القيمة لا يمكن أن تكون سالبة.')
-      .max(1_000_000, 'القيمة أكبر من المسموح.')
-      .optional(),
   })
   .strict();
 
