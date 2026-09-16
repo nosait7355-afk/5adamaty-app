@@ -1,12 +1,11 @@
 'use client';
 
 import { useId } from 'react';
-import { Briefcase, MapPin, Plus, Trash2 } from 'lucide-react';
+import { Briefcase, MapPin } from 'lucide-react';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/common/states';
@@ -21,10 +20,6 @@ export interface ProfessionValues {
   yearsOfExperience: string;
   bio: string;
   coverageAreas: string[];
-  priceMode: string;
-  priceMin: string;
-  priceMax: string;
-  highlights: string[];
 }
 
 export const EMPTY_PROFESSION: ProfessionValues = {
@@ -33,10 +28,6 @@ export const EMPTY_PROFESSION: ProfessionValues = {
   yearsOfExperience: '',
   bio: '',
   coverageAreas: [],
-  priceMode: 'LATER',
-  priceMin: '',
-  priceMax: '',
-  highlights: [],
 };
 
 export interface ProfessionStepProps {
@@ -53,6 +44,9 @@ export interface ProfessionStepProps {
  *
  * مناطق التغطية اختيار متعدد من قائمة الفيوم الثابتة. لا نطاق كيلومترات
  * ولا خريطة (ARCHITECTURE §0.2).
+ *
+ * لا سعر هنا: التسعير أُزيل من المنصة بالكامل ويُتفق عليه بين العميل
+ * والمزوّد مباشرة خارج التطبيق.
  */
 export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps) {
   const ids = {
@@ -60,10 +54,6 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
     profession: useId(),
     years: useId(),
     bio: useId(),
-    priceMode: useId(),
-    priceMin: useId(),
-    priceMax: useId(),
-    highlight: useId(),
   };
 
   const categories = useCategories();
@@ -76,21 +66,6 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
         ? values.coverageAreas.filter((item) => item !== area)
         : [...values.coverageAreas, area],
     });
-  };
-
-  const addHighlight = () => {
-    if (values.highlights.length >= 6) return;
-    onChange({ highlights: [...values.highlights, ''] });
-  };
-
-  const updateHighlight = (index: number, text: string) => {
-    const next = [...values.highlights];
-    next[index] = text;
-    onChange({ highlights: next });
-  };
-
-  const removeHighlight = (index: number) => {
-    onChange({ highlights: values.highlights.filter((_, position) => position !== index) });
   };
 
   return (
@@ -160,10 +135,11 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
         />
       </Field>
 
+      {/* لا حدّ أدنى للطول — الحقل اختياري بالكامل */}
       <Field
         htmlFor={ids.bio}
         label="وصف الخدمة"
-        required
+        hint="اختياري"
         counter={{ current: values.bio.length, max: 300 }}
         error={errors.bio}
       >
@@ -211,85 +187,6 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
         </div>
       </Field>
 
-      {/* ---- السعر ---- */}
-      <Field htmlFor={ids.priceMode} label="سعر الخدمة" hint="اختياري">
-        <Select
-          id={ids.priceMode}
-          value={values.priceMode}
-          onChange={(event) => onChange({ priceMode: event.target.value })}
-          options={[
-            { value: 'LATER', label: 'تحديد السعر لاحقًا' },
-            { value: 'RANGE', label: 'سعر تقريبي من / إلى' },
-          ]}
-        />
-      </Field>
-
-      {values.priceMode === 'RANGE' && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field htmlFor={ids.priceMin} label="من (ج.م)" required error={errors.priceMin}>
-            <Input
-              id={ids.priceMin}
-              type="number"
-              min={0}
-              inputMode="numeric"
-              placeholder="150"
-              value={values.priceMin}
-              invalid={Boolean(errors.priceMin)}
-              onChange={(event) => onChange({ priceMin: event.target.value })}
-            />
-          </Field>
-
-          <Field htmlFor={ids.priceMax} label="إلى (ج.م)" required error={errors.priceMax}>
-            <Input
-              id={ids.priceMax}
-              type="number"
-              min={0}
-              inputMode="numeric"
-              placeholder="500"
-              value={values.priceMax}
-              invalid={Boolean(errors.priceMax)}
-              onChange={(event) => onChange({ priceMax: event.target.value })}
-            />
-          </Field>
-        </div>
-      )}
-
-      {/* ---- ما يميّز خدمتك ---- */}
-      <Field label="ما يميّز خدمتك" hint="اختياري — حتى 6 مزايا" error={errors.highlights}>
-        <div className="flex flex-col gap-2">
-          {values.highlights.map((highlight, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                id={`${ids.highlight}-${index}`}
-                aria-label={`الميزة ${index + 1}`}
-                maxLength={200}
-                placeholder="مثال: ضمان 6 شهور على العمل"
-                value={highlight}
-                onChange={(event) => updateHighlight(index, event.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => removeHighlight(index)}
-                aria-label={`حذف الميزة ${index + 1}`}
-                className="flex size-11 shrink-0 items-center justify-center rounded-field border border-border text-danger transition-colors hover:bg-danger-bg"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          ))}
-
-          {values.highlights.length < 6 && (
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={addHighlight}
-              iconStart={<Plus size={18} />}
-            >
-              أضف ميزة
-            </Button>
-          )}
-        </div>
-      </Field>
     </div>
   );
 }

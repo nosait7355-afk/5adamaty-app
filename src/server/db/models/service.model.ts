@@ -8,10 +8,6 @@ export interface ServiceDocument {
   professionId: Types.ObjectId;
   title: string;
   description: string;
-  /** «بيدأ من 150 ج.م» في الصورة 09 — سعر للعرض فقط، لا تحصيل داخل التطبيق. */
-  priceFrom: number;
-  priceTo?: number;
-  currency: 'EGP';
   images: MediaRef[];
   areas: string[];
   isActive: boolean;
@@ -30,10 +26,6 @@ const serviceSchema = new Schema<ServiceDocument>(
 
     title: { type: String, required: true, trim: true, minlength: 3, maxlength: 120 },
     description: { type: String, required: true, trim: true, maxlength: 500 },
-
-    priceFrom: { type: Number, required: true, min: 0, max: 1_000_000 },
-    priceTo: { type: Number, min: 0, max: 1_000_000 },
-    currency: { type: String, enum: ['EGP'], default: 'EGP' },
 
     images: {
       type: [mediaRefSchema],
@@ -60,15 +52,8 @@ const serviceSchema = new Schema<ServiceDocument>(
 serviceSchema.index({ isActive: 1, providerId: 1 });
 serviceSchema.index({ isActive: 1, categoryId: 1, professionId: 1, ratingAvg: -1 });
 serviceSchema.index({ isActive: 1, ratingAvg: -1, ratingCount: -1 });
-serviceSchema.index({ isActive: 1, priceFrom: 1 });
 serviceSchema.index({ isActive: 1, areas: 1, ratingAvg: -1 });
 serviceSchema.index({ isActive: 1, createdAt: -1 });
 serviceSchema.index({ title: 'text', description: 'text' }, { default_language: 'none' });
-
-serviceSchema.pre('validate', async function validatePrice() {
-  if (this.priceTo != null && this.priceTo < this.priceFrom) {
-    throw new Error('السعر الأقصى يجب ألا يقل عن السعر الأدنى.');
-  }
-});
 
 export const Service = defineModel<ServiceDocument>('Service', serviceSchema);

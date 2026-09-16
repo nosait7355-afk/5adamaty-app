@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { ChevronDown, MapPin, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { formatPrice } from '@/lib/format';
 import { FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
 import { SORT_LABELS_AR, SORT_OPTIONS, type SortOption } from '@/shared/schemas/catalog.schema';
 import type { DiscoveryFilterState } from '@/lib/queries/discovery';
@@ -11,7 +10,9 @@ import type { DiscoveryFilterState } from '@/lib/queries/discovery';
 /**
  * شريط الفلاتر — الصورة 09.
  *
- * `📍 كل المناطق` · `السعر ⌄` · `التقييم ⌄` · `الترتيب ⌄` + زر `تصفية`.
+ * `📍 كل المناطق` · `التقييم ⌄` · `الترتيب ⌄` + زر `تصفية`.
+ *
+ * قرص السعر أُزيل مع إزالة التسعير من المنصة.
  *
  * كل قرص يفتح لوحة خيارات **تحت** الشريط بدل قائمة منسدلة عائمة: على شاشة
  * 375px تخرج القائمة العائمة عن حدود الشاشة في RTL، واللوحة السفلية تتصرّف
@@ -21,21 +22,7 @@ import type { DiscoveryFilterState } from '@/lib/queries/discovery';
  * الثابتة (ARCHITECTURE §0.2).
  */
 
-type PanelKey = 'area' | 'price' | 'rating' | 'sort' | null;
-
-interface PriceBand {
-  label: string;
-  min?: number;
-  max?: number;
-}
-
-const PRICE_BANDS: PriceBand[] = [
-  { label: 'كل الأسعار' },
-  { label: `أقل من ${formatPrice(200)}`, max: 200 },
-  { label: `${formatPrice(200)} - ${formatPrice(500)}`, min: 200, max: 500 },
-  { label: `${formatPrice(500)} - ${formatPrice(1000)}`, min: 500, max: 1000 },
-  { label: `أكثر من ${formatPrice(1000)}`, min: 1000 },
-];
+type PanelKey = 'area' | 'rating' | 'sort' | null;
 
 const RATING_BANDS: { label: string; value?: number }[] = [
   { label: 'كل التقييمات' },
@@ -61,31 +48,14 @@ export function FilterBar({ value, onChange, className }: FilterBarProps) {
     setPanel(null);
   };
 
-  /*
-   * القرص غير المنتقى يقرأ «السعر» كما في الصورة 09. البحث عن النطاق
-   * المطابق مشروط بوجود فلتر فعلي — وإلا طابق النطاق الأول («كل الأسعار»)
-   * لأن حدّيه `undefined` مثل الحالة الفارغة تمامًا.
-   */
-  const hasPriceFilter = value.priceMin != null || value.priceMax != null;
-  const activePriceLabel = hasPriceFilter
-    ? (PRICE_BANDS.find((band) => band.min === value.priceMin && band.max === value.priceMax)
-        ?.label ?? 'السعر')
-    : 'السعر';
-
   const activeRatingLabel =
     value.minRating != null ? `${value.minRating} فأعلى` : 'التقييم';
 
-  const activeCount = [
-    value.area,
-    value.priceMin ?? value.priceMax,
-    value.minRating,
-  ].filter((entry) => entry != null).length;
+  const activeCount = [value.area, value.minRating].filter((entry) => entry != null).length;
 
   const reset = () =>
     patch({
       area: undefined,
-      priceMin: undefined,
-      priceMax: undefined,
       minRating: undefined,
       sort: 'rating',
     });
@@ -99,12 +69,6 @@ export function FilterBar({ value, onChange, className }: FilterBarProps) {
           selected={Boolean(value.area)}
           expanded={panel === 'area'}
           onClick={() => togglePanel('area')}
-        />
-        <FilterChip
-          label={activePriceLabel}
-          selected={hasPriceFilter}
-          expanded={panel === 'price'}
-          onClick={() => togglePanel('price')}
         />
         <FilterChip
           label={activeRatingLabel}
@@ -156,19 +120,6 @@ export function FilterBar({ value, onChange, className }: FilterBarProps) {
                 ))}
               </div>
             </div>
-          ))}
-        </OptionPanel>
-      )}
-
-      {panel === 'price' && (
-        <OptionPanel title="السعر المبدئي">
-          {PRICE_BANDS.map((band) => (
-            <OptionButton
-              key={band.label}
-              label={band.label}
-              selected={band.min === value.priceMin && band.max === value.priceMax}
-              onClick={() => patch({ priceMin: band.min, priceMax: band.max })}
-            />
           ))}
         </OptionPanel>
       )}

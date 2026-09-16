@@ -51,12 +51,7 @@ export interface ProviderProfileDto {
   professionId: string;
   yearsOfExperience: number;
   bio: string;
-  highlights: string[];
   coverageAreas: string[];
-  priceMode: string;
-  priceMin?: number;
-  priceMax?: number;
-  currency: string;
   /** حالة التوثيق — للقراءة فقط من جهة المزوّد. */
   verification: {
     status: VerificationStatus;
@@ -100,8 +95,6 @@ export interface AdminProviderListItemDto {
 export interface CompletionInput {
   bio?: string | undefined;
   coverageAreas?: string[] | undefined;
-  highlights?: string[] | undefined;
-  priceMode?: string | undefined;
   yearsOfExperience?: number | undefined;
   galleryCount: number;
   email?: string | undefined;
@@ -122,10 +115,13 @@ export function computeProfileCompletion(input: CompletionInput): number {
     { weight: 10, done: Boolean(input.email) },
     { weight: 10, done: Boolean(input.addressLine) },
     { weight: 10, done: (input.yearsOfExperience ?? 0) >= 0 && input.yearsOfExperience != null },
-    { weight: 15, done: (input.bio?.length ?? 0) >= 20 },
-    { weight: 15, done: (input.coverageAreas?.length ?? 0) > 0 },
-    { weight: 5, done: (input.highlights?.length ?? 0) > 0 },
-    { weight: 5, done: input.priceMode === 'RANGE' },
+    /*
+     * الوصف لم يعد له حدّ أدنى في التحقق، فشرط الاكتمال صار «مكتوب أصلًا».
+     * الوزنان المحرَّران من «ما يميّز خدمتك» والسعر (10 نقاط) أُضيفا إلى
+     * الوصف ومناطق التغطية كي يبقى السقف 100.
+     */
+    { weight: 20, done: (input.bio?.length ?? 0) > 0 },
+    { weight: 20, done: (input.coverageAreas?.length ?? 0) > 0 },
     { weight: 10, done: input.galleryCount > 0 },
     {
       weight: 20,
@@ -234,12 +230,7 @@ export async function registerProvider(
       professionId: profession._id,
       yearsOfExperience: step2.yearsOfExperience,
       bio: step2.bio,
-      highlights: step2.highlights,
       coverageAreas: step2.coverageAreas,
-      priceMode: step2.priceMode,
-      ...(step2.priceMode === 'RANGE'
-        ? { priceMin: step2.priceMin, priceMax: step2.priceMax }
-        : {}),
       isActive: false,
       isVerifiedBadge: false,
       profileCompletion: 0,
@@ -283,8 +274,6 @@ async function refreshProfileCompletion(
   const completion = computeProfileCompletion({
     bio: provider.bio,
     coverageAreas: provider.coverageAreas,
-    highlights: provider.highlights,
-    priceMode: provider.priceMode,
     yearsOfExperience: provider.yearsOfExperience,
     galleryCount: provider.gallery?.length ?? 0,
     email: user.email,
@@ -313,12 +302,7 @@ export async function getMyProviderProfile(userId: string): Promise<ProviderProf
     professionId: String(provider.professionId),
     yearsOfExperience: provider.yearsOfExperience,
     bio: provider.bio,
-    highlights: provider.highlights ?? [],
     coverageAreas: provider.coverageAreas ?? [],
-    priceMode: provider.priceMode,
-    ...(provider.priceMin != null ? { priceMin: provider.priceMin } : {}),
-    ...(provider.priceMax != null ? { priceMax: provider.priceMax } : {}),
-    currency: provider.currency,
     verification: {
       status: provider.verification.status,
       statusLabel: VERIFICATION_LABELS_AR[provider.verification.status],
@@ -390,21 +374,6 @@ export async function updateMyProviderProfile(
   }
   if (patch.bio !== undefined) providerPatch.bio = patch.bio;
   if (patch.coverageAreas !== undefined) providerPatch.coverageAreas = patch.coverageAreas;
-  if (patch.highlights !== undefined) providerPatch.highlights = patch.highlights;
-
-  if (patch.priceMode !== undefined) {
-    providerPatch.priceMode = patch.priceMode;
-    if (patch.priceMode === 'RANGE') {
-      if (patch.priceMin == null || patch.priceMax == null) {
-        throw unprocessable('حدّد السعر من وإلى عند اختيار سعر تقريبي.');
-      }
-      providerPatch.priceMin = patch.priceMin;
-      providerPatch.priceMax = patch.priceMax;
-    } else {
-      providerPatch.priceMin = undefined;
-      providerPatch.priceMax = undefined;
-    }
-  }
 
   /*
    * تغيير المهنة يغيّر قائمة المستندات المطلوبة كليًا (سبّاك ← طبيب)،
@@ -430,7 +399,7 @@ export async function updateMyProviderProfile(
 }
 
 /* ================================================================== */
-/* إرسال الطلب — الخطوة 4/4                                            */
+/* إرسال الطلب — الخطوة 3/3                                            */
 /* ================================================================== */
 
 export async function submitVerification(
@@ -460,19 +429,35 @@ export async function submitVerification(
     );
   }
 
+  /*
+   * تفعيل تلقائي بقرار منتج صريح: لم تعد هناك مراجعة مسبقة، فالإرسال
+   * الناجح يعتمد الحساب فورًا ويجعله ظاهرًا للعملاء وقادرًا على استقبال
+   * الطلبات. الرقابة صارت **بعدية**: الإدارة تحتفظ بكامل صلاحيات التعليق
+   * والرفض وإلغاء التفعيل عبر `decideVerification` و`setProviderActive`.
+   *
+   * الشرط الوحيد الباقي هو اكتمال المستندات الإلزامية أعلاه — وهي الآن
+   * الهوية وحدها.
+   */
+  const now = new Date();
+
   await updateProvider(String(provider._id), {
-    'verification.status': 'PENDING_REVIEW',
-    'verification.submittedAt': new Date(),
+    'verification.status': 'APPROVED',
+    'verification.submittedAt': now,
+    'verification.reviewedAt': now,
     'verification.rejectionReason': undefined,
+    isActive: true,
+    isVerifiedBadge: true,
   });
+
+  await updateUser(userId, { status: 'ACTIVE' });
 
   await writeAuditLog({
     actorId: userId,
     action: 'PROVIDER_VERIFICATION_CHANGED',
     entityType: 'ServiceProvider',
     entityId: String(provider._id),
-    before: { status: provider.verification.status },
-    after: { status: 'PENDING_REVIEW' },
+    before: { status: provider.verification.status, isActive: provider.isActive },
+    after: { status: 'APPROVED', isActive: true, auto: true },
     ...(meta.ip ? { ip: meta.ip } : {}),
     ...(meta.userAgent ? { userAgent: meta.userAgent } : {}),
   });
@@ -480,14 +465,14 @@ export async function submitVerification(
   await createNotification({
     userId,
     type: 'PROVIDER_REGISTRATION_SUBMITTED',
-    title: 'تم إرسال طلب التسجيل',
-    body: `طلبك رقم ${provider.verification.requestNumber} قيد المراجعة. سنخطرك بالنتيجة خلال 24–48 ساعة عمل.`,
+    title: 'تم تفعيل حسابك',
+    body: `اكتمل تسجيلك رقم ${provider.verification.requestNumber}. حسابك نشط الآن ويمكنك استقبال الطلبات.`,
     entityType: 'PROVIDER',
     entityId: String(provider._id),
-    actionUrl: '/provider/pending-review',
+    actionUrl: '/provider/dashboard',
   });
 
-  logger.info('أُرسل طلب توثيق مقدم خدمة', {
+  logger.info('فُعّل حساب مقدم خدمة تلقائيًا', {
     providerId: String(provider._id),
     requestNumber: provider.verification.requestNumber,
   });
@@ -575,12 +560,8 @@ export async function getProviderForAdmin(providerId: string) {
     displayName: provider.displayName,
     accountType: provider.accountType,
     bio: provider.bio,
-    highlights: provider.highlights ?? [],
     coverageAreas: provider.coverageAreas ?? [],
     yearsOfExperience: provider.yearsOfExperience,
-    priceMode: provider.priceMode,
-    ...(provider.priceMin != null ? { priceMin: provider.priceMin } : {}),
-    ...(provider.priceMax != null ? { priceMax: provider.priceMax } : {}),
     professionName: profession?.name ?? '',
     verification: {
       status: provider.verification.status,

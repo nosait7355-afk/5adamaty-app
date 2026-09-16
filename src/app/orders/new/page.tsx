@@ -31,8 +31,6 @@ import { useCreateOrder } from '@/lib/queries/orders';
 import {
   formatDate,
   formatOrderNumber,
-  formatPrice,
-  formatPriceRange,
   formatTimeRange,
 } from '@/lib/format';
 import { createOrderSchema } from '@/shared/schemas/order.schema';
@@ -192,11 +190,6 @@ function NewOrderWizard() {
     );
   }
 
-  const priceLabel =
-    provider.data?.priceMode === 'RANGE' && provider.data.priceMin != null
-      ? formatPriceRange(provider.data.priceMin, provider.data.priceMax)
-      : 'يُحدَّد بعد الاتفاق';
-
   return (
     <>
       <BackHeader />
@@ -226,10 +219,6 @@ function NewOrderWizard() {
                 {provider.data.displayName}
               </h2>
               <p className="text-meta text-ink-400">{provider.data.professionName}</p>
-            </div>
-            <div className="text-end">
-              <p className="text-badge text-ink-400">السعر المبدئي</p>
-              <p className="num text-label font-extrabold text-brand-600">{priceLabel}</p>
             </div>
           </Card>
         ) : null}
@@ -339,7 +328,7 @@ function NewOrderWizard() {
               {values.landmark && <SummaryRow label="أقرب معلم" value={values.landmark} />}
               <SummaryRow label="التاريخ" value={formatDate(values.scheduledDate)} numeric />
               {values.notes && <SummaryRow label="ملاحظات" value={values.notes} />}
-              <SummaryRow label="قيمة الخدمة المبدئية" value={priceLabel} numeric />
+              <SummaryRow label="قيمة الخدمة المبدئية" value="يُحدَّد بعد الاتفاق" />
             </Card>
 
             <Button variant="ghost" size="sm" className="w-fit" onClick={() => setStep(1)}>
@@ -463,13 +452,7 @@ function NewOrderWizard() {
                     : 'أي وقت'
                 }
               />
-              <SummaryRow
-                label="قيمة الخدمة"
-                numeric
-                value={
-                  provider.data?.priceMin != null ? formatPrice(provider.data.priceMin) : priceLabel
-                }
-              />
+              <SummaryRow label="قيمة الخدمة" value="يُحدَّد بعد الاتفاق" />
               <SummaryRow label="طريقة الدفع" value="كاش عند تنفيذ الخدمة" />
             </Card>
 

@@ -21,13 +21,8 @@ export interface ServiceProviderDocument {
   professionId: Types.ObjectId;
   yearsOfExperience: number;
   bio: string;
-  highlights: string[];
   /** مناطق التغطية — أسماء نصية من قائمة الفيوم الثابتة، لا إحداثيات. */
   coverageAreas: string[];
-  priceMode: 'RANGE' | 'LATER';
-  priceMin?: number;
-  priceMax?: number;
-  currency: 'EGP';
   gallery: MediaRef[];
   verification: ProviderVerification;
   isVerifiedBadge: boolean;
@@ -65,17 +60,8 @@ const serviceProviderSchema = new Schema<ServiceProviderDocument>(
     professionId: { type: Schema.Types.ObjectId, ref: 'Profession', required: true },
     yearsOfExperience: { type: Number, required: true, min: 0, max: 70 },
 
-    // 0/300 — عدّاد الصورة 20
-    bio: { type: String, required: true, trim: true, maxlength: 300 },
-    // 0/200 — «ما يميّز خدمتك» في الصورة 20
-    highlights: {
-      type: [String],
-      default: [],
-      validate: {
-        validator: (list: string[]) => list.length <= 6 && list.every((h) => h.length <= 200),
-        message: 'الحد الأقصى 6 مزايا، كل منها 200 حرف.',
-      },
-    },
+    // سقف 300 حرف بلا حدّ أدنى — انظر `providerStep2Schema`
+    bio: { type: String, default: '', trim: true, maxlength: 300 },
 
     coverageAreas: {
       type: [String],
@@ -85,12 +71,6 @@ const serviceProviderSchema = new Schema<ServiceProviderDocument>(
         message: 'اختر منطقة تغطية واحدة على الأقل (بحد أقصى 20).',
       },
     },
-
-    priceMode: { type: String, enum: ['RANGE', 'LATER'], default: 'LATER' },
-    priceMin: { type: Number, min: 0 },
-    priceMax: { type: Number, min: 0 },
-    // العملة ثابتة — لا معاملات مالية ولا تحويل عملات (ARCHITECTURE §0.1)
-    currency: { type: String, enum: ['EGP'], default: 'EGP' },
 
     gallery: {
       type: [mediaRefSchema],
@@ -140,25 +120,10 @@ serviceProviderSchema.index({
 });
 // الفلترة بالمنطقة النصية (فهرس متعدد المفاتيح على مصفوفة نصية — لا جغرافي)
 serviceProviderSchema.index({ isActive: 1, 'verification.status': 1, coverageAreas: 1, ratingAvg: -1 });
-// الترتيب بالسعر
-serviceProviderSchema.index({ isActive: 1, 'verification.status': 1, priceMin: 1 });
-serviceProviderSchema.index({ isActive: 1, 'verification.status': 1, priceMax: -1 });
 // الترتيب بالأحدث
 serviceProviderSchema.index({ isActive: 1, 'verification.status': 1, createdAt: -1 });
 
 serviceProviderSchema.index({ displayName: 'text', bio: 'text' }, { default_language: 'none' });
-
-/** نطاق السعر يجب أن يكون منطقيًا عند اختيار RANGE. */
-serviceProviderSchema.pre('validate', async function validatePriceRange() {
-  if (this.priceMode === 'RANGE') {
-    if (this.priceMin == null || this.priceMax == null) {
-      throw new Error('يجب تحديد الحد الأدنى والأقصى عند اختيار سعر تقريبي.');
-    }
-    if (this.priceMin > this.priceMax) {
-      throw new Error('الحد الأدنى للسعر يجب ألا يتجاوز الحد الأقصى.');
-    }
-  }
-});
 
 export const ServiceProvider = defineModel<ServiceProviderDocument>(
   'ServiceProvider',

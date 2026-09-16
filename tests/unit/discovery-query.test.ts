@@ -8,7 +8,11 @@ import {
   escapeRegex,
   PUBLIC_PROVIDER_MATCH,
 } from '@/server/repositories/discovery.repository';
-import { discoveryQuerySchema, searchQuerySchema } from '@/shared/schemas/catalog.schema';
+import {
+  discoveryQuerySchema,
+  searchQuerySchema,
+  SORT_OPTIONS,
+} from '@/shared/schemas/catalog.schema';
 
 /**
  * اختبارات وحدة لبناء الاستعلام — بلا قاعدة بيانات.
@@ -29,8 +33,6 @@ describe('buildProviderMatch', () => {
       professionId: OID_2,
       area: 'حي الجامعة',
       minRating: 4.5,
-      priceMin: 100,
-      priceMax: 500,
       q: 'سباك',
     });
 
@@ -49,13 +51,6 @@ describe('buildProviderMatch', () => {
     const match = buildProviderMatch({ area: 'دار الرماد' });
     expect(match.coverageAreas).toBe('دار الرماد');
     expect(JSON.stringify(match)).not.toMatch(/lat|lng|coordinates|radius|geo/i);
-  });
-
-  it('نطاق السعر يُترجم إلى تقاطع بين النطاقين', () => {
-    const match = buildProviderMatch({ priceMin: 200, priceMax: 800 });
-    // نطاق المزوّد يجب أن يتقاطع مع [200, 800]
-    expect(match.priceMax).toEqual({ $gte: 200 });
-    expect(match.priceMin).toEqual({ $lte: 800 });
   });
 
   it('يضيف البحث النصي عند وجود q فقط', () => {
@@ -77,15 +72,6 @@ describe('buildServiceMatch', () => {
     expect(buildServiceMatch({})).toEqual({ isActive: true });
   });
 
-  it('يدمج حدّي السعر في مُعامل واحد على priceFrom', () => {
-    expect(buildServiceMatch({ priceMin: 100, priceMax: 300 }).priceFrom).toEqual({
-      $gte: 100,
-      $lte: 300,
-    });
-    expect(buildServiceMatch({ priceMin: 100 }).priceFrom).toEqual({ $gte: 100 });
-    expect(buildServiceMatch({ priceMax: 300 }).priceFrom).toEqual({ $lte: 300 });
-  });
-
   it('يفلتر بمزوّد بعينه — يغذّي تبويب «الخدمات» في الصورة 10', () => {
     const match = buildServiceMatch({ providerId: OID });
     expect(String(match.providerId)).toBe(OID);
@@ -94,15 +80,14 @@ describe('buildServiceMatch', () => {
 
 describe('buildSort', () => {
   it('كل ترتيب ينتهي بفاصل تعادل _id لثبات الصفحات', () => {
-    for (const sort of ['rating', 'price_asc', 'price_desc', 'newest'] as const) {
+    for (const sort of ['rating', 'newest'] as const) {
       expect(buildSort(sort, 'provider')._id).toBe(-1);
       expect(buildSort(sort, 'service')._id).toBe(-1);
     }
   });
 
-  it('يستخدم مفتاح السعر الصحيح لكل نوع', () => {
-    expect(buildSort('price_asc', 'provider')).toEqual({ priceMin: 1, _id: -1 });
-    expect(buildSort('price_asc', 'service')).toEqual({ priceFrom: 1, _id: -1 });
+  it('لم يعد هناك ترتيب بالسعر — الخيارات المتاحة تقييم وأحدث فقط', () => {
+    expect(SORT_OPTIONS).toEqual(['rating', 'newest']);
   });
 
   it('الأعلى تقييمًا يفكّ التعادل بعدد التقييمات', () => {

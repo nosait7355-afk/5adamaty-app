@@ -194,28 +194,24 @@ describe('GET /api/v1/providers', () => {
     expect([...ratings].sort((a, b) => b - a)).toEqual(ratings);
   });
 
-  it('يرتّب بالأقل سعرًا', async () => {
-    const response = await getProviders(
-      req('/api/v1/providers?sort=price_asc&limit=50'),
-      undefined
-    );
-    const items = (await json(response)).data as { priceMin: number }[];
-    const prices = items.map((p) => p.priceMin);
-    expect([...prices].sort((a, b) => a - b)).toEqual(prices);
-  });
-
   it('يرفض ترتيبًا غير معروف', async () => {
     const response = await getProviders(req('/api/v1/providers?sort=cheapest'), undefined);
     expect(response.status).toBe(400);
   });
 
-  it('يرفض حدًا أدنى للسعر أكبر من الأقصى', async () => {
+  it('يرفض الترتيب بالسعر — لم يعد خيارًا', async () => {
+    for (const sort of ['price_asc', 'price_desc']) {
+      const response = await getProviders(req(`/api/v1/providers?sort=${sort}`), undefined);
+      expect(response.status, sort).toBe(400);
+    }
+  });
+
+  it('يرفض أي فلتر سعر — لم يعد مفتاحًا معروفًا', async () => {
     const response = await getProviders(
-      req('/api/v1/providers?priceMin=500&priceMax=100'),
+      req('/api/v1/providers?priceMin=100&priceMax=500'),
       undefined
     );
     expect(response.status).toBe(400);
-    expect((await json(response)).error?.fields?.priceMin).toBeTruthy();
   });
 
   it('الصفحات لا تتداخل ولا تُسقط عنصرًا', async () => {
@@ -255,8 +251,10 @@ describe('GET /api/v1/providers/:id', () => {
     expect(provider.servicesCount).toBe(2);
     expect(provider).toHaveProperty('customersCount');
     expect(provider).toHaveProperty('memberSince');
-    expect(Array.isArray(provider.highlights)).toBe(true);
     expect(Array.isArray(provider.gallery)).toBe(true);
+    // التسعير أُزيل من المنصة — لا مفتاح سعر في أي استجابة
+    expect(provider).not.toHaveProperty('priceMode');
+    expect(provider).not.toHaveProperty('priceMin');
   });
 
   it('مزوّد قيد المراجعة يعيد 404 لا 403', async () => {
@@ -338,9 +336,9 @@ describe('GET /api/v1/services', () => {
     expect(service).toMatchObject({
       title: expect.any(String),
       description: expect.any(String),
-      priceFrom: expect.any(Number),
-      currency: 'EGP',
     });
+    expect(service).not.toHaveProperty('priceFrom');
+    expect(service).not.toHaveProperty('currency');
     expect(service?.categoryName).toBeTruthy();
     expect((service?.provider as { displayName: string }).displayName).toBeTruthy();
     expect((service?.provider as { yearsOfExperience: number }).yearsOfExperience).toBeTypeOf(
@@ -360,20 +358,10 @@ describe('GET /api/v1/services', () => {
     ).toBe(true);
   });
 
-  it('يفلتر بنطاق السعر', async () => {
-    const response = await getServices(
-      req('/api/v1/services?priceMin=100&priceMax=200&limit=50'),
-      undefined
-    );
-    const items = (await json(response)).data as { priceFrom: number }[];
-    expect(items.length).toBeGreaterThan(0);
-    expect(items.every((s) => s.priceFrom >= 100 && s.priceFrom <= 200)).toBe(true);
-  });
-
   it('يجمع كل الفلاتر مع الترتيب في استعلام واحد', async () => {
     const response = await getServices(
       req(
-        `/api/v1/services?categoryId=${homeCategoryId}&area=${encodeURIComponent('حي الجامعة')}&minRating=4.5&priceMax=1000&sort=price_asc&limit=50`
+        `/api/v1/services?categoryId=${homeCategoryId}&area=${encodeURIComponent('حي الجامعة')}&minRating=4.5&sort=newest&limit=50`
       ),
       undefined
     );
@@ -381,15 +369,11 @@ describe('GET /api/v1/services', () => {
       categoryId: string;
       areas: string[];
       ratingAvg: number;
-      priceFrom: number;
     }[];
 
     expect(items.every((s) => s.categoryId === homeCategoryId)).toBe(true);
     expect(items.every((s) => s.areas.includes('حي الجامعة'))).toBe(true);
     expect(items.every((s) => s.ratingAvg >= 4.5)).toBe(true);
-    expect(items.every((s) => s.priceFrom <= 1000)).toBe(true);
-    const prices = items.map((s) => s.priceFrom);
-    expect([...prices].sort((a, b) => a - b)).toEqual(prices);
   });
 
   it('لا يسرّب حقول اتصال', async () => {

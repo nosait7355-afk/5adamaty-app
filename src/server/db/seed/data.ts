@@ -153,8 +153,6 @@ export interface SeedProvider {
   years: number;
   bio: string;
   areas: string[];
-  priceMin: number;
-  priceMax: number;
   ratingAvg: number;
   ratingCount: number;
   completedOrders: number;
@@ -163,30 +161,30 @@ export interface SeedProvider {
 
 /** مقدمو خدمات — أسماء من الصور 06 و09 و10. */
 export const SEED_PROVIDERS: SeedProvider[] = [
-  { displayName: 'شركة النقاء للتنظيف', professionSlug: 'cleaner', years: 10, bio: 'نوفر خدمات تنظيف احترافية بأعلى معايير الجودة وباستخدام مواد آمنة وفعّالة.', areas: ['الحوّاتم', 'حي الجامعة'], priceMin: 150, priceMax: 500, ratingAvg: 4.8, ratingCount: 128, completedOrders: 540, approved: true },
-  { displayName: 'صيانة الأجهزة المنزلية', professionSlug: 'appliance-technician', years: 7, bio: 'صيانة غسالات وثلاجات وتكييفات وأفران بضمان على الخدمة.', areas: ['شارع البحر', 'حي النصر'], priceMin: 200, priceMax: 600, ratingAvg: 4.7, ratingCount: 96, completedOrders: 310, approved: true },
-  { displayName: 'مكافحة الحشرات والنمل الأبيض', professionSlug: 'pest-control', years: 5, bio: 'رش حشرات ونمل أبيض وفئران بمواد مصرّح بها وآمنة على الأسرة.', areas: ['دار الرماد'], priceMin: 180, priceMax: 450, ratingAvg: 4.9, ratingCount: 74, completedOrders: 220, approved: true },
-  { displayName: 'نجار وديكورات', professionSlug: 'carpenter', years: 8, bio: 'تركيب أبواب ومطابخ وغرف نوم وديكورات خشبية بجودة عالية.', areas: ['حي الجامعة', 'الحوامي'], priceMin: 250, priceMax: 900, ratingAvg: 4.6, ratingCount: 58, completedOrders: 180, approved: true },
-  { displayName: 'كهربائي الفيوم', professionSlug: 'electrician', years: 12, bio: 'كهربائي تمديدات ولوحات كهرباء وصيانة أعطال بسرعة واحترافية.', areas: ['حي السلام', 'حي الترعة'], priceMin: 120, priceMax: 400, ratingAvg: 4.8, ratingCount: 62, completedOrders: 275, approved: true },
-  { displayName: 'أبو خالد للسباكة', professionSlug: 'plumber', years: 15, bio: 'سبّاك صحي وكشف تسربات وتركيب سخانات وأدوات صحية.', areas: ['دار الرماد', 'حي النصر'], priceMin: 120, priceMax: 380, ratingAvg: 4.7, ratingCount: 75, completedOrders: 410, approved: true },
-  { displayName: 'د. أحمد محمد', professionSlug: 'doctor', years: 14, bio: 'استشاري باطنة — كشف وزيارات منزلية ومتابعة الأمراض المزمنة.', areas: ['الحوّاتم', 'حي الجامعة'], priceMin: 200, priceMax: 400, ratingAvg: 4.9, ratingCount: 128, completedOrders: 620, approved: true },
-  { displayName: 'أ/ محمد رضوان', professionSlug: 'lawyer', years: 18, bio: 'محامٍ بالنقض — قضايا مدنية وتجارية وأحوال شخصية واستشارات.', areas: ['شارع البحر'], priceMin: 250, priceMax: 1500, ratingAvg: 4.8, ratingCount: 96, completedOrders: 240, approved: true },
-  { displayName: 'أبو محمد للصيانة والتكييف', professionSlug: 'ac-technician', years: 9, bio: 'تركيب وصيانة وتنظيف التكييفات بجميع أنواعها.', areas: ['دار الرماد'], priceMin: 250, priceMax: 700, ratingAvg: 4.7, ratingCount: 96, completedOrders: 330, approved: true },
-  { displayName: 'المحامي أحمد صلاح', professionSlug: 'lawyer', years: 11, bio: 'استشارات قانونية وصياغة عقود وتوثيق.', areas: ['حي الجامعة'], priceMin: 250, priceMax: 1200, ratingAvg: 5, ratingCount: 57, completedOrders: 150, approved: true },
-  { displayName: 'السبّاك المتخصص', professionSlug: 'plumber', years: 6, bio: 'إصلاح تسريبات وتركيب فلاتر ومواسير.', areas: ['حي الترعة'], priceMin: 100, priceMax: 300, ratingAvg: 4.6, ratingCount: 72, completedOrders: 190, approved: true },
-  { displayName: 'دهانات وديكور الفيوم', professionSlug: 'painter', years: 10, bio: 'دهانات داخلية وخارجية وورق حائط وديكورات جبس.', areas: ['الحوامي', 'حي السلام'], priceMin: 300, priceMax: 1200, ratingAvg: 4.7, ratingCount: 76, completedOrders: 210, approved: true },
-  { displayName: 'نقل عفش الأمانة', professionSlug: 'moving', years: 8, bio: 'نقل عفش وفك وتركيب بعمالة مدرّبة وسيارات مغلقة.', areas: ['حي الجامعة', 'الحوّاتم', 'دار الرماد'], priceMin: 400, priceMax: 2000, ratingAvg: 4.5, ratingCount: 44, completedOrders: 120, approved: true },
-  { displayName: 'مركز الفيوم للكمبيوتر', professionSlug: 'computer-technician', years: 7, bio: 'صيانة أجهزة وشبكات وتركيب أنظمة تشغيل.', areas: ['شارع البحر'], priceMin: 150, priceMax: 600, ratingAvg: 4.4, ratingCount: 38, completedOrders: 95, approved: true },
-  { displayName: 'صيدلية د. منى', professionSlug: 'pharmacist', years: 9, bio: 'استشارات دوائية وتوصيل أدوية.', areas: ['حي النصر'], priceMin: 50, priceMax: 200, ratingAvg: 4.8, ratingCount: 51, completedOrders: 300, approved: true },
-  { displayName: 'مركز العلاج الطبيعي', professionSlug: 'physiotherapist', years: 6, bio: 'جلسات علاج طبيعي منزلية وتأهيل بعد الإصابات.', areas: ['حي الجامعة'], priceMin: 200, priceMax: 500, ratingAvg: 4.9, ratingCount: 63, completedOrders: 175, approved: true },
-  { displayName: 'مكتب المحاسب القانوني', professionSlug: 'accountant', years: 13, bio: 'إعداد قوائم مالية وإقرارات ضريبية ومراجعة حسابات.', areas: ['شارع البحر'], priceMin: 300, priceMax: 2500, ratingAvg: 4.6, ratingCount: 29, completedOrders: 80, approved: true },
-  { displayName: 'أ/ سمير للدروس الخصوصية', professionSlug: 'private-tutor', years: 10, bio: 'دروس رياضيات وفيزياء لطلاب الثانوية العامة.', areas: ['حي السلام', 'حي الجامعة'], priceMin: 100, priceMax: 300, ratingAvg: 4.7, ratingCount: 88, completedOrders: 400, approved: true },
-  { displayName: 'صالون ليان', professionSlug: 'hairdresser', years: 5, bio: 'قص وصبغة وعناية بالشعر ومكياج مناسبات.', areas: ['حي الترعة'], priceMin: 80, priceMax: 600, ratingAvg: 4.5, ratingCount: 41, completedOrders: 260, approved: true },
-  { displayName: 'ورشة الفيوم للسيارات', professionSlug: 'car-mechanic', years: 16, bio: 'صيانة دورية وكهرباء سيارات وتشخيص أعطال بالكمبيوتر.', areas: ['دار الرماد'], priceMin: 200, priceMax: 1500, ratingAvg: 4.6, ratingCount: 67, completedOrders: 340, approved: true },
+  { displayName: 'شركة النقاء للتنظيف', professionSlug: 'cleaner', years: 10, bio: 'نوفر خدمات تنظيف احترافية بأعلى معايير الجودة وباستخدام مواد آمنة وفعّالة.', areas: ['الحوّاتم', 'حي الجامعة'], ratingAvg: 4.8, ratingCount: 128, completedOrders: 540, approved: true },
+  { displayName: 'صيانة الأجهزة المنزلية', professionSlug: 'appliance-technician', years: 7, bio: 'صيانة غسالات وثلاجات وتكييفات وأفران بضمان على الخدمة.', areas: ['شارع البحر', 'حي النصر'], ratingAvg: 4.7, ratingCount: 96, completedOrders: 310, approved: true },
+  { displayName: 'مكافحة الحشرات والنمل الأبيض', professionSlug: 'pest-control', years: 5, bio: 'رش حشرات ونمل أبيض وفئران بمواد مصرّح بها وآمنة على الأسرة.', areas: ['دار الرماد'], ratingAvg: 4.9, ratingCount: 74, completedOrders: 220, approved: true },
+  { displayName: 'نجار وديكورات', professionSlug: 'carpenter', years: 8, bio: 'تركيب أبواب ومطابخ وغرف نوم وديكورات خشبية بجودة عالية.', areas: ['حي الجامعة', 'الحوامي'], ratingAvg: 4.6, ratingCount: 58, completedOrders: 180, approved: true },
+  { displayName: 'كهربائي الفيوم', professionSlug: 'electrician', years: 12, bio: 'كهربائي تمديدات ولوحات كهرباء وصيانة أعطال بسرعة واحترافية.', areas: ['حي السلام', 'حي الترعة'], ratingAvg: 4.8, ratingCount: 62, completedOrders: 275, approved: true },
+  { displayName: 'أبو خالد للسباكة', professionSlug: 'plumber', years: 15, bio: 'سبّاك صحي وكشف تسربات وتركيب سخانات وأدوات صحية.', areas: ['دار الرماد', 'حي النصر'], ratingAvg: 4.7, ratingCount: 75, completedOrders: 410, approved: true },
+  { displayName: 'د. أحمد محمد', professionSlug: 'doctor', years: 14, bio: 'استشاري باطنة — كشف وزيارات منزلية ومتابعة الأمراض المزمنة.', areas: ['الحوّاتم', 'حي الجامعة'], ratingAvg: 4.9, ratingCount: 128, completedOrders: 620, approved: true },
+  { displayName: 'أ/ محمد رضوان', professionSlug: 'lawyer', years: 18, bio: 'محامٍ بالنقض — قضايا مدنية وتجارية وأحوال شخصية واستشارات.', areas: ['شارع البحر'], ratingAvg: 4.8, ratingCount: 96, completedOrders: 240, approved: true },
+  { displayName: 'أبو محمد للصيانة والتكييف', professionSlug: 'ac-technician', years: 9, bio: 'تركيب وصيانة وتنظيف التكييفات بجميع أنواعها.', areas: ['دار الرماد'], ratingAvg: 4.7, ratingCount: 96, completedOrders: 330, approved: true },
+  { displayName: 'المحامي أحمد صلاح', professionSlug: 'lawyer', years: 11, bio: 'استشارات قانونية وصياغة عقود وتوثيق.', areas: ['حي الجامعة'], ratingAvg: 5, ratingCount: 57, completedOrders: 150, approved: true },
+  { displayName: 'السبّاك المتخصص', professionSlug: 'plumber', years: 6, bio: 'إصلاح تسريبات وتركيب فلاتر ومواسير.', areas: ['حي الترعة'], ratingAvg: 4.6, ratingCount: 72, completedOrders: 190, approved: true },
+  { displayName: 'دهانات وديكور الفيوم', professionSlug: 'painter', years: 10, bio: 'دهانات داخلية وخارجية وورق حائط وديكورات جبس.', areas: ['الحوامي', 'حي السلام'], ratingAvg: 4.7, ratingCount: 76, completedOrders: 210, approved: true },
+  { displayName: 'نقل عفش الأمانة', professionSlug: 'moving', years: 8, bio: 'نقل عفش وفك وتركيب بعمالة مدرّبة وسيارات مغلقة.', areas: ['حي الجامعة', 'الحوّاتم', 'دار الرماد'], ratingAvg: 4.5, ratingCount: 44, completedOrders: 120, approved: true },
+  { displayName: 'مركز الفيوم للكمبيوتر', professionSlug: 'computer-technician', years: 7, bio: 'صيانة أجهزة وشبكات وتركيب أنظمة تشغيل.', areas: ['شارع البحر'], ratingAvg: 4.4, ratingCount: 38, completedOrders: 95, approved: true },
+  { displayName: 'صيدلية د. منى', professionSlug: 'pharmacist', years: 9, bio: 'استشارات دوائية وتوصيل أدوية.', areas: ['حي النصر'], ratingAvg: 4.8, ratingCount: 51, completedOrders: 300, approved: true },
+  { displayName: 'مركز العلاج الطبيعي', professionSlug: 'physiotherapist', years: 6, bio: 'جلسات علاج طبيعي منزلية وتأهيل بعد الإصابات.', areas: ['حي الجامعة'], ratingAvg: 4.9, ratingCount: 63, completedOrders: 175, approved: true },
+  { displayName: 'مكتب المحاسب القانوني', professionSlug: 'accountant', years: 13, bio: 'إعداد قوائم مالية وإقرارات ضريبية ومراجعة حسابات.', areas: ['شارع البحر'], ratingAvg: 4.6, ratingCount: 29, completedOrders: 80, approved: true },
+  { displayName: 'أ/ سمير للدروس الخصوصية', professionSlug: 'private-tutor', years: 10, bio: 'دروس رياضيات وفيزياء لطلاب الثانوية العامة.', areas: ['حي السلام', 'حي الجامعة'], ratingAvg: 4.7, ratingCount: 88, completedOrders: 400, approved: true },
+  { displayName: 'صالون ليان', professionSlug: 'hairdresser', years: 5, bio: 'قص وصبغة وعناية بالشعر ومكياج مناسبات.', areas: ['حي الترعة'], ratingAvg: 4.5, ratingCount: 41, completedOrders: 260, approved: true },
+  { displayName: 'ورشة الفيوم للسيارات', professionSlug: 'car-mechanic', years: 16, bio: 'صيانة دورية وكهرباء سيارات وتشخيص أعطال بالكمبيوتر.', areas: ['دار الرماد'], ratingAvg: 4.6, ratingCount: 67, completedOrders: 340, approved: true },
 
   /* ---- مزوّدان قيد المراجعة — لاختبار أنهما لا يظهران في البحث ---- */
-  { displayName: 'مزوّد قيد المراجعة', professionSlug: 'plumber', years: 3, bio: 'مزوّد جديد لم تتم مراجعته بعد.', areas: ['حي الجامعة'], priceMin: 100, priceMax: 200, ratingAvg: 0, ratingCount: 0, completedOrders: 0, approved: false },
-  { displayName: 'طبيب قيد المراجعة', professionSlug: 'doctor', years: 4, bio: 'طبيب جديد في انتظار اعتماد المستندات.', areas: ['الحوّاتم'], priceMin: 150, priceMax: 300, ratingAvg: 0, ratingCount: 0, completedOrders: 0, approved: false },
+  { displayName: 'مزوّد قيد المراجعة', professionSlug: 'plumber', years: 3, bio: 'مزوّد جديد لم تتم مراجعته بعد.', areas: ['حي الجامعة'], ratingAvg: 0, ratingCount: 0, completedOrders: 0, approved: false },
+  { displayName: 'طبيب قيد المراجعة', professionSlug: 'doctor', years: 4, bio: 'طبيب جديد في انتظار اعتماد المستندات.', areas: ['الحوّاتم'], ratingAvg: 0, ratingCount: 0, completedOrders: 0, approved: false },
 ];
 
 /** الأسئلة الشائعة — الصورة 18. */

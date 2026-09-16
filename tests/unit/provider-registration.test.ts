@@ -32,8 +32,6 @@ const EMPTY: CompletionInput = {
 const FULL: CompletionInput = {
   bio: 'وصف خدمة مفصّل يتجاوز عشرين حرفًا بوضوح.',
   coverageAreas: ['حي الجامعة'],
-  highlights: ['ضمان'],
-  priceMode: 'RANGE',
   yearsOfExperience: 8,
   galleryCount: 3,
   email: 'p@example.com',
@@ -70,9 +68,10 @@ describe('computeProfileCompletion', () => {
     expect(computeProfileCompletion(partial)).toBe(computeProfileCompletion({ ...FULL, requiredDocumentsUploaded: 0 }));
   });
 
-  it('وصف أقل من 20 حرفًا لا يُحتسب', () => {
-    const short = { ...FULL, bio: 'قصير' };
-    expect(computeProfileCompletion(short)).toBeLessThan(100);
+  it('وصف فارغ لا يُحتسب — ولا حدّ أدنى لطوله بعد ذلك', () => {
+    expect(computeProfileCompletion({ ...FULL, bio: '' })).toBeLessThan(100);
+    // «قصير» صار مقبولًا: الحدّ الأدنى للطول أُزيل
+    expect(computeProfileCompletion({ ...FULL, bio: 'قصير' })).toBe(100);
   });
 
   it('مهنة بلا مستندات إلزامية لا تمنح درجة المستندات مجانًا', () => {
@@ -133,10 +132,9 @@ const VALID_STEP2 = {
   yearsOfExperience: 8,
   bio: 'سبّاك صحي بخبرة في كشف التسربات وتركيب السخانات.',
   coverageAreas: ['حي الجامعة'],
-  priceMode: 'LATER',
 };
 
-describe('الخطوة 1/4 — البيانات الأساسية', () => {
+describe('الخطوة 1/3 — البيانات الأساسية', () => {
   it('تقبل البيانات الصحيحة وتطبّع الهاتف إلى E.164', () => {
     const result = providerStep1Schema.parse(VALID_STEP1);
     expect(result.phone).toBe('+201012345678');
@@ -181,7 +179,7 @@ describe('الخطوة 1/4 — البيانات الأساسية', () => {
   });
 });
 
-describe('الخطوة 2/4 — المهنة والخدمة', () => {
+describe('الخطوة 2/3 — المهنة والخدمة', () => {
   it('تقبل البيانات الصحيحة', () => {
     expect(providerStep2Schema.safeParse(VALID_STEP2).success).toBe(true);
   });
@@ -196,48 +194,24 @@ describe('الخطوة 2/4 — المهنة والخدمة', () => {
     ).toBe(false);
   });
 
-  it('تشترط حدّي السعر عند اختيار سعر تقريبي', () => {
-    expect(providerStep2Schema.safeParse({ ...VALID_STEP2, priceMode: 'RANGE' }).success).toBe(
-      false
-    );
+  it('ترفض أي مفتاح سعر — التسعير أُزيل من المخطط', () => {
     expect(
-      providerStep2Schema.safeParse({
-        ...VALID_STEP2,
-        priceMode: 'RANGE',
-        priceMin: 100,
-        priceMax: 500,
-      }).success
-    ).toBe(true);
+      providerStep2Schema.safeParse({ ...VALID_STEP2, priceMode: 'RANGE' }).success
+    ).toBe(false);
+    expect(
+      providerStep2Schema.safeParse({ ...VALID_STEP2, priceMin: 100, priceMax: 500 }).success
+    ).toBe(false);
+    expect(
+      providerStep2Schema.safeParse({ ...VALID_STEP2, highlights: ['ميزة'] }).success
+    ).toBe(false);
   });
 
-  it('ترفض حدًا أدنى أكبر من الأقصى', () => {
-    const result = providerStep2Schema.safeParse({
-      ...VALID_STEP2,
-      priceMode: 'RANGE',
-      priceMin: 900,
-      priceMax: 100,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('«تحديد السعر لاحقًا» لا يشترط أي سعر', () => {
-    expect(providerStep2Schema.safeParse({ ...VALID_STEP2, priceMode: 'LATER' }).success).toBe(true);
-  });
-
-  it('ترفض وصفًا أقصر من 20 حرفًا أو أطول من 300', () => {
-    expect(providerStep2Schema.safeParse({ ...VALID_STEP2, bio: 'قصير' }).success).toBe(false);
+  it('تقبل أي طول للوصف حتى 300 حرفًا — لا حدّ أدنى', () => {
+    expect(providerStep2Schema.safeParse({ ...VALID_STEP2, bio: '' }).success).toBe(true);
+    expect(providerStep2Schema.safeParse({ ...VALID_STEP2, bio: 'قصير' }).success).toBe(true);
     expect(providerStep2Schema.safeParse({ ...VALID_STEP2, bio: 'ا'.repeat(301) }).success).toBe(
       false
     );
-  });
-
-  it('تحدّ المزايا بستّ وكل ميزة بـ200 حرف', () => {
-    expect(
-      providerStep2Schema.safeParse({ ...VALID_STEP2, highlights: Array(7).fill('ميزة') }).success
-    ).toBe(false);
-    expect(
-      providerStep2Schema.safeParse({ ...VALID_STEP2, highlights: ['ا'.repeat(201)] }).success
-    ).toBe(false);
   });
 });
 

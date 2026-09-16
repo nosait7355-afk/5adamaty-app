@@ -19,10 +19,8 @@ import {
   type ProfessionValues,
 } from '@/components/features/provider/profession-step';
 import { DocumentsStep } from '@/components/features/provider/documents-step';
-import { ReviewStep } from '@/components/features/provider/review-step';
 import { ApiClientError } from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/queries/auth';
-import { useCategories, useProfessions } from '@/lib/queries/catalog';
 import {
   useMyProviderProfile,
   useRegisterProvider,
@@ -36,19 +34,21 @@ import {
 import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 
 /**
- * معالج تسجيل مقدم الخدمة — الصور 19 إلى 22.
+ * معالج تسجيل مقدم الخدمة — الصور 19 إلى 21.
  *
  * المعالج يعبر حدّ المصادقة في منتصفه: الحساب يُنشأ عند الانتقال من 2 إلى 3
  * لأن رفع المستندات يتطلب جلسة وملف مزوّد. لذلك:
  *   - الخطوتان 1 و2 تُحفظان محليًا (مسودة) ويمكن العودة إليهما بحرية.
  *   - بعد إنشاء الحساب تصير الخطوتان 1 و2 للعرض والتعديل عبر الـAPI.
+ *
+ * خطوة «مراجعة الطلب» أُزيلت: الإرسال يتم من خطوة المستندات مباشرة،
+ * والحساب يُفعَّل تلقائيًا بعده.
  */
 
 const STEPS = [
   { label: 'البيانات الأساسية' },
   { label: 'المهنة والخدمة' },
   { label: 'المستندات' },
-  { label: 'مراجعة الطلب' },
 ];
 
 const DRAFT_KEY = 'khadamaty:provider-draft';
@@ -68,14 +68,10 @@ export default function ProviderRegistrationPage() {
   const [basic, setBasic] = useState<BasicInfoValues>(EMPTY_BASIC_INFO);
   const [profession, setProfession] = useState<ProfessionValues>(EMPTY_PROFESSION);
   const [errors, setErrors] = useState<Errors>({});
-  const [accepted, setAccepted] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [googleFillPending, setGoogleFillPending] = useState(false);
   const [googleFillError, setGoogleFillError] = useState('');
-
-  const categories = useCategories();
-  const professions = useProfessions(profession.categoryId || undefined);
 
   const registerMutation = useRegisterProvider();
   const submitMutation = useSubmitVerification();
@@ -180,11 +176,11 @@ export default function ProviderRegistrationPage() {
     /*
      * استئناف من حالة الخادم عند العودة للمعالج (إعادة تحميل، أو رجوع بعد
      * أيام، أو طلب إعادة إرسال). المسودة المحلية تُمسح فور إنشاء الحساب،
-     * فالخادم هو مصدر الحقيقة الوحيد بعدها: مستندات ناقصة ← الخطوة 3،
-     * مكتملة ولم تُرسل ← خطوة المراجعة.
+     * فالخادم هو مصدر الحقيقة الوحيد بعدها: أي طلب لم يُرسل يستأنف من
+     * خطوة المستندات، وهي الخطوة الأخيرة التي يتم الإرسال منها.
      */
     if (loaded.verification.status === 'DRAFT' || loaded.verification.status === 'RESUBMISSION_REQUIRED') {
-      setStep(loaded.documents.isComplete ? 4 : 3);
+      setStep(3);
     }
 
     setBasic((current) => ({
@@ -203,10 +199,6 @@ export default function ProviderRegistrationPage() {
       yearsOfExperience: String(loaded.yearsOfExperience),
       bio: loaded.bio,
       coverageAreas: loaded.coverageAreas,
-      priceMode: loaded.priceMode,
-      priceMin: loaded.priceMin != null ? String(loaded.priceMin) : '',
-      priceMax: loaded.priceMax != null ? String(loaded.priceMax) : '',
-      highlights: loaded.highlights,
     }));
   }
 
@@ -247,10 +239,6 @@ export default function ProviderRegistrationPage() {
       yearsOfExperience: profession.yearsOfExperience,
       bio: profession.bio,
       coverageAreas: profession.coverageAreas,
-      priceMode: profession.priceMode,
-      ...(profession.priceMin ? { priceMin: profession.priceMin } : {}),
-      ...(profession.priceMax ? { priceMax: profession.priceMax } : {}),
-      highlights: profession.highlights.filter((item) => item.trim().length > 0),
     });
 
     if (result.success) {
@@ -299,11 +287,6 @@ export default function ProviderRegistrationPage() {
           yearsOfExperience: Number(profession.yearsOfExperience),
           bio: profession.bio,
           coverageAreas: profession.coverageAreas,
-          priceMode: profession.priceMode as never,
-          ...(profession.priceMode === 'RANGE'
-            ? { priceMin: Number(profession.priceMin), priceMax: Number(profession.priceMax) }
-            : {}),
-          highlights: profession.highlights.filter((item) => item.trim().length > 0),
         },
       });
 
@@ -330,11 +313,6 @@ export default function ProviderRegistrationPage() {
   }, [basic, profession, hasAccount, registerMutation, profile, validateStep2]);
 
   const submitRequest = useCallback(async () => {
-    if (!accepted) {
-      setSubmitError('يجب الإقرار بصحة البيانات والموافقة على الشروط.');
-      return;
-    }
-
     setSubmitError('');
     try {
       await submitMutation.mutateAsync();
@@ -344,7 +322,7 @@ export default function ProviderRegistrationPage() {
         error instanceof ApiClientError ? error.message : 'تعذّر إرسال الطلب. حاول مرة أخرى.'
       );
     }
-  }, [accepted, submitMutation, router]);
+  }, [submitMutation, router]);
 
   /* ---- العرض ---- */
 
@@ -355,11 +333,6 @@ export default function ProviderRegistrationPage() {
     isComplete: false,
   };
 
-  const categoryName = categories.data?.find((item) => item.id === profession.categoryId)?.name;
-  const professionName = professions.data?.find(
-    (item) => item.id === profession.professionId
-  )?.name;
-
   const busy = registerMutation.isPending || submitMutation.isPending;
 
   return (
@@ -369,7 +342,7 @@ export default function ProviderRegistrationPage() {
       <PageContainer withBottomNav={false}>
         <PageTitle
           title="تسجيل مقدم خدمة"
-          subtitle={`الخطوة ${step} من 4 — ${STEPS[step - 1]?.label ?? ''}`}
+          subtitle={`الخطوة ${step} من 3 — ${STEPS[step - 1]?.label ?? ''}`}
         />
 
         <Stepper steps={STEPS} current={step} className="mb-6" />
@@ -433,28 +406,22 @@ export default function ProviderRegistrationPage() {
             </InfoAlert>
           ))}
 
-        {step === 4 && (
-          <ReviewStep
-            basic={basic}
-            profession={profession}
-            {...(categoryName ? { categoryName } : {})}
-            {...(professionName ? { professionName } : {})}
-            documents={documents}
-            accepted={accepted}
-            onAcceptedChange={setAccepted}
-            onEdit={(target) => setStep(target)}
-            {...(submitError ? { error: submitError } : {})}
-          />
-        )}
-
-        {submitError && step !== 4 && (
+        {submitError && (
           <InfoAlert tone="danger" title="تعذّر إتمام الخطوة" className="mt-4">
             {submitError}
           </InfoAlert>
         )}
 
+        {step === 3 && (
+          <p className="mt-6 text-meta text-ink-400">
+            بإرسال الطلب تُقرّ بأن جميع البيانات والمستندات المرفقة صحيحة وتخصّك، وتوافق على{' '}
+            <span className="font-semibold text-brand-600">الشروط والأحكام</span> و
+            <span className="font-semibold text-brand-600">سياسة الخصوصية</span>.
+          </p>
+        )}
+
         {/* ---- أزرار التنقّل ---- */}
-        <div className="mt-6 flex gap-3 pb-8">
+        <div className="mt-4 flex gap-3 pb-8">
           {step > 1 && (
             <Button
               variant="secondary"
@@ -498,19 +465,8 @@ export default function ProviderRegistrationPage() {
           {step === 3 && (
             <Button
               className="flex-[2]"
-              disabled={!documents.isComplete || busy}
-              onClick={() => setStep(4)}
-              iconEnd={<ArrowLeft size={20} />}
-            >
-              التالي
-            </Button>
-          )}
-
-          {step === 4 && (
-            <Button
-              className="flex-[2]"
               loading={submitMutation.isPending}
-              disabled={!accepted || !documents.isComplete}
+              disabled={!documents.isComplete || busy}
               onClick={() => void submitRequest()}
               iconEnd={<Send size={20} />}
             >

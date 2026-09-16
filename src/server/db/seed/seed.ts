@@ -120,9 +120,6 @@ export async function runSeed(options: { clear?: boolean } = {}): Promise<SeedRe
       yearsOfExperience: seed.years,
       bio: seed.bio,
       coverageAreas: seed.areas,
-      priceMode: 'RANGE',
-      priceMin: seed.priceMin,
-      priceMax: seed.priceMax,
       ratingAvg: seed.ratingAvg,
       ratingCount: seed.ratingCount,
       completedOrders: seed.completedOrders,
@@ -142,15 +139,13 @@ export async function runSeed(options: { clear?: boolean } = {}): Promise<SeedRe
     // خدمتان لكل مزوّد معتمد
     if (seed.approved) {
       const titles = [`${profession.name} - خدمة أساسية`, `${profession.name} - خدمة متقدمة`];
-      for (const [index, title] of titles.entries()) {
+      for (const title of titles) {
         await Service.create({
           providerId: provider._id,
           categoryId: profession.categoryId,
           professionId: profession._id,
           title,
           description: seed.bio,
-          priceFrom: seed.priceMin + index * 50,
-          priceTo: seed.priceMax,
           areas: seed.areas,
           isActive: true,
           ratingAvg: seed.ratingAvg,

@@ -274,7 +274,6 @@ export interface ProviderOrderFilters {
 const PROVIDER_SORTS: Record<string, Record<string, 1 | -1>> = {
   newest: { createdAt: -1, _id: -1 },
   oldest: { createdAt: 1, _id: 1 },
-  price_desc: { agreedPrice: -1, _id: -1 },
 };
 
 /**

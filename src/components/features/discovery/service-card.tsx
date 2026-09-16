@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { MediaThumb } from './media-thumb';
 import { Rating } from './rating-stars';
 import { cn } from '@/lib/cn';
-import { formatExperience, formatPriceFrom } from '@/lib/format';
+import { formatExperience } from '@/lib/format';
 import type { ServiceCardDto } from '@/server/services/discovery.service';
 
 export interface ServiceCardProps {
@@ -101,11 +101,7 @@ export function ServiceCard({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
-        <span className="num text-card-title font-bold text-brand-600">
-          {formatPriceFrom(service.priceFrom)}
-        </span>
-
+      <div className="mt-4 flex items-center justify-end gap-3 border-t border-border pt-3">
         <LinkButton
           href={`/providers/${provider.id}?serviceId=${service.id}`}
           size="sm"

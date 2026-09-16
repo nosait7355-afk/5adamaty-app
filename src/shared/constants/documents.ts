@@ -95,35 +95,34 @@ function requirement(
  * يبني قائمة المستندات من مفاتيح التحكم الثلاثة.
  *
  * قاعدة الاتساق (PROJECT_PLAN — قواعد المستندات الديناميكية):
- *   - NATIONAL_ID      → دائمًا Required
- *   - PERSONAL_PHOTO   → دائمًا Required
- *   - PROFESSIONAL_CERT→ يظهر Required فقط عند requiresQualification، وإلا يختفي تمامًا
- *   - PRACTICE_LICENSE → يظهر Required فقط عند requiresLicense، وإلا يختفي تمامًا
+ *   - NATIONAL_ID      → دائمًا Required — وهو **المستند الإلزامي الوحيد**
+ *   - PERSONAL_PHOTO   → يظهر دائمًا، اختياري
+ *   - PROFESSIONAL_CERT→ يظهر دائمًا، اختياري
+ *   - PRACTICE_LICENSE → يظهر دائمًا، اختياري
+ *
+ * تخفيف الإلزام قرار منتج صريح: التسجيل كان يتعثّر عند مستندات يصعب على
+ * الحرفي توفيرها فورًا. `requiresQualification` و`requiresLicense` ما زالا
+ * يُقرآن، لكنهما لم يعودا يرفعان المستند إلى إلزامي.
  *
  * ملاحظة: `ADDRESS_PROOF` كان يُضاف تلقائيًا (Optional) لكل مهنة — أُزيل من
  * القائمة الافتراضية بقرار صريح، ويبقى مفتاحًا صالحًا في `DOCUMENT_KEYS`
  * لأي استخدام لاحق، لكن لا شيء يُنشئه تلقائيًا بعد الآن.
  */
 export function buildDocumentRequirements(options: {
-  requiresQualification: boolean;
-  requiresLicense: boolean;
+  /** تُقرأ من المهنة ولم تعد ترفع أي مستند إلى إلزامي — انظر الشرح أعلاه. */
+  requiresQualification?: boolean;
+  requiresLicense?: boolean;
   /** مستندات إضافية يضيفها Admin بحرية. */
   custom?: DocumentRequirement[];
 }): DocumentRequirement[] {
   const list: DocumentRequirement[] = [
     requirement('NATIONAL_ID', true, 1),
-    requirement('PERSONAL_PHOTO', true, 2),
+    requirement('PERSONAL_PHOTO', false, 2),
+    requirement('PROFESSIONAL_CERT', false, 3),
+    requirement('PRACTICE_LICENSE', false, 4),
   ];
 
-  let order = 3;
-  if (options.requiresQualification) {
-    list.push(requirement('PROFESSIONAL_CERT', true, order));
-    order += 1;
-  }
-  if (options.requiresLicense) {
-    list.push(requirement('PRACTICE_LICENSE', true, order));
-    order += 1;
-  }
+  const order = 5;
 
   if (options.custom?.length) {
     options.custom.forEach((item, index) => {
@@ -140,68 +139,28 @@ export interface ConsistencyViolation {
 }
 
 /**
- * يتحقق أن قائمة المستندات لا تخالف مفاتيح التحكم.
- * تُستدعى قبل أي حفظ من لوحة Admin؛ المخالفة تُرفض بـ422.
+ * يتحقق أن قائمة المستندات لا تخالف القاعدة الوحيدة الباقية: وجود الهوية
+ * إلزاميةً. تُستدعى قبل أي حفظ من لوحة Admin؛ المخالفة تُرفض بـ422.
+ *
+ * `_flags` لم تعد تُقرأ — بقيت في التوقيع حتى لا تتغيّر نداءات المستدعين.
  */
 export function validateRequirementsConsistency(
   requirements: readonly DocumentRequirement[],
-  flags: { requiresQualification: boolean; requiresLicense: boolean }
+  _flags?: { requiresQualification: boolean; requiresLicense: boolean }
 ): ConsistencyViolation[] {
   const violations: ConsistencyViolation[] = [];
   const byKey = new Map(requirements.filter((r) => r.key !== 'CUSTOM').map((r) => [r.key, r]));
 
+  /*
+   * بقيت قاعدة واحدة: الهوية. كل ما عداها اختياري ويحرّره Admin بحرية،
+   * بما في ذلك جعله إلزاميًا لمهنة بعينها إن شاء — لا شيء يمنع ذلك، لكن
+   * لا شيء يفرضه أيضًا.
+   */
   const nationalId = byKey.get('NATIONAL_ID');
   if (!nationalId) {
     violations.push({ key: 'NATIONAL_ID', message: 'بطاقة الرقم القومي مطلوبة في كل المهن.' });
   } else if (!nationalId.required) {
     violations.push({ key: 'NATIONAL_ID', message: 'بطاقة الرقم القومي يجب أن تكون إلزامية.' });
-  }
-
-  const photo = byKey.get('PERSONAL_PHOTO');
-  if (!photo) {
-    violations.push({ key: 'PERSONAL_PHOTO', message: 'الصورة الشخصية مطلوبة في كل المهن.' });
-  } else if (!photo.required) {
-    violations.push({ key: 'PERSONAL_PHOTO', message: 'الصورة الشخصية يجب أن تكون إلزامية.' });
-  }
-
-  const cert = byKey.get('PROFESSIONAL_CERT');
-  if (flags.requiresQualification) {
-    if (!cert) {
-      violations.push({
-        key: 'PROFESSIONAL_CERT',
-        message: 'المهنة تتطلب مؤهلًا، فيجب إدراج المؤهل/الشهادة المهنية.',
-      });
-    } else if (!cert.required) {
-      violations.push({
-        key: 'PROFESSIONAL_CERT',
-        message: 'المهنة تتطلب مؤهلًا، فيجب أن يكون المؤهل إلزاميًا.',
-      });
-    }
-  } else if (cert) {
-    violations.push({
-      key: 'PROFESSIONAL_CERT',
-      message: 'المهنة لا تتطلب مؤهلًا، فلا يجوز إدراج المؤهل/الشهادة المهنية.',
-    });
-  }
-
-  const license = byKey.get('PRACTICE_LICENSE');
-  if (flags.requiresLicense) {
-    if (!license) {
-      violations.push({
-        key: 'PRACTICE_LICENSE',
-        message: 'المهنة تتطلب ترخيصًا، فيجب إدراج رخصة مزاولة المهنة.',
-      });
-    } else if (!license.required) {
-      violations.push({
-        key: 'PRACTICE_LICENSE',
-        message: 'المهنة تتطلب ترخيصًا، فيجب أن تكون الرخصة إلزامية.',
-      });
-    }
-  } else if (license) {
-    violations.push({
-      key: 'PRACTICE_LICENSE',
-      message: 'المهنة لا تتطلب ترخيصًا، فلا يجوز إدراج رخصة مزاولة المهنة.',
-    });
   }
 
   return violations;

@@ -54,8 +54,6 @@ export interface DiscoveryFilters {
   providerId?: string | undefined;
   area?: string | undefined;
   minRating?: number | undefined;
-  priceMin?: number | undefined;
-  priceMax?: number | undefined;
   sort?: SortOption | undefined;
   page?: number | undefined;
   limit?: number | undefined;
@@ -81,15 +79,11 @@ type SortSpec = Record<string, 1 | -1>;
 
 const PROVIDER_SORTS: Record<SortOption, SortSpec> = {
   rating: { ratingAvg: -1, ratingCount: -1 },
-  price_asc: { priceMin: 1 },
-  price_desc: { priceMax: -1 },
   newest: { createdAt: -1 },
 };
 
 const SERVICE_SORTS: Record<SortOption, SortSpec> = {
   rating: { ratingAvg: -1, ratingCount: -1 },
-  price_asc: { priceFrom: 1 },
-  price_desc: { priceFrom: -1 },
   newest: { createdAt: -1 },
 };
 
@@ -135,14 +129,6 @@ export function buildProviderMatch(filters: DiscoveryFilters): Record<string, un
   if (filters.area) match.coverageAreas = filters.area;
   if (filters.minRating != null) match.ratingAvg = { $gte: filters.minRating };
 
-  /*
-   * السعر: تقاطع نطاق المزوّد المعلن مع النطاق المطلوب.
-   * مزوّد اختار «أحدّد السعر لاحقًا» (priceMode = LATER) بلا حدود معلنة
-   * يسقط تلقائيًا من نتائج الفلترة بالسعر — وهذا مقصود، فلا سعر لمقارنته.
-   */
-  if (filters.priceMin != null) match.priceMax = { $gte: filters.priceMin };
-  if (filters.priceMax != null) match.priceMin = { $lte: filters.priceMax };
-
   applySearch(match, filters, ['displayName', 'bio']);
 
   return match;
@@ -157,11 +143,6 @@ export function buildServiceMatch(filters: DiscoveryFilters): Record<string, unk
   if (filters.providerId) match.providerId = new Types.ObjectId(filters.providerId);
   if (filters.area) match.areas = filters.area;
   if (filters.minRating != null) match.ratingAvg = { $gte: filters.minRating };
-
-  const price: Record<string, number> = {};
-  if (filters.priceMin != null) price.$gte = filters.priceMin;
-  if (filters.priceMax != null) price.$lte = filters.priceMax;
-  if (Object.keys(price).length > 0) match.priceFrom = price;
 
   applySearch(match, filters, ['title', 'description']);
 
@@ -188,10 +169,6 @@ const PROVIDER_CARD_PROJECT = {
   yearsOfExperience: 1,
   bio: 1,
   coverageAreas: 1,
-  priceMode: 1,
-  priceMin: 1,
-  priceMax: 1,
-  currency: 1,
   isVerifiedBadge: 1,
   ratingAvg: 1,
   ratingCount: 1,
@@ -206,7 +183,6 @@ const PROVIDER_CARD_PROJECT = {
 
 const PROVIDER_DETAIL_PROJECT = {
   ...PROVIDER_CARD_PROJECT,
-  highlights: 1,
   gallery: 1,
   customersCount: 1,
   avgResponseMinutes: 1,
@@ -221,9 +197,6 @@ const SERVICE_CARD_PROJECT = {
   professionId: 1,
   title: 1,
   description: 1,
-  priceFrom: 1,
-  priceTo: 1,
-  currency: 1,
   areas: 1,
   ordersCount: 1,
   ratingAvg: 1,
@@ -261,12 +234,7 @@ export interface ProviderRow {
   professionId: Types.ObjectId;
   yearsOfExperience: number;
   bio: string;
-  highlights?: string[];
   coverageAreas: string[];
-  priceMode: string;
-  priceMin?: number;
-  priceMax?: number;
-  currency: string;
   isVerifiedBadge: boolean;
   ratingAvg: number;
   ratingCount: number;
@@ -291,9 +259,6 @@ export interface ServiceRow {
   professionId: Types.ObjectId;
   title: string;
   description: string;
-  priceFrom: number;
-  priceTo?: number;
-  currency: string;
   areas: string[];
   ordersCount: number;
   ratingAvg: number;

@@ -38,7 +38,7 @@ import {
   formatExperience,
   formatOrderNumber,
   formatPhone,
-  formatPriceFrom,
+  formatPrice,
   formatRating,
   formatRelativeTime,
   formatServicesCount,
@@ -117,7 +117,7 @@ export default function DesignSystemPage() {
         {/* ---------- Formatting ---------- */}
         <Section title="التنسيق (أرقام لاتينية داخل نص عربي)">
           <Card className="flex flex-col gap-2 text-label text-ink-600">
-            <Row label="السعر" value={formatPriceFrom(150)} />
+            <Row label="السعر" value={formatPrice(150)} />
             <Row label="التقييم" value={`${formatRating(4.83)} ⭐`} />
             <Row label="رقم الطلب" value={formatOrderNumber(10245)} />
             <Row label="الهاتف" value={formatPhone('01012345678')} />

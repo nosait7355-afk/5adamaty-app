@@ -553,8 +553,6 @@ export async function listServices(options: {
       id: String(item._id),
       providerId: String(item.providerId),
       title: item.title,
-      priceFrom: item.priceFrom,
-      ...(item.priceTo != null ? { priceTo: item.priceTo } : {}),
       isActive: item.isActive,
       ratingAvg: item.ratingAvg,
       ratingCount: item.ratingCount,

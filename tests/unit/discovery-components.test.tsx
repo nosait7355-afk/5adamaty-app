@@ -17,9 +17,6 @@ const service: ServiceCardDto = {
   id: 'svc1',
   title: 'تنظيف شقق وفلل',
   description: 'تنظيف شامل بمواد آمنة وفريق مدرّب.',
-  priceFrom: 150,
-  priceTo: 500,
-  currency: 'EGP',
   areas: ['حي الجامعة', 'الحوّاتم'],
   area: 'حي الجامعة',
   ratingAvg: 4.8,
@@ -54,10 +51,6 @@ const provider: ProviderCardDto = {
   yearsOfExperience: 10,
   area: 'حي الجامعة',
   coverageAreas: ['حي الجامعة'],
-  priceMode: 'RANGE',
-  priceMin: 150,
-  priceMax: 500,
-  currency: 'EGP',
   isVerifiedBadge: true,
   ratingAvg: 4.8,
   ratingCount: 128,
@@ -74,7 +67,6 @@ describe('ServiceCard (الصورة 09)', () => {
     expect(screen.getByText('خدمات منزلية')).toBeInTheDocument();
     expect(screen.getByText(/تنظيف شامل/)).toBeInTheDocument();
     expect(screen.getByText('حي الجامعة')).toBeInTheDocument();
-    expect(screen.getByText('بيدأ من 150 ج.م')).toBeInTheDocument();
     expect(screen.getByText('+10 سنوات خبرة')).toBeInTheDocument();
   });
 
@@ -104,11 +96,9 @@ describe('ServiceCard (الصورة 09)', () => {
     expect(onToggle).toHaveBeenCalledWith('svc1');
   });
 
-  it('يعرض السعر بأرقام لاتينية داخل نص عربي', () => {
-    render(<ServiceCard service={service} />);
-    const price = screen.getByText('بيدأ من 150 ج.م');
-    expect(price).toHaveClass('num');
-    expect(price.textContent).not.toMatch(/[٠-٩]/);
+  it('لا يعرض أي سعر — التسعير أُزيل من المنصة', () => {
+    const { container } = render(<ServiceCard service={service} />);
+    expect(container.textContent).not.toMatch(/ج\.م|بيدأ من/);
   });
 });
 
@@ -158,16 +148,9 @@ describe('FilterBar (الصورة 09)', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ area: 'دار الرماد' }));
   });
 
-  it('يبلّغ بنطاق السعر كحدّين رقميّين', async () => {
-    const onChange = vi.fn();
-    render(<FilterBar value={{ sort: 'rating' }} onChange={onChange} />);
-
-    await userEvent.click(screen.getByText('السعر'));
-    await userEvent.click(screen.getByRole('button', { name: '200 ج.م - 500 ج.م' }));
-
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ priceMin: 200, priceMax: 500 })
-    );
+  it('لا يعرض قرص السعر إطلاقًا', () => {
+    render(<FilterBar value={{ sort: 'rating' }} onChange={vi.fn()} />);
+    expect(screen.queryByText('السعر')).not.toBeInTheDocument();
   });
 
   it('يبلّغ بتغيير الترتيب', async () => {
@@ -175,9 +158,9 @@ describe('FilterBar (الصورة 09)', () => {
     render(<FilterBar value={{ sort: 'rating' }} onChange={onChange} />);
 
     await userEvent.click(screen.getByText('الأعلى تقييمًا'));
-    await userEvent.click(screen.getByRole('button', { name: 'الأقل سعرًا' }));
+    await userEvent.click(screen.getByRole('button', { name: 'الأحدث' }));
 
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sort: 'price_asc' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sort: 'newest' }));
   });
 
   it('زر التصفية معطّل بلا فلاتر ويعرض عددها عند وجودها', () => {
@@ -196,7 +179,7 @@ describe('FilterBar (الصورة 09)', () => {
     const onChange = vi.fn();
     render(
       <FilterBar
-        value={{ sort: 'price_asc', area: 'حي الجامعة', minRating: 4, priceMin: 200 }}
+        value={{ sort: 'newest', area: 'حي الجامعة', minRating: 4 }}
         onChange={onChange}
       />
     );
@@ -204,8 +187,6 @@ describe('FilterBar (الصورة 09)', () => {
     await userEvent.click(screen.getByRole('button', { name: /تصفية/ }));
     expect(onChange).toHaveBeenCalledWith({
       area: undefined,
-      priceMin: undefined,
-      priceMax: undefined,
       minRating: undefined,
       sort: 'rating',
     });

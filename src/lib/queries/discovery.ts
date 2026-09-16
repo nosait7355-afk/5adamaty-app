@@ -29,8 +29,6 @@ export interface DiscoveryFilterState {
   providerId?: string | undefined;
   area?: string | undefined;
   minRating?: number | undefined;
-  priceMin?: number | undefined;
-  priceMax?: number | undefined;
   sort?: SortOption | undefined;
   limit?: number | undefined;
 }
@@ -47,8 +45,6 @@ function toQueryParams(filters: DiscoveryFilterState, page: number) {
     providerId: filters.providerId,
     area: filters.area,
     minRating: filters.minRating,
-    priceMin: filters.priceMin,
-    priceMax: filters.priceMax,
     sort: filters.sort ?? 'rating',
   };
 }

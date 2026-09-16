@@ -26,9 +26,6 @@ export interface ServiceDto {
   id: string;
   title: string;
   description: string;
-  priceFrom: number;
-  priceTo?: number;
-  currency: string;
   areas: string[];
   isActive: boolean;
   ordersCount: number;
@@ -50,9 +47,6 @@ function toServiceDto(row: ServiceLean): ServiceDto {
     id: String(row._id),
     title: row.title,
     description: row.description,
-    priceFrom: row.priceFrom,
-    ...(row.priceTo != null ? { priceTo: row.priceTo } : {}),
-    currency: row.currency,
     areas: row.areas ?? [],
     isActive: row.isActive,
     ordersCount: row.ordersCount,
@@ -101,8 +95,6 @@ export async function createMyService(
     professionId: String(provider.professionId),
     title: input.title,
     description: input.description,
-    priceFrom: input.priceFrom,
-    ...(input.priceTo != null ? { priceTo: input.priceTo } : {}),
     areas: input.areas,
     isActive: input.isActive,
   });

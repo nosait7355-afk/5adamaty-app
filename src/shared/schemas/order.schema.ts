@@ -190,13 +190,13 @@ export const PROVIDER_TAB_STATUSES: Record<
   CANCELLED: ['CANCELLED', 'REJECTED'],
 };
 
-export const PROVIDER_ORDER_SORTS = ['newest', 'oldest', 'price_desc'] as const;
+/** `price_desc` أُزيل: لم تعد هناك قيمة معلنة تُرتَّب عليها الطلبات. */
+export const PROVIDER_ORDER_SORTS = ['newest', 'oldest'] as const;
 export type ProviderOrderSort = (typeof PROVIDER_ORDER_SORTS)[number];
 
 export const PROVIDER_ORDER_SORT_LABELS_AR: Record<ProviderOrderSort, string> = {
   newest: 'الأحدث',
   oldest: 'الأقدم',
-  price_desc: 'الأعلى قيمة',
 };
 
 /** بحث برقم الطلب أو اسم العميل — الصورة 25. */

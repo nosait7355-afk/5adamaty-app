@@ -192,9 +192,7 @@ export default function ProviderOrderDetailPage({
           <h2 className="mb-2 text-section font-bold text-ink-900">العميل</h2>
           <Card className="flex flex-col gap-2">
             <Row icon={<User size={16} />} label="الاسم" value={data.customer.fullName} />
-            {data.customer.phone && (
-              <Row icon={<Phone size={16} />} label="الهاتف" value={data.customer.phone} numeric />
-            )}
+            {/* رقم العميل لا يُعرض نصًّا — زرّا «اتصال» و«واتساب» أدناه هما المنفذ الوحيد */}
             <Row
               icon={<MapPin size={16} />}
               label="موقع الخدمة"

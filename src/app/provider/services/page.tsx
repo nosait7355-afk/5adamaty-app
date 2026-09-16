@@ -14,7 +14,6 @@ import { Badge, Chip } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { InfoAlert } from '@/components/common/info-alert';
-import { formatPriceRange } from '@/lib/format';
 import {
   useCreateMyService,
   useDeleteMyService,
@@ -29,8 +28,6 @@ import type { ServiceDto } from '@/server/services/provider-services.service';
 interface FormValues {
   title: string;
   description: string;
-  priceFrom: string;
-  priceTo: string;
   areas: string[];
   isActive: boolean;
 }
@@ -38,8 +35,6 @@ interface FormValues {
 const EMPTY_FORM: FormValues = {
   title: '',
   description: '',
-  priceFrom: '',
-  priceTo: '',
   areas: [],
   isActive: true,
 };
@@ -72,8 +67,6 @@ export default function ProviderServicesPage() {
     setValues({
       title: service.title,
       description: service.description,
-      priceFrom: String(service.priceFrom),
-      priceTo: service.priceTo != null ? String(service.priceTo) : '',
       areas: service.areas,
       isActive: service.isActive,
     });
@@ -95,10 +88,6 @@ export default function ProviderServicesPage() {
     const next: Errors = {};
     if (values.title.trim().length < 3) next.title = 'عنوان الخدمة قصير جدًا.';
     if (values.description.trim().length < 10) next.description = 'وصف الخدمة قصير جدًا.';
-    if (!values.priceFrom || Number(values.priceFrom) < 0) next.priceFrom = 'أدخل سعرًا صحيحًا.';
-    if (values.priceTo && Number(values.priceTo) < Number(values.priceFrom)) {
-      next.priceTo = 'السعر الأقصى يجب ألا يقل عن الأدنى.';
-    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -110,8 +99,6 @@ export default function ProviderServicesPage() {
     const payload = {
       title: values.title.trim(),
       description: values.description.trim(),
-      priceFrom: Number(values.priceFrom),
-      ...(values.priceTo ? { priceTo: Number(values.priceTo) } : {}),
       areas: values.areas,
       isActive: values.isActive,
     };
@@ -138,8 +125,6 @@ export default function ProviderServicesPage() {
   const ids = {
     title: useId(),
     description: useId(),
-    priceFrom: useId(),
-    priceTo: useId(),
   };
 
   const busy = createMutation.isPending || updateMutation.isPending;
@@ -233,38 +218,6 @@ export default function ProviderServicesPage() {
                 />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Field htmlFor={ids.priceFrom} label="من (ج.م)" required error={errors.priceFrom}>
-                  <Input
-                    id={ids.priceFrom}
-                    type="number"
-                    min={0}
-                    inputMode="numeric"
-                    placeholder="150"
-                    value={values.priceFrom}
-                    invalid={Boolean(errors.priceFrom)}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, priceFrom: event.target.value }))
-                    }
-                  />
-                </Field>
-
-                <Field htmlFor={ids.priceTo} label="إلى (ج.م)" hint="اختياري" error={errors.priceTo}>
-                  <Input
-                    id={ids.priceTo}
-                    type="number"
-                    min={0}
-                    inputMode="numeric"
-                    placeholder="500"
-                    value={values.priceTo}
-                    invalid={Boolean(errors.priceTo)}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, priceTo: event.target.value }))
-                    }
-                  />
-                </Field>
-              </div>
-
               <Field label="مناطق التغطية" hint="اختياري — اتركها فاضية لتغطية كل مناطقك">
                 <div className="flex flex-col gap-3 rounded-card border border-border p-3">
                   {Object.entries(FAYOUM_AREAS).map(([city, areas]) => (
@@ -353,11 +306,7 @@ function ServiceCard({
 
       <p className="line-clamp-2 text-meta text-ink-600">{service.description}</p>
 
-      <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
-        <span className="num text-label font-extrabold text-brand-600">
-          {formatPriceRange(service.priceFrom, service.priceTo)}
-        </span>
-
+      <div className="flex items-center justify-end gap-2 border-t border-border pt-2">
         <div className="flex items-center gap-2">
           <button
             type="button"

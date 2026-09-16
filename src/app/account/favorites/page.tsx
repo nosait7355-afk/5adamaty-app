@@ -10,7 +10,6 @@ import { Button, LinkButton } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { Rating } from '@/components/features/discovery/rating-stars';
-import { formatPriceFrom } from '@/lib/format';
 import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
 
 /**
@@ -135,9 +134,6 @@ export default function FavoritesPage() {
                           </h3>
                           <div className="mt-1 flex items-center gap-3">
                             <Rating value={service.ratingAvg} />
-                            <span className="num text-meta font-semibold text-brand-600">
-                              {formatPriceFrom(service.priceFrom)}
-                            </span>
                           </div>
                         </Link>
 

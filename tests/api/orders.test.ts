@@ -240,12 +240,11 @@ describe('POST /api/v1/orders', () => {
     }
   });
 
-  it('يشتق السعر من المزوّد لا من العميل', async () => {
+  it('لا يُحفظ أي سعر عند الإنشاء — التسعير أُزيل من المنصة', async () => {
     const order = await createOrder();
     const stored = await ServiceRequest.findById(order.id);
-    const provider = await ServiceProvider.findById(approvedProviderId);
 
-    expect(stored?.agreedPrice).toBe(provider?.priceMin);
+    expect(stored?.agreedPrice).toBeUndefined();
   });
 
   it('يرفض الطلب من مزوّد قيد المراجعة', async () => {

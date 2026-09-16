@@ -145,25 +145,25 @@ describe('حفظ المستندات — المحرّك الديناميكي', ()
     expect(document.status).toBe('PENDING');
   });
 
-  it('🔐 يرفض مستندًا لا تطلبه المهنة', async () => {
+  it('🔐 يرفض مفتاح مستند خارج قائمة المهنة كليًا', async () => {
     const { session } = await makeProvider({ kind: 'CRAFT', slug: 'plumber2' });
     const publicId = documentPublicId(session.id);
     mockCloudinaryAsset(publicId);
 
-    // السبّاك لا يحتاج ترخيص مزاولة — يجب الرفض حتى لو أرسلته الواجهة
+    // إثبات العنوان لم يعد في القائمة الافتراضية لأي مهنة
     await expect(
-      saveDocument(session, { requirementKey: 'PRACTICE_LICENSE', publicId })
+      saveDocument(session, { requirementKey: 'ADDRESS_PROOF', publicId })
     ).rejects.toThrow(/غير مطلوب لمهنتك/);
   });
 
-  it('🔐 يرفض المؤهل لمهنة حرفية', async () => {
+  it('يقبل المؤهل والترخيص لمهنة حرفية — صارا اختياريين لكل المهن', async () => {
     const { session } = await makeProvider({ kind: 'CRAFT', slug: 'plumber3' });
     const publicId = documentPublicId(session.id);
     mockCloudinaryAsset(publicId);
 
     await expect(
       saveDocument(session, { requirementKey: 'PROFESSIONAL_CERT', publicId })
-    ).rejects.toThrow(/غير مطلوب لمهنتك/);
+    ).resolves.toBeTruthy();
   });
 
   it('يقبل المؤهل والترخيص لمهنة منظَّمة', async () => {
@@ -264,45 +264,39 @@ describe('قائمة المستندات', () => {
     mockCloudinaryAsset(publicId);
 
     const before = await listMyDocuments(session);
-    expect(before.requirements).toHaveLength(2);
+    expect(before.requirements).toHaveLength(4);
     expect(before.isComplete).toBe(false);
-    expect(before.missingRequired).toEqual(['الهوية الشخصية', 'صورة شخصية']);
+    // الهوية وحدها إلزامية
+    expect(before.missingRequired).toEqual(['الهوية الشخصية']);
 
     await saveDocument(session, { requirementKey: 'NATIONAL_ID', publicId });
-    await saveDocument(session, { requirementKey: 'PERSONAL_PHOTO', publicId });
 
     const after = await listMyDocuments(session);
     expect(after.isComplete).toBe(true);
     expect(after.missingRequired).toEqual([]);
   });
 
-  it('مهنة حرفية تكتمل بمستندين فقط، ولا إثبات عنوان في القائمة', async () => {
+  it('مهنة حرفية تكتمل بالهوية وحدها، ولا إثبات عنوان في القائمة', async () => {
     const { session } = await makeProvider({ kind: 'CRAFT', slug: 'plumber11' });
     const publicId = documentPublicId(session.id);
     mockCloudinaryAsset(publicId);
 
     await saveDocument(session, { requirementKey: 'NATIONAL_ID', publicId });
-    await saveDocument(session, { requirementKey: 'PERSONAL_PHOTO', publicId });
 
     const result = await listMyDocuments(session);
     expect(result.isComplete).toBe(true);
     expect(result.requirements.some((r) => r.key === 'ADDRESS_PROOF')).toBe(false);
   });
 
-  it('مهنة منظَّمة تحتاج 4 مستندات للاكتمال', async () => {
+  it('المهنة المنظَّمة تكتمل هي الأخرى بالهوية وحدها', async () => {
     const { session } = await makeProvider({ kind: 'REGULATED', slug: 'doctor2' });
     const publicId = documentPublicId(session.id);
     mockCloudinaryAsset(publicId);
 
+    const before = await listMyDocuments(session);
+    expect(before.missingRequired).toEqual(['الهوية الشخصية']);
+
     await saveDocument(session, { requirementKey: 'NATIONAL_ID', publicId });
-    await saveDocument(session, { requirementKey: 'PERSONAL_PHOTO', publicId });
-
-    const partial = await listMyDocuments(session);
-    expect(partial.isComplete).toBe(false);
-    expect(partial.missingRequired).toEqual(['مؤهل أو شهادة مهنية', 'رخصة مزاولة المهنة']);
-
-    await saveDocument(session, { requirementKey: 'PROFESSIONAL_CERT', publicId });
-    await saveDocument(session, { requirementKey: 'PRACTICE_LICENSE', publicId });
 
     expect((await listMyDocuments(session)).isComplete).toBe(true);
   });

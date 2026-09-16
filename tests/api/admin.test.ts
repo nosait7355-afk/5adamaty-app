@@ -347,12 +347,11 @@ describe('التصنيفات', () => {
 /* ================================================================== */
 
 describe('المهن ومحرّك المستندات الديناميكي', () => {
-  it('🔐 يرفض 422 عند تعارض requiresLicense مع القائمة', async () => {
+  it('🔐 يرفض 422 عند حذف بطاقة الرقم القومي من القائمة', async () => {
     const token = await tokenFor(adminId, 'ADMIN');
-    const badRequirements = buildDocumentRequirements({
-      requiresQualification: false,
-      requiresLicense: false,
-    });
+    const badRequirements = buildDocumentRequirements({}).filter(
+      (item) => item.key !== 'NATIONAL_ID'
+    );
 
     const response = await createProfessionRoute(
       req('/api/v1/admin/professions', {
@@ -366,8 +365,8 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
           order: 1,
           professionKind: 'REGULATED',
           requiresQualification: false,
-          requiresLicense: true, // تعارض متعمَّد مع القائمة أدناه التي لا تحوي رخصة
-          documentRequirements: badRequirements,
+          requiresLicense: true,
+          documentRequirements: badRequirements, // بلا هوية — مخالفة متعمّدة
         },
       })
     , undefined);
@@ -375,7 +374,7 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     expect(response.status).toBe(422);
   });
 
-  it('ينشئ مهنة حرفية بمستندات صحيحة (بطاقة + صورة، إثبات عنوان اختياري)', async () => {
+  it('ينشئ مهنة حرفية بالمستندات الأربعة، الهوية وحدها إلزامية', async () => {
     const token = await tokenFor(adminId, 'ADMIN');
     const requirements = buildDocumentRequirements({
       requiresQualification: false,
@@ -402,17 +401,20 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
 
     expect(response.status).toBe(201);
     const body = await json(response);
-    const data = body.data as { id: string; documentRequirements: Array<{ key: string; required: boolean }> };
-    expect(data.documentRequirements).toHaveLength(2);
-    expect(data.documentRequirements.filter((r) => r.required)).toHaveLength(2);
+    const data = body.data as {
+      id: string;
+      documentRequirements: Array<{ key: string; required: boolean }>;
+    };
+    expect(data.documentRequirements).toHaveLength(4);
+    expect(data.documentRequirements.filter((r) => r.required)).toHaveLength(1);
   });
 
   it('🔐 المسار العام يعكس فورًا تعديل الإدارة على متطلبات المستندات', async () => {
     const token = await tokenFor(adminId, 'ADMIN');
-    const requirements = buildDocumentRequirements({
-      requiresQualification: false,
-      requiresLicense: false,
-    });
+    // قائمة مقلّصة يدويًا — Admin يحرّرها بحرية ما دامت الهوية إلزامية
+    const requirements = buildDocumentRequirements({}).filter((item) =>
+      ['NATIONAL_ID', 'PERSONAL_PHOTO'].includes(item.key)
+    );
 
     const created = await createProfessionRoute(
       req('/api/v1/admin/professions', {
@@ -442,8 +444,11 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     const beforeBody = await json(before);
     expect((beforeBody.data as { requirements: unknown[] }).requirements).toHaveLength(2);
 
-    // الإدارة تحوّلها إلى مهنة منظَّمة تتطلب مؤهلًا وترخيصًا
-    const upgraded = buildDocumentRequirements({ requiresQualification: true, requiresLicense: true });
+    // الإدارة تحوّلها إلى مهنة منظَّمة بالقائمة الكاملة
+    const upgraded = buildDocumentRequirements({
+      requiresQualification: true,
+      requiresLicense: true,
+    });
     const updateResponse = await updateProfessionRoute(
       req(`/api/v1/admin/professions/${professionId}`, {
         method: 'PATCH',
@@ -473,7 +478,7 @@ describe('المهن ومحرّك المستندات الديناميكي', () =
     expect(afterData.requiresQualification).toBe(true);
     expect(afterData.requiresLicense).toBe(true);
     expect(afterData.requirements).toHaveLength(4);
-    expect(afterData.requirements.filter((r) => r.required)).toHaveLength(4);
+    expect(afterData.requirements.filter((r) => r.required)).toHaveLength(1);
   });
 
   it('يرفض slug مكررًا للمهنة', async () => {

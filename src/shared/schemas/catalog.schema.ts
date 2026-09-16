@@ -24,14 +24,17 @@ export const listProfessionsQuerySchema = z
 
 export const professionIdParamSchema = z.object({ id: objectIdSchema }).strict();
 
-/** ترتيب نتائج البحث — الخيارات الظاهرة في شريط الفلاتر (الصورة 09). */
-export const SORT_OPTIONS = ['rating', 'price_asc', 'price_desc', 'newest'] as const;
+/**
+ * ترتيب نتائج البحث — الخيارات الظاهرة في شريط الفلاتر (الصورة 09).
+ *
+ * خيارا السعر (`price_asc`/`price_desc`) أُزيلا مع إزالة التسعير من
+ * المنصة: لم يعد هناك حقل سعر يُرتَّب عليه.
+ */
+export const SORT_OPTIONS = ['rating', 'newest'] as const;
 export type SortOption = (typeof SORT_OPTIONS)[number];
 
 export const SORT_LABELS_AR: Record<SortOption, string> = {
   rating: 'الأعلى تقييمًا',
-  price_asc: 'الأقل سعرًا',
-  price_desc: 'الأعلى سعرًا',
   newest: 'الأحدث',
 };
 
@@ -53,15 +56,9 @@ export const discoveryQuerySchema = paginationSchema
       .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'المنطقة غير صالحة.' })
       .optional(),
     minRating: z.coerce.number().min(0).max(5).optional(),
-    priceMin: z.coerce.number().min(0).max(1_000_000).optional(),
-    priceMax: z.coerce.number().min(0).max(1_000_000).optional(),
     sort: z.enum(SORT_OPTIONS).default('rating'),
   })
-  .strict()
-  .refine((data) => data.priceMin == null || data.priceMax == null || data.priceMin <= data.priceMax, {
-    message: 'الحد الأدنى للسعر يجب ألا يتجاوز الحد الأقصى.',
-    path: ['priceMin'],
-  });
+  .strict();
 
 export type DiscoveryQuery = z.infer<typeof discoveryQuerySchema>;
 

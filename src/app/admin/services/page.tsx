@@ -9,7 +9,7 @@ import { Badge, Chip } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { useAdminServices, useSetServiceActive } from '@/lib/queries/admin';
-import { formatDateShort, formatPriceFrom, formatRating } from '@/lib/format';
+import { formatDateShort, formatRating } from '@/lib/format';
 
 const PAGE_SIZE = 20;
 
@@ -83,8 +83,8 @@ export default function AdminServicesPage() {
                     {service.title}
                   </h3>
                   <p className="num text-badge text-ink-400">
-                    {formatPriceFrom(service.priceFrom)} · ⭐ {formatRating(service.ratingAvg)} (
-                    {service.ratingCount}) · {formatDateShort(service.createdAt)}
+                    ⭐ {formatRating(service.ratingAvg)} ({service.ratingCount}) ·{' '}
+                    {formatDateShort(service.createdAt)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">

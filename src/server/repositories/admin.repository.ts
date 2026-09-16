@@ -162,8 +162,6 @@ export interface AdminServiceLean {
   categoryId: Types.ObjectId;
   professionId: Types.ObjectId;
   title: string;
-  priceFrom: number;
-  priceTo?: number;
   isActive: boolean;
   ratingAvg: number;
   ratingCount: number;

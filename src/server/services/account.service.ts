@@ -376,7 +376,6 @@ export async function listFavorites(user: SessionUser) {
     services: services.map((service) => ({
       id: String(service._id),
       title: service.title,
-      priceFrom: service.priceFrom,
       ratingAvg: service.ratingAvg,
       providerId: String(service.providerId),
     })),

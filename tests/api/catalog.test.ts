@@ -181,16 +181,27 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
     expect(data.requiresQualification).toBe(false);
     expect(data.requiresLicense).toBe(false);
 
-    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
-    expect(data.requirements.filter((r) => r.required)).toHaveLength(2);
+    expect(data.requirements.map((r) => r.key)).toEqual([
+      'NATIONAL_ID',
+      'PERSONAL_PHOTO',
+      'PROFESSIONAL_CERT',
+      'PRACTICE_LICENSE',
+    ]);
+    // الهوية وحدها إلزامية في كل المهن
+    expect(data.requirements.filter((r) => r.required).map((r) => r.key)).toEqual(['NATIONAL_ID']);
   });
 
   it('كهربائي (حرفية): نفس مستندات السبّاك', async () => {
     const { data } = await requirementsFor('electrician');
-    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
+    expect(data.requirements.map((r) => r.key)).toEqual([
+      'NATIONAL_ID',
+      'PERSONAL_PHOTO',
+      'PROFESSIONAL_CERT',
+      'PRACTICE_LICENSE',
+    ]);
   });
 
-  it('طبيب (منظَّمة): 4 مستندات، كلها إلزامية', async () => {
+  it('طبيب (منظَّمة): 4 مستندات، الهوية وحدها إلزامية', async () => {
     const { data } = await requirementsFor('doctor');
 
     expect(data.requiresQualification).toBe(true);
@@ -201,7 +212,7 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
       'PROFESSIONAL_CERT',
       'PRACTICE_LICENSE',
     ]);
-    expect(data.requirements.filter((r) => r.required)).toHaveLength(4);
+    expect(data.requirements.filter((r) => r.required).map((r) => r.key)).toEqual(['NATIONAL_ID']);
   });
 
   it('محامٍ (منظَّمة): نفس مستندات الطبيب', async () => {
@@ -210,14 +221,18 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
     expect(data.requirements.map((r) => r.key)).toContain('PRACTICE_LICENSE');
   });
 
-  it('مدرّس خصوصي: مؤهل بلا ترخيص — 3 مستندات', async () => {
+  it('مدرّس خصوصي: نفس القائمة — الأعلام لم تعد تُخفي مستندًا', async () => {
     const { data } = await requirementsFor('private-tutor');
 
     expect(data.requiresQualification).toBe(true);
     expect(data.requiresLicense).toBe(false);
-    expect(data.requirements).toHaveLength(3);
-    expect(data.requirements.map((r) => r.key)).toContain('PROFESSIONAL_CERT');
-    expect(data.requirements.map((r) => r.key)).not.toContain('PRACTICE_LICENSE');
+    expect(data.requirements.map((r) => r.key)).toEqual([
+      'NATIONAL_ID',
+      'PERSONAL_PHOTO',
+      'PROFESSIONAL_CERT',
+      'PRACTICE_LICENSE',
+    ]);
+    expect(data.requirements.filter((r) => r.required).map((r) => r.key)).toEqual(['NATIONAL_ID']);
   });
 
   it('يعيد قيود الملفات مع كل مستند', async () => {

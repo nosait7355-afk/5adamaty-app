@@ -6,7 +6,6 @@ import { EmptyState, ErrorState } from '@/components/common/states';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CatalogIcon } from '@/components/common/catalog-icon';
 import { Rating } from './rating-stars';
-import { formatPriceFrom } from '@/lib/format';
 import { useServices } from '@/lib/queries/discovery';
 
 export interface PopularServicesProps {
@@ -56,9 +55,6 @@ export function PopularServices({ limit = 4 }: PopularServicesProps) {
               <span className="line-clamp-1 text-label font-bold text-ink-900">{service.title}</span>
               <span className="flex items-center gap-2">
                 <Rating value={service.ratingAvg} count={service.ratingCount} />
-                <span className="num text-meta font-semibold text-brand-600">
-                  {formatPriceFrom(service.priceFrom)}
-                </span>
               </span>
             </span>
 

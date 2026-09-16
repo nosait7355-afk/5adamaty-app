@@ -41,29 +41,13 @@ describe('البذر', () => {
     expect(regulated).toBeGreaterThan(0);
   });
 
-  it('كل مهنة حرفية لها مستندان إلزاميان بالضبط، ولا إثبات عنوان', async () => {
+  it('كل مهنة تعرض المستندات الأربعة، والهوية وحدها إلزامية، ولا إثبات عنوان', async () => {
     await runSeed();
-    const crafts = await Profession.find({ professionKind: 'CRAFT' }).lean();
+    const professions = await Profession.find().lean();
 
-    for (const profession of crafts) {
-      const keys = profession.documentRequirements.map((r) => r.key);
-      expect(keys, profession.name).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
+    expect(professions.length).toBeGreaterThan(0);
 
-      const required = profession.documentRequirements.filter((r) => r.required).map((r) => r.key);
-      expect(required, profession.name).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
-    }
-  });
-
-  it('المهن المنظَّمة بترخيص لها 4 مستندات، كلها إلزامية', async () => {
-    await runSeed();
-    const regulated = await Profession.find({
-      professionKind: 'REGULATED',
-      requiresLicense: true,
-    }).lean();
-
-    expect(regulated.length).toBeGreaterThan(0);
-
-    for (const profession of regulated) {
+    for (const profession of professions) {
       const keys = profession.documentRequirements.map((r) => r.key);
       expect(keys, profession.name).toEqual([
         'NATIONAL_ID',
@@ -71,19 +55,10 @@ describe('البذر', () => {
         'PROFESSIONAL_CERT',
         'PRACTICE_LICENSE',
       ]);
-      expect(profession.documentRequirements.filter((r) => r.required)).toHaveLength(4);
+
+      const required = profession.documentRequirements.filter((r) => r.required).map((r) => r.key);
+      expect(required, profession.name).toEqual(['NATIONAL_ID']);
     }
-  });
-
-  it('مهنة بمؤهل بلا ترخيص لا تعرض رخصة المزاولة', async () => {
-    await runSeed();
-    const tutor = await Profession.findOne({ slug: 'private-tutor' }).lean();
-
-    expect(tutor).not.toBeNull();
-    const keys = tutor!.documentRequirements.map((r) => r.key);
-    expect(keys).toHaveLength(3);
-    expect(keys).toContain('PROFESSIONAL_CERT');
-    expect(keys).not.toContain('PRACTICE_LICENSE');
   });
 
   it('كل مناطق التغطية من قائمة الفيوم النصية', async () => {

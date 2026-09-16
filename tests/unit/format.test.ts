@@ -8,8 +8,6 @@ import {
   formatOrderNumber,
   formatPhone,
   formatPrice,
-  formatPriceFrom,
-  formatPriceRange,
   formatRating,
   formatRelativeTime,
   formatServicesCount,
@@ -41,19 +39,6 @@ describe('formatPrice', () => {
   it('يعرض السعر بصيغة الصور: "150 ج.م"', () => {
     expect(formatPrice(150)).toBe('150 ج.م');
     expect(formatPrice(150)).not.toMatch(ARABIC_INDIC);
-  });
-
-  it('يعرض "بيدأ من" كما في بطاقة الخدمة', () => {
-    expect(formatPriceFrom(150)).toBe('بيدأ من 150 ج.م');
-  });
-
-  it('يعرض النطاق السعري', () => {
-    expect(formatPriceRange(100, 500)).toBe('100 - 500 ج.م');
-  });
-
-  it('يطوي النطاق إلى سعر واحد عند تساوي الطرفين أو غياب الأقصى', () => {
-    expect(formatPriceRange(200, 200)).toBe('200 ج.م');
-    expect(formatPriceRange(200, null)).toBe('200 ج.م');
   });
 });
 

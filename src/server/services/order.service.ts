@@ -36,7 +36,7 @@ import type { MediaRef } from '@/server/db/models/shared';
  *   1. **لا يوجد أي مسار مالي.** `paymentMethod` يثبّته الخادم على القيمة
  *      الوحيدة الممكنة، ولا يُقرأ من الطلب إطلاقًا. لا معاملة ولا محفظة ولا
  *      بوابة (ARCHITECTURE §0.1).
- *   2. **السعر ليس بيد العميل.** `agreedPrice` يُشتق من سعر الخدمة أو المزوّد
+ *   2. **السعر ليس بيد العميل.** `agreedPrice` لم يعد يُشتق من أي سعر معلن
  *      المعلن، ولا يقبل الخادم قيمة سعر من جسم الطلب أصلًا.
  *   3. **كل تغيير حالة يمرّ بالـState Machine** ثم بتحديث شرطي ذرّي.
  *   4. **IDOR:** من ليس طرفًا في الطلب يحصل على 404 لا 403.
@@ -216,8 +216,12 @@ export async function createOrder(
     throw unprocessable('لا يمكنك طلب خدمة من نفسك.');
   }
 
-  /* ---- السعر: من الخدمة أو من نطاق المزوّد، لا من العميل ---- */
-  let agreedPrice: number | undefined;
+  /*
+   * لا سعر عند الإنشاء: التسعير أُزيل من المنصة، فالقيمة تُتفق عليها بين
+   * العميل والمزوّد خارج التطبيق. `agreedPrice` يبقى في النموذج لأنه
+   * مصدر تقارير الإدارة، لكنه لا يُملأ من أي مصدر معلن.
+   */
+  const agreedPrice: number | undefined = undefined;
   let serviceType = input.serviceType;
 
   if (input.serviceId) {
@@ -226,10 +230,7 @@ export async function createOrder(
     if (String(service.providerId) !== input.providerId) {
       throw unprocessable('الخدمة المختارة لا تخصّ مقدم الخدمة المحدد.');
     }
-    agreedPrice = service.priceFrom;
     serviceType = service.title;
-  } else if (provider.priceMode === 'RANGE' && provider.priceMin != null) {
-    agreedPrice = provider.priceMin;
   }
 
   /* ---- المرفقات: يُتحقق من كل أصل لدى Cloudinary قبل حفظه ---- */

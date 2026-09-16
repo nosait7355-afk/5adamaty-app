@@ -44,10 +44,6 @@ export interface ProviderCardDto {
   /** المنطقة الأولى — هي المعروضة بجانب 📍 في البطاقة. */
   area?: string;
   coverageAreas: string[];
-  priceMode: string;
-  priceMin?: number;
-  priceMax?: number;
-  currency: string;
   isVerifiedBadge: boolean;
   ratingAvg: number;
   ratingCount: number;
@@ -56,7 +52,6 @@ export interface ProviderCardDto {
 }
 
 export interface ProviderDetailDto extends ProviderCardDto {
-  highlights: string[];
   gallery: string[];
   customersCount: number;
   avgResponseMinutes?: number;
@@ -68,9 +63,6 @@ export interface ServiceCardDto {
   id: string;
   title: string;
   description: string;
-  priceFrom: number;
-  priceTo?: number;
-  currency: string;
   areas: string[];
   area?: string;
   ratingAvg: number;
@@ -139,10 +131,6 @@ function toProviderCard(row: ProviderRow): ProviderCardDto {
     yearsOfExperience: row.yearsOfExperience,
     ...(row.coverageAreas?.[0] ? { area: row.coverageAreas[0] } : {}),
     coverageAreas: row.coverageAreas ?? [],
-    priceMode: row.priceMode,
-    ...(row.priceMin != null ? { priceMin: row.priceMin } : {}),
-    ...(row.priceMax != null ? { priceMax: row.priceMax } : {}),
-    currency: row.currency,
     isVerifiedBadge: row.isVerifiedBadge,
     ratingAvg: row.ratingAvg,
     ratingCount: row.ratingCount,
@@ -154,7 +142,6 @@ function toProviderCard(row: ProviderRow): ProviderCardDto {
 function toProviderDetail(row: ProviderRow, servicesCount: number): ProviderDetailDto {
   return {
     ...toProviderCard(row),
-    highlights: row.highlights ?? [],
     gallery: (row.gallery ?? []).map((image) => image.url),
     customersCount: row.customersCount ?? 0,
     ...(row.avgResponseMinutes != null ? { avgResponseMinutes: row.avgResponseMinutes } : {}),
@@ -168,9 +155,6 @@ function toServiceCard(row: ServiceRow): ServiceCardDto {
     id: String(row._id),
     title: row.title,
     description: row.description,
-    priceFrom: row.priceFrom,
-    ...(row.priceTo != null ? { priceTo: row.priceTo } : {}),
-    currency: row.currency,
     areas: row.areas ?? [],
     ...(row.areas?.[0] ? { area: row.areas[0] } : {}),
     ratingAvg: row.ratingAvg,
@@ -249,8 +233,6 @@ async function resolveFilters(query: DiscoveryQuery): Promise<DiscoveryFilters> 
     providerId: query.providerId,
     area: query.area,
     minRating: query.minRating,
-    priceMin: query.priceMin,
-    priceMax: query.priceMax,
     sort: query.sort,
     page: query.page,
     limit: query.limit,

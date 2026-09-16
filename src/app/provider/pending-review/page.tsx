@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Clock, FileSearch, Gavel, Inbox } from 'lucide-react';
+import { CheckCircle2, Gavel, Inbox } from 'lucide-react';
 import { PageContainer } from '@/components/layout/page-container';
 import { BrandMark } from '@/components/layout/brand-mark';
 import { Card } from '@/components/ui/card';
@@ -9,12 +9,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { VerificationBadge } from '@/components/common/status-badge';
 import { InfoAlert } from '@/components/common/info-alert';
 import { ErrorState } from '@/components/common/states';
-import { OrderTimeline } from '@/components/common/order-timeline';
 import { formatDateTime } from '@/lib/format';
 import { useMyProviderProfile } from '@/lib/queries/provider';
 
 /**
- * تم إرسال طلب التسجيل / قيد المراجعة — الصورة 23.
+ * تم التسجيل بنجاح — الصورة 23.
+ *
+ * لم تعد هذه شاشة انتظار: الحساب يُفعَّل تلقائيًا فور الإرسال، فالشاشة
+ * تؤكّد التفعيل وتعرض رقم الطلب. تبقى قادرة على عرض حالات الرفض وطلب
+ * التعديل لأن الإدارة تحتفظ برقابة **بعدية** تستطيع بها تغيير الحالة.
  *
  * التصميم يذكر إخطارًا برسالة نصية؛ القرار المعتمد في `UI_ANALYSIS §2` هو
  * إشعار داخل التطبيق + بريد إلكتروني، بلا أي SMS أو OTP.
@@ -51,36 +54,6 @@ export default function PendingReviewPage() {
   const needsResubmission = verification.status === 'RESUBMISSION_REQUIRED';
   const isDraft = verification.status === 'DRAFT';
 
-  /* خطوات المراجعة الأربع — الصورة 23. */
-  const decided = isApproved || isRejected;
-
-  const reviewSteps = [
-    {
-      title: 'استلام الطلب',
-      description: 'وصل طلبك بنجاح إلى فريق المراجعة.',
-      state: 'done' as const,
-      ...(verification.submittedAt ? { timestamp: formatDateTime(verification.submittedAt) } : {}),
-    },
-    {
-      title: 'مراجعة البيانات',
-      description: 'التحقق من بيانات حسابك ومهنتك ومناطق تغطيتك.',
-      state: (decided ? 'done' : 'current') as 'done' | 'current' | 'pending',
-    },
-    {
-      title: 'التحقق من المستندات',
-      description: 'مطابقة المستندات المرفوعة بمتطلبات مهنتك.',
-      state: (decided ? 'done' : 'pending') as 'done' | 'current' | 'pending',
-    },
-    {
-      title: 'اتخاذ القرار',
-      description: isApproved
-        ? 'تم اعتماد حسابك وأصبح ظاهرًا للعملاء.'
-        : 'سنخطرك بالنتيجة عبر إشعار داخل التطبيق وبريدك الإلكتروني.',
-      state: (decided ? 'done' : 'pending') as 'done' | 'current' | 'pending',
-      ...(verification.reviewedAt ? { timestamp: formatDateTime(verification.reviewedAt) } : {}),
-    },
-  ];
-
   return (
     <PageContainer withBottomNav={false} className="flex flex-col gap-5 pb-10 pt-6">
       <header className="flex flex-col items-center gap-3 text-center">
@@ -95,7 +68,7 @@ export default function PendingReviewPage() {
 
         <h1 className="text-screen-title font-extrabold text-ink-900">
           {isApproved
-            ? 'تم اعتماد حسابك'
+            ? 'تم التسجيل بنجاح'
             : isRejected
               ? 'تم رفض طلب التسجيل'
               : needsResubmission
@@ -107,7 +80,7 @@ export default function PendingReviewPage() {
 
         <p className="text-body text-ink-400">
           {isApproved
-            ? 'أصبح ملفك ظاهرًا للعملاء ويمكنك استقبال الطلبات.'
+            ? 'حسابك نشط الآن — ملفك ظاهر للعملاء ويمكنك استقبال الطلبات.'
             : isRejected
               ? 'يمكنك التواصل مع الدعم لمعرفة التفاصيل.'
               : needsResubmission
@@ -146,31 +119,12 @@ export default function PendingReviewPage() {
           <span className="num text-meta font-bold text-ink-900">{profileCompletion}%</span>
         </div>
 
-        {!isApproved && !isRejected && !isDraft && (
-          <p className="flex items-center gap-2 rounded-field bg-warning-bg px-3 py-2 text-meta text-warning">
-            <Clock size={16} aria-hidden="true" />
-            المراجعة تستغرق عادةً 24–48 ساعة عمل.
-          </p>
-        )}
       </Card>
 
       {verification.rejectionReason && (
         <InfoAlert tone={isRejected ? 'danger' : 'warning'} title="ملاحظة الإدارة">
           {verification.rejectionReason}
         </InfoAlert>
-      )}
-
-      {/* ---- خطوات المراجعة ---- */}
-      {!isDraft && (
-        <section aria-label="خطوات المراجعة">
-          <h2 className="mb-3 flex items-center gap-2 text-section font-bold text-ink-900">
-            <FileSearch size={20} className="text-brand-600" aria-hidden="true" />
-            خطوات المراجعة
-          </h2>
-          <Card>
-            <OrderTimeline items={reviewSteps} />
-          </Card>
-        </section>
       )}
 
       {/* ---- معلومات هامة ---- */}
@@ -181,8 +135,8 @@ export default function PendingReviewPage() {
         </h2>
         <Card>
           <ul className="flex list-inside list-disc flex-col gap-2 text-meta text-ink-600">
-            <li>لن يظهر ملفك في نتائج البحث ولن تستقبل طلبات قبل الاعتماد.</li>
-            <li>سنخطرك بالقرار عبر إشعار داخل التطبيق وبريدك الإلكتروني.</li>
+            <li>حسابك نشط وملفك ظاهر في نتائج البحث فور اكتمال التسجيل.</li>
+            <li>للإدارة أن تراجع حسابك لاحقًا وتوقفه عند مخالفة الشروط.</li>
             <li>الدفع كاش مباشرة بينك وبين العميل خارج التطبيق.</li>
             <li>مستنداتك محفوظة بشكل مقيّد ولا تظهر للعملاء ولا لمقدمي خدمة آخرين.</li>
           </ul>

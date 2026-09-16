@@ -17,8 +17,6 @@ export interface CreateServiceInput {
   professionId: string;
   title: string;
   description: string;
-  priceFrom: number;
-  priceTo?: number;
   areas: string[];
   isActive: boolean;
 }
@@ -67,8 +65,6 @@ export async function createProviderService(input: CreateServiceInput): Promise<
     professionId: new Types.ObjectId(input.professionId),
     title: input.title,
     description: input.description,
-    priceFrom: input.priceFrom,
-    ...(input.priceTo != null ? { priceTo: input.priceTo } : {}),
     areas: input.areas,
     isActive: input.isActive,
   });
@@ -82,8 +78,6 @@ export async function updateProviderService(
   patch: Partial<{
     title: string;
     description: string;
-    priceFrom: number;
-    priceTo: number | undefined;
     areas: string[];
     isActive: boolean;
   }>

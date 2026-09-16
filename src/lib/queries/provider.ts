@@ -91,12 +91,8 @@ export interface AdminProviderDetail {
   displayName: string;
   professionName: string;
   bio: string;
-  highlights: string[];
   coverageAreas: string[];
   yearsOfExperience: number;
-  priceMode: string;
-  priceMin?: number;
-  priceMax?: number;
   profileCompletion: number;
   verification: {
     status: VerificationStatus;

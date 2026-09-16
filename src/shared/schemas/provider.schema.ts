@@ -80,10 +80,8 @@ export const providerStep1Schema = z
 export type ProviderStep1Values = z.input<typeof providerStep1Schema>;
 
 /* ================================================================== */
-/* الخطوة 2/4 — المهنة والخدمة (الصورة 20)                             */
+/* الخطوة 2/3 — المهنة والخدمة (الصورة 20)                             */
 /* ================================================================== */
-
-export const PRICE_MODES = ['RANGE', 'LATER'] as const;
 
 /** مناطق التغطية: اختيار متعدد من قائمة الفيوم الثابتة — لا خريطة ولا نطاق. */
 const coverageAreasSchema = z
@@ -101,37 +99,15 @@ export const providerStep2Schema = z
     categoryId: objectIdSchema,
     professionId: objectIdSchema,
     yearsOfExperience: z.coerce.number().int().min(0).max(70),
-    // عدّاد 0/300 في الصورة 20
-    bio: safeString(300).refine((value) => value.length >= 20, {
-      message: 'وصف الخدمة قصير جدًا — اكتب 20 حرفًا على الأقل.',
-    }),
+    /*
+     * عدّاد 0/300 في الصورة 20. لا حدّ أدنى لعدد الحروف بقرار صريح: السقف
+     * وحده محفوظ لأنه قيد تخزين وعرض، أما الطول الأدنى فكان يعرقل التسجيل
+     * بلا فائدة.
+     */
+    bio: safeString(300),
     coverageAreas: coverageAreasSchema,
-    priceMode: z.enum(PRICE_MODES).default('LATER'),
-    priceMin: z.coerce.number().min(0).max(1_000_000).optional(),
-    priceMax: z.coerce.number().min(0).max(1_000_000).optional(),
-    // «ما يميّز خدمتك» 0/200 لكل ميزة
-    highlights: z.array(safeString(200)).max(6, 'الحد الأقصى 6 مزايا.').default([]),
   })
-  .strict()
-  .superRefine((data, ctx) => {
-    if (data.priceMode !== 'RANGE') return;
-
-    if (data.priceMin == null || data.priceMax == null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'حدّد السعر من وإلى، أو اختر «تحديد السعر لاحقًا».',
-        path: ['priceMin'],
-      });
-      return;
-    }
-    if (data.priceMin > data.priceMax) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'الحد الأدنى للسعر يجب ألا يتجاوز الحد الأقصى.',
-        path: ['priceMin'],
-      });
-    }
-  });
+  .strict();
 
 export type ProviderStep2Values = z.input<typeof providerStep2Schema>;
 
@@ -144,7 +120,7 @@ export type ProviderStep2Values = z.input<typeof providerStep2Schema>;
  *
  * السبب تقني لا تصميمي: المستندات تُرفع إلى Cloudinary بوضع مقيّد وتُربط
  * بـ`providerId`، فلا يمكن رفعها قبل وجود حساب وملف مزوّد. لذلك ينتهي
- * الطلب في حالة `DRAFT` حتى يُرسَل فعليًا من الخطوة 4.
+ * الطلب في حالة `DRAFT` حتى يُرسَل فعليًا من الخطوة 3.
  */
 export const registerProviderSchema = z
   .object({
@@ -180,10 +156,6 @@ export const updateProviderProfileSchema = z
     yearsOfExperience: z.coerce.number().int().min(0).max(70).optional(),
     bio: safeString(300).optional(),
     coverageAreas: coverageAreasSchema.optional(),
-    priceMode: z.enum(PRICE_MODES).optional(),
-    priceMin: z.coerce.number().min(0).max(1_000_000).optional(),
-    priceMax: z.coerce.number().min(0).max(1_000_000).optional(),
-    highlights: z.array(safeString(200)).max(6).optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
@@ -254,35 +226,15 @@ const providerServiceBaseSchema = z.object({
   description: safeString(500).refine((value) => value.length >= 10, {
     message: 'وصف الخدمة قصير جدًا.',
   }),
-  priceFrom: z.coerce.number().min(0).max(1_000_000),
-  priceTo: z.coerce.number().min(0).max(1_000_000).optional(),
   areas: serviceAreasSchema,
   isActive: z.boolean().default(true),
 });
 
-function refinePriceOrder<T extends { priceFrom?: number; priceTo?: number }>(
-  data: T,
-  ctx: z.RefinementCtx
-) {
-  if (data.priceTo != null && data.priceFrom != null && data.priceTo < data.priceFrom) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'السعر الأقصى يجب ألا يقل عن السعر الأدنى.',
-      path: ['priceTo'],
-    });
-  }
-}
-
-export const createProviderServiceSchema = providerServiceBaseSchema
-  .strict()
-  .superRefine(refinePriceOrder);
+export const createProviderServiceSchema = providerServiceBaseSchema.strict();
 
 export type CreateProviderServiceInput = z.output<typeof createProviderServiceSchema>;
 
-export const updateProviderServiceSchema = providerServiceBaseSchema
-  .partial()
-  .strict()
-  .superRefine(refinePriceOrder);
+export const updateProviderServiceSchema = providerServiceBaseSchema.partial().strict();
 
 export type UpdateProviderServiceInput = z.output<typeof updateProviderServiceSchema>;
 

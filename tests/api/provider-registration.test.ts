@@ -166,10 +166,6 @@ function step2(overrides: Record<string, unknown> = {}) {
     yearsOfExperience: 8,
     bio: 'سبّاك صحي بخبرة في كشف التسربات وتركيب السخانات والأدوات الصحية.',
     coverageAreas: ['حي الجامعة', 'دار الرماد'],
-    priceMode: 'RANGE',
-    priceMin: 150,
-    priceMax: 500,
-    highlights: ['ضمان على العمل'],
     ...overrides,
   };
 }
@@ -323,11 +319,11 @@ describe('POST /api/v1/auth/register-provider', () => {
     expect(response.status).toBe(422);
   });
 
-  it('يرفض سعرًا تقريبيًا بلا حدّين', async () => {
+  it('يرفض أي مفتاح سعر — التسعير أُزيل من مخطط التسجيل', async () => {
     const response = await registerProviderRoute(
       req('/api/v1/auth/register-provider', {
         method: 'POST',
-        body: { step1: step1(), step2: step2({ priceMode: 'RANGE', priceMin: undefined, priceMax: undefined }) },
+        body: { step1: step1(), step2: step2({ priceMode: 'RANGE' }) },
       }),
       undefined
     );
@@ -510,7 +506,7 @@ describe('POST /api/v1/provider/verification/submit', () => {
     expect(response.status).toBe(400);
   });
 
-  it('ينقل الطلب إلى PENDING_REVIEW ويسجّله وينشئ إشعارًا', async () => {
+  it('يعتمد الحساب تلقائيًا (APPROVED) ويسجّله وينشئ إشعارًا', async () => {
     const { token, providerId, userId } = await createProvider();
     await uploadRequiredDocuments(providerId);
 
@@ -528,7 +524,7 @@ describe('POST /api/v1/provider/verification/submit', () => {
     };
 
     expect(response.status).toBe(200);
-    expect(profile.verification.status).toBe('PENDING_REVIEW');
+    expect(profile.verification.status).toBe('APPROVED');
     expect(profile.documents.isComplete).toBe(true);
 
     const log = await AuditLog.findOne({
@@ -561,9 +557,9 @@ describe('POST /api/v1/provider/verification/submit', () => {
     expect(second.status).toBe(409);
   });
 
-  it('مزوّد PENDING_REVIEW لا يظهر في القوائم ولا يستطيع استقبال طلبات', async () => {
+  it('المزوّد يظهر ويستقبل طلبات فور الإرسال — تفعيل تلقائي', async () => {
     const { token, providerId } = await createProvider({
-      step1: { fullName: 'مزوّد قيد المراجعة للاختبار' },
+      step1: { fullName: 'مزوّد مفعَّل تلقائيًا للاختبار' },
     });
     await uploadRequiredDocuments(providerId);
     await submitRoute(
@@ -575,12 +571,26 @@ describe('POST /api/v1/provider/verification/submit', () => {
       undefined
     );
 
-    // 1) لا يظهر في قائمة المزوّدين العامة
+    // 1) يظهر في قائمة المزوّدين العامة بلا أي قرار إداري
+    const list = await providersRoute(req('/api/v1/providers?limit=50'), undefined);
+    const items = (await json(list)).data as unknown as { id: string }[];
+    expect(items.some((item) => item.id === providerId)).toBe(true);
+
+    // 2) الـAPI نفسها تقول إنه يستطيع استقبال طلبات
+    const profile = await getProfileRoute(req('/api/v1/provider/profile', { token }), undefined);
+    const data = (await json(profile)).data as unknown as { canAcceptOrders: boolean };
+    expect(data.canAcceptOrders).toBe(true);
+  });
+
+  it('مزوّد لم يُرسل طلبه (DRAFT) لا يظهر ولا يستقبل طلبات', async () => {
+    const { token, providerId } = await createProvider({
+      step1: { fullName: 'مزوّد مسودة للاختبار' },
+    });
+
     const list = await providersRoute(req('/api/v1/providers?limit=50'), undefined);
     const items = (await json(list)).data as unknown as { id: string }[];
     expect(items.some((item) => item.id === providerId)).toBe(false);
 
-    // 2) الـAPI نفسها تقول إنه لا يستطيع استقبال طلبات
     const profile = await getProfileRoute(req('/api/v1/provider/profile', { token }), undefined);
     const data = (await json(profile)).data as unknown as { canAcceptOrders: boolean };
     expect(data.canAcceptOrders).toBe(false);
@@ -590,7 +600,7 @@ describe('POST /api/v1/provider/verification/submit', () => {
 /* ================================================================== */
 
 describe('مستندات المهن مختلفة حسب المهنة', () => {
-  it('مستندات السبّاك ≠ مستندات الطبيب', async () => {
+  it('السبّاك والطبيب سواء: الهوية وحدها إلزامية في المهنتين', async () => {
     const plumber = await createProvider();
     const doctor = await createProvider({
       step2: { categoryId: doctorCategoryId, professionId: doctorProfessionId },
@@ -599,28 +609,40 @@ describe('مستندات المهن مختلفة حسب المهنة', () => {
     const plumberCount = await uploadRequiredDocuments(plumber.providerId);
     const doctorCount = await uploadRequiredDocuments(doctor.providerId);
 
-    // الطبيب مهنة منظَّمة: مؤهل + ترخيص إضافيان
-    expect(doctorCount).toBeGreaterThan(plumberCount);
+    expect(plumberCount).toBe(1);
+    expect(doctorCount).toBe(1);
 
-    const plumberKeys = (await ProviderDocument.find({ providerId: plumber.providerId })).map(
-      (doc) => doc.requirementKey
-    );
     const doctorKeys = (await ProviderDocument.find({ providerId: doctor.providerId })).map(
       (doc) => doc.requirementKey
     );
-
-    expect(doctorKeys).toContain('PRACTICE_LICENSE');
-    expect(plumberKeys).not.toContain('PRACTICE_LICENSE');
+    expect(doctorKeys).toEqual(['NATIONAL_ID']);
   });
 
-  it('طلب الطبيب يُرفض إن نقص الترخيص وحده', async () => {
+  it('طلب الطبيب يمرّ بالهوية وحدها — المؤهل والترخيص اختياريان', async () => {
+    const doctor = await createProvider({
+      step2: { categoryId: doctorCategoryId, professionId: doctorProfessionId },
+    });
+    await uploadRequiredDocuments(doctor.providerId);
+
+    const response = await submitRoute(
+      req('/api/v1/provider/verification/submit', {
+        method: 'POST',
+        token: doctor.token,
+        body: { acceptTerms: true },
+      }),
+      undefined
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('طلب بلا بطاقة رقم قومي يُرفض بـ422', async () => {
     const doctor = await createProvider({
       step2: { categoryId: doctorCategoryId, professionId: doctorProfessionId },
     });
     await uploadRequiredDocuments(doctor.providerId);
     await ProviderDocument.deleteOne({
       providerId: new Types.ObjectId(doctor.providerId),
-      requirementKey: 'PRACTICE_LICENSE',
+      requirementKey: 'NATIONAL_ID',
     });
 
     const response = await submitRoute(
@@ -667,8 +689,9 @@ describe('لوحة الإدارة — التوثيق', () => {
     const submitted = await submittedProvider('طلب مرسل يظهر');
     const token = await tokenFor(adminId, 'ADMIN');
 
+    // الإرسال يعتمد الحساب تلقائيًا، فالطلبات المرسلة تُقرأ بحالة APPROVED
     const response = await adminQueueRoute(
-      req('/api/v1/admin/providers', { token, query: '?status=PENDING_REVIEW&limit=50' }),
+      req('/api/v1/admin/providers', { token, query: '?status=APPROVED&limit=50' }),
       undefined
     );
     const items = (await json(response)).data as unknown as { id: string }[];
@@ -828,7 +851,7 @@ describe('لوحة الإدارة — التوثيق', () => {
     expect(response.status).toBe(403);
 
     const untouched = await ServiceProvider.findById(provider.providerId);
-    expect(untouched?.verification.status).toBe('PENDING_REVIEW');
+    expect(untouched?.verification.status).toBe('APPROVED');
   });
 
   it('كل قرار يُسجَّل في auditLogs بحالته قبل وبعد', async () => {
@@ -850,7 +873,7 @@ describe('لوحة الإدارة — التوثيق', () => {
     }).sort({ createdAt: -1 });
 
     expect(log?.action).toBe('PROVIDER_VERIFICATION_CHANGED');
-    expect(log?.before).toMatchObject({ status: 'PENDING_REVIEW' });
+    expect(log?.before).toMatchObject({ status: 'APPROVED' });
     expect(log?.after).toMatchObject({ status: 'APPROVED', isActive: true });
   });
 });
@@ -858,7 +881,7 @@ describe('لوحة الإدارة — التوثيق', () => {
 /* ================================================================== */
 
 describe('E2E — من التسجيل إلى الظهور في البحث', () => {
-  it('تسجيل كامل ← قيد المراجعة ← اعتماد ← ظهور في نتائج البحث', async () => {
+  it('تسجيل كامل ← إرسال ← تفعيل تلقائي ← ظهور في نتائج البحث', async () => {
     const name = 'ورشة النور للكهرباء';
     const created = await createProvider({ step1: { fullName: name } });
     const adminToken = await tokenFor(adminId, 'ADMIN');
@@ -891,10 +914,21 @@ describe('E2E — من التسجيل إلى الظهور في البحث', () =
     );
     expect(submit.status).toBe(200);
 
-    // 3) بعد الإرسال وقبل القرار: ما زال غير ظاهر
+    // 3) الإرسال وحده يُظهره — لا قرار إداري بينهما
+    expect(await isListed()).toBe(true);
+
+    // 4) ورقابة الإدارة **بعدية**: الرفض يُخفيه مجددًا
+    await decideRoute(
+      req(`/api/v1/admin/providers/${created.providerId}/verification`, {
+        method: 'PATCH',
+        token: adminToken,
+        body: { status: 'REJECTED', reason: 'مخالفة الشروط' },
+      }),
+      ctx(created.providerId)
+    );
     expect(await isListed()).toBe(false);
 
-    // 4) الاعتماد
+    // 5) وإعادة الاعتماد تُظهره من جديد
     await decideRoute(
       req(`/api/v1/admin/providers/${created.providerId}/verification`, {
         method: 'PATCH',
@@ -903,11 +937,9 @@ describe('E2E — من التسجيل إلى الظهور في البحث', () =
       }),
       ctx(created.providerId)
     );
-
-    // 5) الآن يظهر في البحث
     expect(await isListed()).toBe(true);
 
-    // 6) وصار قادرًا على استقبال الطلبات
+    // 6) وهو قادر على استقبال الطلبات
     const activeToken = await tokenFor(created.userId, 'PROVIDER', 'ACTIVE');
     const profile = await getProfileRoute(
       req('/api/v1/provider/profile', { token: activeToken }),

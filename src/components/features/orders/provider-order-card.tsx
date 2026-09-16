@@ -40,13 +40,15 @@ export function ProviderOrderCard({ order, className }: ProviderOrderCardProps) 
           <span className="font-semibold text-ink-900">{order.customer.fullName}</span>
         </span>
 
+        {/* الرقم نفسه لا يُعرض — زر الاتصال وحده يفتح الاتصال به */}
         {order.customer.phone && (
           <a
             href={`tel:${order.customer.phone}`}
-            className="num inline-flex w-fit items-center gap-1.5 hover:text-brand-600"
+            aria-label={`الاتصال بـ${order.customer.fullName}`}
+            className="inline-flex w-fit items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700"
           >
             <Phone size={14} aria-hidden="true" />
-            {order.customer.phone}
+            اتصال
           </a>
         )}
 

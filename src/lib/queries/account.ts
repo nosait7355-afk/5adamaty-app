@@ -159,7 +159,7 @@ export interface FavoritesResponse {
     ratingCount: number;
     area?: string;
   }[];
-  services: { id: string; title: string; priceFrom: number; ratingAvg: number; providerId: string }[];
+  services: { id: string; title: string; ratingAvg: number; providerId: string }[];
   total: number;
 }
 

@@ -44,10 +44,6 @@ export default function ProviderProfilePage() {
       yearsOfExperience: String(loaded.yearsOfExperience),
       bio: loaded.bio,
       coverageAreas: loaded.coverageAreas,
-      priceMode: loaded.priceMode,
-      priceMin: loaded.priceMin != null ? String(loaded.priceMin) : '',
-      priceMax: loaded.priceMax != null ? String(loaded.priceMax) : '',
-      highlights: loaded.highlights,
     });
   }
 
@@ -61,10 +57,6 @@ export default function ProviderProfilePage() {
       yearsOfExperience: values.yearsOfExperience,
       bio: values.bio,
       coverageAreas: values.coverageAreas,
-      priceMode: values.priceMode,
-      ...(values.priceMin ? { priceMin: values.priceMin } : {}),
-      ...(values.priceMax ? { priceMax: values.priceMax } : {}),
-      highlights: values.highlights.filter((item) => item.trim().length > 0),
     });
 
     if (!result.success) {

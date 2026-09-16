@@ -15,20 +15,14 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat(LOCALE).format(value);
 }
 
-/** سعر بالجنيه المصري كما يظهر في الصور. مثال: 150 → "150 ج.م" */
+/**
+ * سعر بالجنيه المصري. مثال: 150 → "150 ج.م"
+ *
+ * الاستخدام الوحيد الباقي هو `agreedPrice` في الطلبات: الأسعار المعلنة
+ * أُزيلت من المنصة، فلا نطاقات ولا «بيدأ من».
+ */
 export function formatPrice(value: number): string {
   return `${formatNumber(value)} ج.م`;
-}
-
-/** نطاق سعري. مثال: (100, 500) → "100 - 500 ج.م" */
-export function formatPriceRange(min: number, max?: number | null): string {
-  if (max == null || max === min) return formatPrice(min);
-  return `${formatNumber(min)} - ${formatNumber(max)} ج.م`;
-}
-
-/** "بيدأ من 150 ج.م" — الصيغة المستخدمة في بطاقات الخدمات (الصورة 09). */
-export function formatPriceFrom(value: number): string {
-  return `بيدأ من ${formatPrice(value)}`;
 }
 
 /** تقييم بخانة عشرية واحدة. مثال: 4.75 → "4.8" */

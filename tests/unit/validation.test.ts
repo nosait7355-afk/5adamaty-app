@@ -135,8 +135,9 @@ describe('paginationSchema', () => {
 });
 
 describe('discoveryQuerySchema', () => {
-  it('يرفض نطاق سعر مقلوب', () => {
-    expect(() => discoveryQuerySchema.parse({ priceMin: 500, priceMax: 100 })).toThrow(/الحد الأدنى/);
+  it('يرفض أي مفتاح سعر — التسعير أُزيل من المنصة', () => {
+    expect(() => discoveryQuerySchema.parse({ priceMin: 100 })).toThrow();
+    expect(() => discoveryQuerySchema.parse({ priceMax: 500 })).toThrow();
   });
 
   it('يرفض منطقة غير موجودة في الفيوم', () => {
@@ -241,22 +242,23 @@ describe('قاعدة اتساق المستندات', () => {
     ).toEqual([]);
   });
 
-  it('يرصد ترخيصًا زائدًا', () => {
-    const reqs = buildDocumentRequirements({ requiresQualification: false, requiresLicense: true });
-    const violations = validateRequirementsConsistency(reqs, {
-      requiresQualification: false,
-      requiresLicense: false,
-    });
-    expect(violations.map((v) => v.key)).toContain('PRACTICE_LICENSE');
+  it('لا يرصد شيئًا على المؤهل أو الترخيص — صارا اختياريين دائمًا', () => {
+    const reqs = buildDocumentRequirements({});
+    expect(
+      validateRequirementsConsistency(reqs, {
+        requiresQualification: false,
+        requiresLicense: false,
+      })
+    ).toEqual([]);
+    expect(
+      validateRequirementsConsistency(reqs, { requiresQualification: true, requiresLicense: true })
+    ).toEqual([]);
   });
 
-  it('يرصد مؤهلًا ناقصًا', () => {
-    const reqs = buildDocumentRequirements({ requiresQualification: false, requiresLicense: false });
-    const violations = validateRequirementsConsistency(reqs, {
-      requiresQualification: true,
-      requiresLicense: false,
-    });
-    expect(violations.map((v) => v.key)).toContain('PROFESSIONAL_CERT');
+  it('يرصد غياب بطاقة الرقم القومي', () => {
+    const reqs = buildDocumentRequirements({}).filter((item) => item.key !== 'NATIONAL_ID');
+    const violations = validateRequirementsConsistency(reqs);
+    expect(violations.map((v) => v.key)).toContain('NATIONAL_ID');
   });
 
   it('يرصد بطاقة قومية اختيارية', () => {

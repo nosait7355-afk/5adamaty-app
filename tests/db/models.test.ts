@@ -212,55 +212,26 @@ describe('User', () => {
 });
 
 describe('Profession — محرّك المستندات الديناميكية', () => {
-  it('مهنة حرفية: مستندان إلزاميان فقط', async () => {
+  it('كل مهنة تعرض المستندات الأربعة، والهوية وحدها إلزامية', async () => {
     const category = await makeCategory();
-    const profession = await makeProfession(category._id, 'CRAFT');
 
-    const keys = profession.documentRequirements.map((r) => r.key);
-    expect(keys).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
-    expect(profession.documentRequirements.filter((r) => r.required)).toHaveLength(2);
-    // المؤهل والترخيص يختفيان تمامًا
-    expect(keys).not.toContain('PROFESSIONAL_CERT');
-    expect(keys).not.toContain('PRACTICE_LICENSE');
+    for (const kind of ['CRAFT', 'REGULATED'] as const) {
+      const profession = await makeProfession(category._id, kind);
+      const keys = profession.documentRequirements.map((r) => r.key);
+
+      expect(keys, kind).toEqual([
+        'NATIONAL_ID',
+        'PERSONAL_PHOTO',
+        'PROFESSIONAL_CERT',
+        'PRACTICE_LICENSE',
+      ]);
+
+      const required = profession.documentRequirements.filter((r) => r.required);
+      expect(required.map((r) => r.key), kind).toEqual(['NATIONAL_ID']);
+    }
   });
 
-  it('مهنة منظَّمة: 4 مستندات، كلها إلزامية', async () => {
-    const category = await makeCategory();
-    const profession = await makeProfession(category._id, 'REGULATED');
-
-    const keys = profession.documentRequirements.map((r) => r.key);
-    expect(keys).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'PROFESSIONAL_CERT',
-      'PRACTICE_LICENSE',
-    ]);
-    expect(profession.documentRequirements.filter((r) => r.required)).toHaveLength(4);
-  });
-
-  it('مهنة بمؤهل بلا ترخيص: 3 مستندات بلا رخصة (مثل مدرّس خصوصي)', async () => {
-    const category = await makeCategory();
-    const profession = await Profession.create({
-      categoryId: category._id,
-      name: 'مدرّس خصوصي',
-      slug: 'private-tutor',
-      icon: 'graduation-cap',
-      professionKind: 'REGULATED',
-      requiresQualification: true,
-      requiresLicense: false,
-      documentRequirements: buildDocumentRequirements({
-        requiresQualification: true,
-        requiresLicense: false,
-      }),
-    });
-
-    const keys = profession.documentRequirements.map((r) => r.key);
-    expect(keys).toHaveLength(3);
-    expect(keys).toContain('PROFESSIONAL_CERT');
-    expect(keys).not.toContain('PRACTICE_LICENSE');
-  });
-
-  it('يرفض ترخيصًا في مهنة لا تتطلبه', async () => {
+  it('يرفض مهنة بلا بطاقة رقم قومي — القاعدة الوحيدة الباقية', async () => {
     const category = await makeCategory();
     await expect(
       Profession.create({
@@ -271,15 +242,14 @@ describe('Profession — محرّك المستندات الديناميكية', 
         professionKind: 'CRAFT',
         requiresLicense: false,
         requiresQualification: false,
-        documentRequirements: buildDocumentRequirements({
-          requiresQualification: false,
-          requiresLicense: true, // تعارض متعمّد
-        }),
+        documentRequirements: buildDocumentRequirements({}).filter(
+          (item) => item.key !== 'NATIONAL_ID'
+        ),
       })
     ).rejects.toThrow(/غير متسق/);
   });
 
-  it('يرفض غياب المؤهل في مهنة تتطلبه', async () => {
+  it('يرفض جعل بطاقة الرقم القومي اختيارية', async () => {
     const category = await makeCategory();
     await expect(
       Profession.create({
@@ -290,10 +260,9 @@ describe('Profession — محرّك المستندات الديناميكية', 
         professionKind: 'REGULATED',
         requiresQualification: true,
         requiresLicense: false,
-        documentRequirements: buildDocumentRequirements({
-          requiresQualification: false,
-          requiresLicense: false,
-        }),
+        documentRequirements: buildDocumentRequirements({}).map((item) =>
+          item.key === 'NATIONAL_ID' ? { ...item, required: false } : item
+        ),
       })
     ).rejects.toThrow(/غير متسق/);
   });
@@ -442,7 +411,6 @@ describe('MediaRef', () => {
         professionId: oid(),
         title: 'تنظيف شامل',
         description: 'تنظيف أرضيات وحمامات',
-        priceFrom: 150,
         images: [{ ...validMedia, url: 'https://evil.example.com/x.jpg' }],
       })
     ).rejects.toThrow(/Cloudinary/);
@@ -581,26 +549,6 @@ describe('ServiceProvider', () => {
     expect(provider.isActive).toBe(false);
     expect(provider.verification.status).toBe('PENDING_REVIEW');
     expect(provider.ratingAvg).toBe(0);
-  });
-
-  it('يرفض نطاق سعر مقلوب', async () => {
-    const category = await makeCategory();
-    const profession = await makeProfession(category._id);
-    await expect(
-      ServiceProvider.create({
-        userId: oid(),
-        displayName: 'مزوّد',
-        categoryId: category._id,
-        professionId: profession._id,
-        yearsOfExperience: 5,
-        bio: 'وصف',
-        coverageAreas: ['حي الجامعة'],
-        priceMode: 'RANGE',
-        priceMin: 500,
-        priceMax: 100,
-        verification: { requestNumber: 'SRV-2025-000124' },
-      })
-    ).rejects.toThrow(/الحد الأدنى/);
   });
 
   it('يرفض مزوّدًا بلا مناطق تغطية', async () => {

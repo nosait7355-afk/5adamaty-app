@@ -32,7 +32,6 @@ import {
   formatDateShort,
   formatExperience,
   formatNumber,
-  formatPriceRange,
   formatRelativeTime,
   pluralizeAr,
 } from '@/lib/format';
@@ -166,16 +165,6 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           )}
         </header>
 
-        {/* ---- شريط السعر المبدئي ---- */}
-        <div className="flex items-center justify-between rounded-card border border-brand-100 bg-brand-50 px-4 py-3">
-          <span className="text-label font-semibold text-ink-600">السعر المبدئي</span>
-          <span className="num text-card-title font-extrabold text-brand-600">
-            {data.priceMode === 'RANGE' && data.priceMin != null
-              ? formatPriceRange(data.priceMin, data.priceMax)
-              : 'يُحدَّد بعد الاتفاق'}
-          </span>
-        </div>
-
         {/* ---- الإحصاءات الأربع ---- */}
         <Card className="grid grid-cols-4 divide-x divide-x-reverse divide-border p-0">
           <StatCell
@@ -220,14 +209,6 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           {tab === 'about' && (
             <div className="flex flex-col gap-3">
               <p className="text-body text-ink-700">{data.bio}</p>
-
-              {data.highlights.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {data.highlights.map((highlight) => (
-                    <Chip key={highlight}>{highlight}</Chip>
-                  ))}
-                </div>
-              )}
 
               <div>
                 <h2 className="mb-2 text-label font-bold text-ink-900">مناطق التغطية</h2>
