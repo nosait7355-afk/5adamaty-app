@@ -187,6 +187,7 @@ export default function ProviderRegistrationPage() {
       ...current,
       fullName: loaded.user.fullName,
       phone: loaded.user.phone ?? current.phone,
+      whatsapp: loaded.whatsapp ?? current.whatsapp,
       email: loaded.user.email ?? current.email,
       city: loaded.user.city ?? current.city,
       addressLine: loaded.user.addressLine ?? current.addressLine,
@@ -209,6 +210,7 @@ export default function ProviderRegistrationPage() {
     const result = providerStep1Schema.safeParse({
       fullName: basic.fullName,
       phone: basic.phone,
+      whatsapp: basic.whatsapp,
       email: basic.email,
       password: basic.password,
       confirmPassword: basic.confirmPassword,
@@ -273,6 +275,7 @@ export default function ProviderRegistrationPage() {
         step1: {
           fullName: basic.fullName,
           phone: basic.phone,
+          whatsapp: basic.whatsapp,
           email: basic.email,
           password: basic.password,
           confirmPassword: basic.confirmPassword,

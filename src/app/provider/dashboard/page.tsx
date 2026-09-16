@@ -17,7 +17,6 @@ import { AppHeader } from '@/components/layout/app-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer } from '@/components/layout/page-container';
 import { Card, SectionHeader } from '@/components/ui/card';
-import { LinkButton } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InfoAlert } from '@/components/common/info-alert';
 import { EmptyState, ErrorState } from '@/components/common/states';
@@ -173,23 +172,6 @@ export default function ProviderDashboardPage() {
           </div>
         </section>
 
-        {/* ---- بانر التوثيق ---- */}
-        {!provider.isVerifiedBadge && (
-          <Card className="flex items-center gap-3 bg-brand-50">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-brand-600">
-              <BadgeCheck size={26} aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-card-title font-bold text-ink-900">احصل على شارة التوثيق</h3>
-              <p className="text-meta text-ink-600">
-                أكمل مستنداتك لتحصل على الشارة وتزيد ثقة العملاء.
-              </p>
-            </div>
-            <LinkButton href="/register/provider" size="sm" variant="secondary">
-              أكمل
-            </LinkButton>
-          </Card>
-        )}
       </PageContainer>
 
       <BottomNav variant="provider" />

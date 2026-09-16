@@ -47,6 +47,7 @@ export interface ProviderProfileDto {
   id: string;
   displayName: string;
   accountType: string;
+  whatsapp?: string;
   categoryId: string;
   professionId: string;
   yearsOfExperience?: number;
@@ -226,6 +227,7 @@ export async function registerProvider(
     provider: {
       accountType: step1.accountType,
       displayName: step1.fullName,
+      whatsapp: step1.whatsapp,
       categoryId: profession.categoryId,
       professionId: profession._id,
       yearsOfExperience: step2.yearsOfExperience,
@@ -298,6 +300,7 @@ export async function getMyProviderProfile(userId: string): Promise<ProviderProf
     id: String(provider._id),
     displayName: provider.displayName,
     accountType: provider.accountType,
+    ...(provider.whatsapp ? { whatsapp: provider.whatsapp } : {}),
     categoryId: String(provider.categoryId),
     professionId: String(provider.professionId),
     ...(provider.yearsOfExperience != null
@@ -370,6 +373,7 @@ export async function updateMyProviderProfile(
   /* ---- حقول الملف ---- */
   const providerPatch: Record<string, unknown> = {};
   if (patch.fullName !== undefined) providerPatch.displayName = patch.fullName;
+  if (patch.whatsapp !== undefined) providerPatch.whatsapp = patch.whatsapp;
   if (patch.accountType !== undefined) providerPatch.accountType = patch.accountType;
   if (patch.yearsOfExperience !== undefined) {
     providerPatch.yearsOfExperience = patch.yearsOfExperience;

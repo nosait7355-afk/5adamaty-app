@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BadgeCheck,
   ChevronLeft,
   CircleHelp,
   FileText,
@@ -64,7 +63,7 @@ export default function ProviderAccountPage() {
     );
   }
 
-  const { user, displayName, verification, isVerifiedBadge } = profile.data;
+  const { user, displayName, verification } = profile.data;
 
   return (
     <>
@@ -88,9 +87,6 @@ export default function ProviderAccountPage() {
             {user.email && <p className="num text-meta text-ink-400">{user.email}</p>}
           </div>
 
-          {isVerifiedBadge && (
-            <BadgeCheck size={22} className="shrink-0 text-brand-600" aria-label="حساب موثّق" />
-          )}
         </Card>
 
         {/* ---- حالة التوثيق ---- */}

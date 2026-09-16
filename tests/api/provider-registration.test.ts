@@ -44,6 +44,8 @@ import { GET as adminDetailRoute } from '@/app/api/v1/admin/providers/[id]/route
 import { PATCH as decideRoute } from '@/app/api/v1/admin/providers/[id]/verification/route';
 import { GET as searchRoute } from '@/app/api/v1/search/route';
 import { GET as providersRoute } from '@/app/api/v1/providers/route';
+import { GET as providerDetailRoute } from '@/app/api/v1/providers/[id]/route';
+import { GET as providerContactRoute } from '@/app/api/v1/providers/[id]/contact/route';
 
 /**
  * تسجيل مقدم الخدمة والتوثيق (Phase 6).
@@ -149,6 +151,7 @@ function step1(overrides: Record<string, unknown> = {}) {
   return {
     fullName: 'محمد عبد الرحمن',
     phone: uniquePhone(),
+    whatsapp: '01122334455',
     email: `provider${phoneCounter}@test.local`,
     password: 'Provider12345',
     confirmPassword: 'Provider12345',
@@ -951,5 +954,94 @@ describe('E2E — من التسجيل إلى الظهور في البحث', () =
     };
     expect(data.canAcceptOrders).toBe(true);
     expect(data.profileCompletion).toBeGreaterThanOrEqual(80);
+  });
+});
+
+/* ================================================================== */
+
+describe('التواصل المباشر — اتصل الآن وواتساب', () => {
+  async function approvedProvider(name: string) {
+    const created = await createProvider({ step1: { fullName: name } });
+    await uploadRequiredDocuments(created.providerId);
+    await submitRoute(
+      req('/api/v1/provider/verification/submit', {
+        method: 'POST',
+        token: created.token,
+        body: { acceptTerms: true },
+      }),
+      undefined
+    );
+    return created;
+  }
+
+  async function customerToken() {
+    const customer = await User.create({
+      role: 'CUSTOMER',
+      fullName: 'عميل يبحث عن فني',
+      phone: uniquePhone().replace(/^0/, '+20'),
+      passwordHash: 'x'.repeat(20),
+      status: 'ACTIVE',
+    });
+    return tokenFor(String(customer._id), 'CUSTOMER');
+  }
+
+  it('يرفض التسجيل بلا واتساب أو برقم غير صالح', async () => {
+    for (const whatsapp of [undefined, '0112233445', '02122334455', '1122334455']) {
+      const response = await registerProviderRoute(
+        req('/api/v1/auth/register-provider', {
+          method: 'POST',
+          body: { step1: step1({ whatsapp }), step2: step2() },
+        }),
+        undefined
+      );
+      expect(response.status, String(whatsapp)).toBe(400);
+    }
+  });
+
+  it('الزائر غير المسجّل لا يحصل على روابط التواصل', async () => {
+    const provider = await approvedProvider('مزوّد للتواصل - زائر');
+    const response = await providerContactRoute(
+      req(`/api/v1/providers/${provider.providerId}/contact`),
+      ctx(provider.providerId)
+    );
+    expect(response.status).toBe(401);
+  });
+
+  it('المسجّل يحصل على روابط tel: و wa.me الصحيحة', async () => {
+    const provider = await approvedProvider('مزوّد للتواصل - عميل');
+    const token = await customerToken();
+
+    const response = await providerContactRoute(
+      req(`/api/v1/providers/${provider.providerId}/contact`, { token }),
+      ctx(provider.providerId)
+    );
+    const data = (await json(response)).data as unknown as { callUrl: string; whatsappUrl: string };
+
+    expect(response.status).toBe(200);
+    expect(data.callUrl).toMatch(/^tel:\+201\d{9}$/);
+    expect(data.whatsappUrl).toBe('https://wa.me/201122334455');
+  });
+
+  it('مزوّد لم يُفعَّل (DRAFT) لا تُعاد روابطه', async () => {
+    const draft = await createProvider({ step1: { fullName: 'مسودة بلا تواصل' } });
+    const token = await customerToken();
+
+    const response = await providerContactRoute(
+      req(`/api/v1/providers/${draft.providerId}/contact`, { token }),
+      ctx(draft.providerId)
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it('صفحة التفاصيل العامة لا تحمل أي رقم', async () => {
+    const provider = await approvedProvider('مزوّد بلا أرقام في التفاصيل');
+    const response = await providerDetailRoute(
+      req(`/api/v1/providers/${provider.providerId}`),
+      ctx(provider.providerId)
+    );
+    const raw = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(raw).not.toMatch(/"phone"|"whatsapp"|01122334455|\+20\d/);
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { CalendarDays, Home, Lock, Mail, MapPin, Phone, User } from 'lucide-react';
+import { CalendarDays, Home, Lock, Mail, MapPin, MessageCircle, Phone, User } from 'lucide-react';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -18,6 +18,7 @@ import {
 export interface BasicInfoValues {
   fullName: string;
   phone: string;
+  whatsapp: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -31,6 +32,7 @@ export interface BasicInfoValues {
 export const EMPTY_BASIC_INFO: BasicInfoValues = {
   fullName: '',
   phone: '',
+  whatsapp: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -59,6 +61,7 @@ export function BasicInfoStep({ values, errors, onChange, mode = 'create' }: Bas
   const ids = {
     fullName: useId(),
     phone: useId(),
+    whatsapp: useId(),
     email: useId(),
     password: useId(),
     confirmPassword: useId(),
@@ -96,6 +99,38 @@ export function BasicInfoStep({ values, errors, onChange, mode = 'create' }: Bas
           />
         </Field>
       )}
+
+      {/* رقم الواتساب إجباري ويظهر في وضعي الإنشاء والتعديل */}
+      <Field
+        htmlFor={ids.whatsapp}
+        label="رقم الواتساب"
+        required
+        hint="11 رقمًا يبدأ بـ 01 — يتواصل عليه العملاء"
+        error={errors.whatsapp}
+      >
+        <Input
+          id={ids.whatsapp}
+          type="tel"
+          inputMode="numeric"
+          maxLength={11}
+          icon={<MessageCircle size={20} />}
+          placeholder="01012345678"
+          value={values.whatsapp}
+          invalid={Boolean(errors.whatsapp)}
+          onChange={(event) =>
+            onChange({ whatsapp: event.target.value.replace(/\D/g, '').slice(0, 11) })
+          }
+        />
+        {mode === 'create' && values.phone && values.whatsapp !== values.phone.replace(/\D/g, '') && (
+          <button
+            type="button"
+            onClick={() => onChange({ whatsapp: values.phone.replace(/\D/g, '').slice(0, 11) })}
+            className="mt-1 w-fit text-meta font-semibold text-brand-600 hover:text-brand-700"
+          >
+            نفس رقم الهاتف
+          </button>
+        )}
+      </Field>
 
       <Field
         htmlFor={ids.email}

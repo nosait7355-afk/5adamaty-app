@@ -4,20 +4,22 @@ import { use, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  BadgeCheck,
   CalendarDays,
   ChevronLeft,
   Clock,
+  Gavel,
   Heart,
   ImageIcon,
   MapPin,
+  MessageCircle,
+  Phone,
   Share2,
   ShieldCheck,
   Users,
 } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { PageContainer } from '@/components/layout/page-container';
-import { Badge, Chip } from '@/components/ui/badge';
+import { Chip } from '@/components/ui/badge';
 import { Button, LinkButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,13 +38,16 @@ import {
   pluralizeAr,
 } from '@/lib/format';
 import { useProvider, useProviderReviews, useServices } from '@/lib/queries/discovery';
+import { useMe } from '@/lib/queries/auth';
+import { api, ApiClientError } from '@/lib/api-client';
+import type { ProviderContactDto } from '@/server/services/discovery.service';
 
 /**
  * ملف مقدم الخدمة — الصورة 10.
  *
- * ملاحظة أمنية مقصودة: لا يعرض هذا الملف رقم هاتف ولا بريدًا. الـAPI لا
- * يعيدهما أصلًا في أي مسار عام؛ قناة التواصل المباشر تُفتح بعد قبول الطلب
- * (Phase 7/8)، ولذلك يظهر زر «تواصل واتساب» معطّلًا بنص يوضّح السبب.
+ * التطبيق دليل اتصال مباشر: زرّا «اتصل الآن» و«واتساب» يفتحان الاتصال
+ * فورًا. الرقم **لا يُعرض نصًّا** ولا يأتي مع بيانات الصفحة؛ يُطلب من مسار
+ * يتطلب تسجيل الدخول لحظة الضغط، ثم ننتقل إلى رابط `tel:` أو `wa.me`.
  */
 export default function ProviderProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -51,6 +56,32 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
   const provider = useProvider(id);
   const services = useServices({ providerId: id, limit: 20 }, Boolean(provider.data));
   const reviews = useProviderReviews(id, Boolean(provider.data));
+  const me = useMe();
+  const [contactPending, setContactPending] = useState<'call' | 'whatsapp' | null>(null);
+  const [contactError, setContactError] = useState('');
+
+  const openContact = async (channel: 'call' | 'whatsapp') => {
+    setContactError('');
+    setContactPending(channel);
+    try {
+      const { data: links } = await api.get<ProviderContactDto>(`/providers/${id}/contact`);
+      const url = channel === 'call' ? links.callUrl : links.whatsappUrl;
+      if (!url) {
+        setContactError(
+          channel === 'call' ? 'لا يتوفر رقم هاتف لمقدم الخدمة.' : 'لا يتوفر رقم واتساب لمقدم الخدمة.'
+        );
+        return;
+      }
+      if (channel === 'call') window.location.href = url;
+      else window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      setContactError(
+        error instanceof ApiClientError ? error.message : 'تعذّر فتح التواصل. حاول مرة أخرى.'
+      );
+    } finally {
+      setContactPending(null);
+    }
+  };
 
   const serviceItems = services.data?.pages.flatMap((page) => page.data) ?? [];
   const reviewItems = reviews.data?.data.items ?? [];
@@ -136,11 +167,6 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
         <header className="flex flex-col gap-2">
           <h1 className="flex flex-wrap items-center gap-2 text-section font-extrabold text-ink-900">
             {data.displayName}
-            {data.isVerifiedBadge && (
-              <Badge tone="success" icon={<BadgeCheck size={14} />}>
-                موثّق
-              </Badge>
-            )}
           </h1>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-600">
@@ -167,8 +193,8 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           )}
         </header>
 
-        {/* ---- الإحصاءات الأربع ---- */}
-        <Card className="grid grid-cols-4 divide-x divide-x-reverse divide-border p-0">
+        {/* ---- الإحصاءات ---- */}
+        <Card className="grid grid-cols-3 divide-x divide-x-reverse divide-border p-0">
           <StatCell
             icon={<CalendarDays size={18} />}
             label="عضو منذ"
@@ -180,11 +206,6 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             value={formatNumber(data.customersCount)}
           />
           <StatCell
-            icon={<ShieldCheck size={18} />}
-            label="تم التنفيذ"
-            value={formatNumber(data.completedOrders)}
-          />
-          <StatCell
             icon={<Clock size={18} />}
             label="متوسط الرد"
             value={
@@ -193,6 +214,19 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
                 : '—'
             }
           />
+        </Card>
+
+        {/* ---- معلومات هامة — إخلاء مسؤولية المنصة ---- */}
+        <Card className="flex flex-col gap-2">
+          <h2 className="flex items-center gap-2 text-label font-bold text-ink-900">
+            <Gavel size={18} className="text-brand-600" aria-hidden="true" />
+            معلومات هامة
+          </h2>
+          <ul className="flex list-inside list-disc flex-col gap-1 text-meta text-ink-600">
+            <li>البيانات مقدمة من مقدم الخدمة. نحن وسيط إعلانات فقط.</li>
+            <li>نحن غير مسؤولين عن جودة الخدمة. يتم الاتفاق مباشرة مع مقدم الخدمة.</li>
+            <li>السعر والدفع يتم الاتفاق عليهما مباشرة بينك وبين مقدم الخدمة.</li>
+          </ul>
         </Card>
 
         {/* ---- التبويبات ---- */}
@@ -288,24 +322,44 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
         </div>
       </PageContainer>
 
-      {/* ---- فوتر الإجراءات الثابت ---- */}
+      {/* ---- فوتر التواصل الثابت ---- */}
       <div className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-[520px] items-center gap-3 px-page py-3 pb-safe">
-          <LinkButton href={`/orders/new?providerId=${data.id}`} className="flex-1">
-            اطلب الخدمة
-          </LinkButton>
-          <Button
-            variant="secondary"
-            disabled
-            title="يتاح التواصل المباشر بعد قبول مقدم الخدمة لطلبك"
-            className="shrink-0 whitespace-nowrap px-3"
-          >
-            تواصل واتساب
-          </Button>
-        </div>
-        <p className="mx-auto max-w-[520px] px-page pb-2 text-center text-badge text-ink-400">
-          يتاح التواصل المباشر بعد قبول مقدم الخدمة لطلبك.
-        </p>
+        {me.data ? (
+          <div className="mx-auto flex w-full max-w-[520px] items-center gap-3 px-page py-3 pb-safe">
+            <Button
+              size="lg"
+              className="flex-1"
+              loading={contactPending === 'call'}
+              disabled={contactPending !== null}
+              onClick={() => void openContact('call')}
+              iconStart={<Phone size={20} />}
+            >
+              اتصل الآن
+            </Button>
+            <Button
+              size="lg"
+              variant="success"
+              className="flex-1"
+              loading={contactPending === 'whatsapp'}
+              disabled={contactPending !== null}
+              onClick={() => void openContact('whatsapp')}
+              iconStart={<MessageCircle size={20} />}
+            >
+              واتساب
+            </Button>
+          </div>
+        ) : (
+          <div className="mx-auto flex w-full max-w-[520px] flex-col gap-2 px-page py-3 pb-safe">
+            <LinkButton href="/login" size="lg" fullWidth iconStart={<Phone size={20} />}>
+              سجّل الدخول للتواصل
+            </LinkButton>
+          </div>
+        )}
+        {contactError && (
+          <p className="mx-auto max-w-[520px] px-page pb-2 text-center text-badge text-danger" role="alert">
+            {contactError}
+          </p>
+        )}
       </div>
     </>
   );

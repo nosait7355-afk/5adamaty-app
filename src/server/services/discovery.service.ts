@@ -4,6 +4,7 @@ import {
   findProviderById,
   findProviderReviews,
   findProviders,
+  findPublicProviderContact,
   findServiceById,
   findServices,
   type DiscoveryFilters,
@@ -280,6 +281,40 @@ export async function getProvider(id: string): Promise<ProviderDetailDto> {
 
   const servicesCount = await countProviderServices(id);
   return toProviderDetail(row, servicesCount);
+}
+
+export interface ProviderContactDto {
+  /** رابط `tel:` جاهز — الواجهة لا تعرض الرقم، تنتقل إليه مباشرة. */
+  callUrl?: string;
+  /** رابط `wa.me` جاهز. */
+  whatsappUrl?: string;
+}
+
+/** يحوّل 01XXXXXXXXX أو +201XXXXXXXXX إلى أرقام دولية بلا + (201XXXXXXXXX). */
+function toInternationalDigits(value: string): string | null {
+  const digits = value.replace(/\D/g, '');
+  if (/^01\d{9}$/.test(digits)) return `20${digits.slice(1)}`;
+  if (/^201\d{9}$/.test(digits)) return digits;
+  return null;
+}
+
+/**
+ * روابط التواصل مع مقدم خدمة — زرّا «اتصل الآن» و«واتساب».
+ *
+ * رقم الواتساب اختياري للحسابات القديمة المسجّلة قبل إضافة الحقل؛ عندها
+ * نستخدم رقم الهاتف لأنه غالبًا نفس الرقم.
+ */
+export async function getProviderContact(id: string): Promise<ProviderContactDto> {
+  const contact = await findPublicProviderContact(id);
+  if (!contact) throw notFound('مقدم الخدمة المطلوب غير موجود.');
+
+  const phone = contact.phone ? toInternationalDigits(contact.phone) : null;
+  const whatsapp = toInternationalDigits(contact.whatsapp ?? contact.phone ?? '');
+
+  return {
+    ...(phone ? { callUrl: `tel:+${phone}` } : {}),
+    ...(whatsapp ? { whatsappUrl: `https://wa.me/${whatsapp}` } : {}),
+  };
 }
 
 /** قائمة الخدمات — الصورة 09. */

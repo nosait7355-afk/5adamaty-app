@@ -17,6 +17,8 @@ export interface ServiceProviderDocument {
   userId: Types.ObjectId;
   accountType: 'INDIVIDUAL' | 'COMPANY';
   displayName: string;
+  /** رقم الواتساب بالصيغة المحلية 01XXXXXXXXX — لا يُعاد في أي مسار عام. */
+  whatsapp?: string;
   categoryId: Types.ObjectId;
   professionId: Types.ObjectId;
   yearsOfExperience?: number;
@@ -55,6 +57,7 @@ const serviceProviderSchema = new Schema<ServiceProviderDocument>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     accountType: { type: String, enum: ['INDIVIDUAL', 'COMPANY'], default: 'INDIVIDUAL' },
     displayName: { type: String, required: true, trim: true, minlength: 3, maxlength: 100 },
+    whatsapp: { type: String, trim: true, match: /^01\d{9}$/ },
 
     categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     professionId: { type: Schema.Types.ObjectId, ref: 'Profession', required: true },

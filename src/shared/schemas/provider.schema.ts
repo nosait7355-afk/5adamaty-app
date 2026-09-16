@@ -53,10 +53,23 @@ const birthDateSchema = z
  * البريد **إلزامي** لمقدم الخدمة (بعكس العميل) — كما هو معلّم بـ`*` في
  * الصورة 19. هو قناة إبلاغه بقرار التوثيق حين لا يكون داخل التطبيق.
  */
+/**
+ * رقم الواتساب — 11 رقمًا يبدأ بـ01، ويُخزَّن بالصيغة المحلية كما كُتب.
+ * منفصل عن رقم الهاتف لأن كثيرًا من الحرفيين يستخدمون رقمًا آخر للواتساب.
+ */
+export const whatsappSchema = z
+  .string({ message: 'رقم الواتساب مطلوب.' })
+  .trim()
+  .transform((value) => value.replace(/[\s-]/g, ''))
+  .refine((value) => /^01\d{9}$/.test(value), {
+    message: 'رقم الواتساب يجب أن يكون 11 رقمًا ويبدأ بـ 01.',
+  });
+
 export const providerStep1Schema = z
   .object({
     fullName: fullNameSchema,
     phone: egyptPhoneSchema,
+    whatsapp: whatsappSchema,
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
@@ -160,6 +173,7 @@ export const updateProviderProfileSchema = z
   .object({
     fullName: fullNameSchema.optional(),
     email: emailSchema.optional(),
+    whatsapp: whatsappSchema.optional(),
     city: z.enum(FAYOUM_CITIES).optional(),
     addressLine: safeString(100).optional(),
     accountType: z.enum(ACCOUNT_TYPES).optional(),

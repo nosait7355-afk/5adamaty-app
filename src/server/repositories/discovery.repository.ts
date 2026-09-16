@@ -369,6 +369,32 @@ export async function findProviderById(id: string): Promise<ProviderRow | null> 
   return row ?? null;
 }
 
+/**
+ * أرقام التواصل لمزوّد **عام** فقط (معتمد ونشط).
+ *
+ * منفصلة تمامًا عن `findProviderById`: الأرقام لا تدخل أي إسقاط عام، فلا
+ * تتسرّب إلى صفحات البحث أو التفاصيل. تُقرأ حصرًا من مسار يتطلب تسجيل دخول.
+ */
+export async function findPublicProviderContact(
+  id: string
+): Promise<{ phone?: string; whatsapp?: string } | null> {
+  await connectToDatabase();
+  if (!Types.ObjectId.isValid(id)) return null;
+
+  const provider = await ServiceProvider.findOne(
+    { _id: new Types.ObjectId(id), ...PUBLIC_PROVIDER_MATCH },
+    { userId: 1, whatsapp: 1 }
+  ).lean<{ userId: Types.ObjectId; whatsapp?: string }>();
+  if (!provider) return null;
+
+  const user = await User.findById(provider.userId, { phone: 1 }).lean<{ phone?: string }>();
+
+  return {
+    ...(user?.phone ? { phone: user.phone } : {}),
+    ...(provider.whatsapp ? { whatsapp: provider.whatsapp } : {}),
+  };
+}
+
 /** قائمة الخدمات — الحارس مطبَّق على المزوّد المالك للخدمة. */
 export async function findServices(filters: DiscoveryFilters): Promise<Paged<ServiceRow>> {
   await connectToDatabase();

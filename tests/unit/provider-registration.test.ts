@@ -119,6 +119,7 @@ describe('حارس استقبال الطلبات', () => {
 const VALID_STEP1 = {
   fullName: 'محمد عبد الرحمن',
   phone: '01012345678',
+  whatsapp: '01012345678',
   email: 'p@example.com',
   password: 'Provider12345',
   confirmPassword: 'Provider12345',

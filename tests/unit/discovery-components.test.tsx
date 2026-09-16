@@ -114,12 +114,10 @@ describe('ProviderMiniCard (الصورة 06)', () => {
     expect(screen.getByText('خدمات منزلية')).toBeInTheDocument();
   });
 
-  it('شارة التوثيق تظهر للمزوّد الموثّق فقط', () => {
-    const { rerender } = render(<ProviderMiniCard provider={provider} />);
-    expect(screen.getByLabelText('مقدم خدمة موثّق')).toBeInTheDocument();
-
-    rerender(<ProviderMiniCard provider={{ ...provider, isVerifiedBadge: false }} />);
+  it('لا تظهر شارة «موثّق» — المنصة دليل إعلانات لا جهة اعتماد', () => {
+    const { container } = render(<ProviderMiniCard provider={provider} />);
     expect(screen.queryByLabelText('مقدم خدمة موثّق')).not.toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/موثّق/);
   });
 
   it('البطاقة كلها رابط لملف المزوّد', () => {
