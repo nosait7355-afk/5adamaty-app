@@ -88,12 +88,13 @@ export function useCompleteOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { orderId: string; note?: string }) =>
+    mutationFn: async (input: { orderId: string; note?: string; agreedPrice?: number }) =>
       (
         await api.post<ProviderOrderDto>(`/orders/${input.orderId}/complete`, {
           serviceCompleted: true,
           cashReceivedConfirmed: true,
           ...(input.note ? { note: input.note } : {}),
+          ...(input.agreedPrice != null ? { agreedPrice: input.agreedPrice } : {}),
         })
       ).data,
     onSuccess: (order) => {

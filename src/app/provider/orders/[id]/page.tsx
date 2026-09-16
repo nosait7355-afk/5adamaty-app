@@ -21,6 +21,7 @@ import { Card } from '@/components/ui/card';
 import { Button, LinkButton } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OrderStatusBadge } from '@/components/common/status-badge';
@@ -74,6 +75,7 @@ export default function ProviderOrderDetailPage({
   const [rejecting, setRejecting] = useState(false);
   const [serviceDone, setServiceDone] = useState(false);
   const [cashReceived, setCashReceived] = useState(false);
+  const [agreedPrice, setAgreedPrice] = useState('');
   const [error, setError] = useState('');
 
   if (order.isPending) {
@@ -142,7 +144,11 @@ export default function ProviderOrderDetailPage({
   const runComplete = async () => {
     setError('');
     try {
-      await complete.mutateAsync({ orderId: id, ...(note.trim() ? { note: note.trim() } : {}) });
+      await complete.mutateAsync({
+        orderId: id,
+        ...(note.trim() ? { note: note.trim() } : {}),
+        ...(agreedPrice.trim() ? { agreedPrice: Number(agreedPrice) } : {}),
+      });
       setNote('');
     } catch (mutationError) {
       setError(
@@ -154,6 +160,11 @@ export default function ProviderOrderDetailPage({
   };
 
   const busy = updateStatus.isPending || complete.isPending;
+
+  const priceValue = Number(agreedPrice);
+  const priceInvalid =
+    agreedPrice.trim() !== '' &&
+    (!Number.isFinite(priceValue) || priceValue < 0 || priceValue > 1_000_000);
 
   return (
     <>
@@ -419,6 +430,25 @@ export default function ProviderOrderDetailPage({
                 label="أؤكد أنني استلمت المبلغ المتفق عليه من العميل مباشرة."
               />
 
+              <Field
+                htmlFor="agreed-price"
+                label="القيمة المتفق عليها (ج.م)"
+                hint="اختياري — تُستخدم في إحصاءاتك فقط ولا تظهر للعملاء الآخرين"
+                {...(priceInvalid ? { error: 'أدخل قيمة صحيحة بين 0 و1,000,000.' } : {})}
+              >
+                <Input
+                  id="agreed-price"
+                  type="number"
+                  min={0}
+                  max={1_000_000}
+                  inputMode="numeric"
+                  placeholder="مثال: 350"
+                  value={agreedPrice}
+                  invalid={priceInvalid}
+                  onChange={(event) => setAgreedPrice(event.target.value)}
+                />
+              </Field>
+
               <p className="rounded-field bg-surface px-3 py-2 text-badge leading-5 text-ink-600">
                 التطبيق لا يوفر أي خدمة دفع إلكترونية. هذا التأكيد **إفادة** بأن الدفع تمّ نقدًا
                 خارج التطبيق، ولا يُنشئ أي معاملة مالية.
@@ -439,7 +469,7 @@ export default function ProviderOrderDetailPage({
                 variant="success"
                 fullWidth
                 loading={complete.isPending}
-                disabled={!serviceDone || !cashReceived}
+                disabled={!serviceDone || !cashReceived || priceInvalid}
                 onClick={() => void runComplete()}
                 iconStart={<CheckCircle2 size={20} />}
               >
