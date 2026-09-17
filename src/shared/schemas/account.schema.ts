@@ -7,7 +7,12 @@ import {
   paginationSchema,
   safeString,
 } from './common.schema';
-import { ADDRESS_TYPES, ALL_FAYOUM_AREAS, FAYOUM_CITIES, GOVERNORATE } from '@/shared/constants/fayoum-areas';
+import {
+  ADDRESS_TYPES,
+  FAYOUM_CITIES,
+  GOVERNORATE,
+  isValidCoverageArea,
+} from '@/shared/constants/fayoum-areas';
 import { NOTIFICATION_TABS } from '@/shared/constants/notifications';
 
 /**
@@ -92,10 +97,11 @@ export const createAddressSchema = z
 
     governorate: z.string().trim().max(60).default(GOVERNORATE),
     city: z.enum(FAYOUM_CITIES, { message: 'المدينة/المركز غير صالح.' }),
+    // المنطقة = أحد مراكز الفيوم الخمسة — لا أحياء فرعية
     area: z
       .string()
       .trim()
-      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'المنطقة غير صالحة.' }),
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' }),
     line: safeString(200).refine((value) => value.length >= 5, {
       message: 'العنوان التفصيلي قصير جدًا.',
     }),
@@ -150,7 +156,7 @@ export const updateProfileSchema = z
     area: z
       .string()
       .trim()
-      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'المنطقة غير صالحة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' })
       .optional(),
     gender: z.enum(['MALE', 'FEMALE']).optional(),
     avatarPublicId: safeString(200).optional(),

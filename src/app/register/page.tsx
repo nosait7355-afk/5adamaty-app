@@ -18,7 +18,7 @@ import {
   type RegisterCustomerFormValues,
   type RegisterCustomerInput,
 } from '@/shared/schemas/auth.schema';
-import { ALL_FAYOUM_AREAS, GOVERNORATE } from '@/shared/constants/fayoum-areas';
+import { COVERAGE_AREAS, GOVERNORATE } from '@/shared/constants/fayoum-areas';
 import { extractErrorMessage, resolveHomeRoute, useRegister } from '@/lib/queries/auth';
 import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 
@@ -96,13 +96,13 @@ export default function RegisterPage() {
           />
         </Field>
 
-        <Field label="المنطقة / الحي" required htmlFor="area" error={errors.area?.message}>
+        <Field label="المركز" required htmlFor="area" error={errors.area?.message}>
           <Select
             id="area"
-            placeholder="اختر منطقتك أو الحي"
+            placeholder="اختر المركز"
             icon={<MapPin size={20} />}
             invalid={Boolean(errors.area)}
-            options={ALL_FAYOUM_AREAS.map((area) => ({ value: area, label: area }))}
+            options={COVERAGE_AREAS.map((area) => ({ value: area, label: area }))}
             {...register('area')}
           />
         </Field>

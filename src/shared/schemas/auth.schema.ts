@@ -6,7 +6,7 @@ import {
   literalTrue,
   passwordSchema,
 } from './common.schema';
-import { ALL_FAYOUM_AREAS, FAYOUM_CITIES, GOVERNORATE } from '@/shared/constants/fayoum-areas';
+import { FAYOUM_CITIES, GOVERNORATE, isValidCoverageArea } from '@/shared/constants/fayoum-areas';
 
 /**
  * مخططات المصادقة.
@@ -27,10 +27,11 @@ export const registerCustomerSchema = z
     fullName: fullNameSchema,
     phone: egyptPhoneSchema.optional().or(z.literal('').transform(() => undefined)),
     email: emailSchema,
+    // المنطقة = أحد مراكز الفيوم الخمسة — لا أحياء فرعية
     area: z
       .string()
       .trim()
-      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'المنطقة غير صالحة.' }),
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' }),
     city: z.enum(FAYOUM_CITIES).default(GOVERNORATE),
     password: passwordSchema,
     confirmPassword: z.string(),

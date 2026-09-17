@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * هجرة مناطق التغطية — من الأحياء الفرعية إلى المراكز الخمسة.
+ * هجرة المناطق — من الأحياء الفرعية إلى المراكز الخمسة.
  *
  * صارت مناطق تغطية مقدم الخدمة (\`coverageAreas\`) ومناطق خدماته (\`areas\`)
  * اختيارًا من المراكز الخمسة فقط (الفيوم، سنورس، طامية، إطسا، إبشواي). أي
  * سجل مخزَّن بأسماء أحياء («حي الجامعة»…) يفشل في التحقق عند أول تعديل ولا
  * يطابق فلتر المنطقة الجديد. هذا السكربت يحوّل كل حيّ إلى مركزه بلا تكرار.
  *
- * عناوين العملاء لا تُمسّ — الأحياء باقية فيها.
+ * يشمل أيضًا منطقة المستخدم وعناوينه: الأحياء أُزيلت من شاشاته كذلك،
+ * فصارت «المنطقة» عنده هي المركز نفسه.
  *
  * الاستخدام:
  *   npm run db:migrate-coverage -- --dry-run   # عرض بلا كتابة
@@ -23,7 +24,9 @@ config({ path: '.env', quiet: true });
 
 const { toCoverageCities } = await import('../src/shared/constants/fayoum-areas');
 const { connectToDatabase, disconnectFromDatabase } = await import('../src/server/db/mongoose');
-const { ServiceProvider, Service } = await import('../src/server/db/models/index');
+const { ServiceProvider, Service, User, Address } = await import(
+  '../src/server/db/models/index'
+);
 
 const dryRun = process.argv.includes('--dry-run');
 
@@ -83,6 +86,49 @@ async function migrateServices() {
   return { scanned, changed };
 }
 
+/* ------------------------------------------------------------------ */
+/* مناطق العملاء — حقل نصي مفرد                                        */
+/* ------------------------------------------------------------------ */
+
+async function migrateUserAreas() {
+  let scanned = 0;
+  let changed = 0;
+  const cursor = User.find({ area: { $exists: true, $ne: null } }, 'area city').cursor();
+
+  for await (const user of cursor) {
+    scanned += 1;
+    const [next] = toCoverageCities([user.area ?? '']);
+    if (!next || next === user.area) continue;
+
+    changed += 1;
+    note(`user ${String(user._id)}: ${user.area} → ${next}`);
+    // المركز يتبع المنطقة كي لا يتناقض الاثنان
+    if (!dryRun) await User.updateOne({ _id: user._id }, { $set: { area: next, city: next } });
+  }
+  return { scanned, changed };
+}
+
+async function migrateAddresses() {
+  let scanned = 0;
+  let changed = 0;
+  const cursor = Address.find({}, 'area city').cursor();
+
+  for await (const address of cursor) {
+    scanned += 1;
+    const [next] = toCoverageCities([address.area]);
+    if (!next || next === address.area) continue;
+
+    changed += 1;
+    note(`address ${String(address._id)}: ${address.city}/${address.area} → ${next}/${next}`);
+    if (!dryRun) {
+      await Address.updateOne({ _id: address._id }, { $set: { area: next, city: next } });
+    }
+  }
+  return { scanned, changed };
+}
+
+/* ------------------------------------------------------------------ */
+
 async function main() {
   if (!process.env.MONGODB_URI) {
     console.error('❌ MONGODB_URI غير معرّف. أضفه في .env.local — انظر .env.example.');
@@ -95,6 +141,8 @@ async function main() {
 
   const providers = await migrateProviders();
   const services = await migrateServices();
+  const users = await migrateUserAreas();
+  const addresses = await migrateAddresses();
 
   if (samples.length > 0) {
     console.log('\nعيّنة من التغييرات:');
@@ -104,6 +152,8 @@ async function main() {
   console.log('\n📊 الملخّص:');
   console.log(`   providers  فُحص ${providers.scanned} — ${dryRun ? 'سيُعدَّل' : 'عُدّل'} ${providers.changed}`);
   console.log(`   services   فُحص ${services.scanned} — ${dryRun ? 'سيُعدَّل' : 'عُدّل'} ${services.changed}`);
+  console.log(`   users      فُحص ${users.scanned} — ${dryRun ? 'سيُعدَّل' : 'عُدّل'} ${users.changed}`);
+  console.log(`   addresses  فُحص ${addresses.scanned} — ${dryRun ? 'سيُعدَّل' : 'عُدّل'} ${addresses.changed}`);
   if (dryRun) console.log('\nℹ️  لم تُكتب أي تغييرات. أعد التشغيل بلا --dry-run للتنفيذ.');
   else console.log('\n✅ اكتملت الهجرة.');
 

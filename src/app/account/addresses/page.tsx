@@ -26,7 +26,6 @@ import {
 import {
   ADDRESS_TYPES,
   ADDRESS_TYPE_LABELS_AR,
-  FAYOUM_AREAS,
   FAYOUM_CITIES,
   GOVERNORATE,
 } from '@/shared/constants/fayoum-areas';
@@ -51,7 +50,6 @@ interface FormValues {
   label: string;
   type: string;
   city: string;
-  area: string;
   line: string;
   landmark: string;
   postalCode: string;
@@ -63,7 +61,6 @@ const EMPTY: FormValues = {
   label: '',
   type: 'HOME',
   city: GOVERNORATE,
-  area: '',
   line: '',
   landmark: '',
   postalCode: '',
@@ -81,7 +78,6 @@ export default function AddressesPage() {
   const [values, setValues] = useState<FormValues>(EMPTY);
   const [error, setError] = useState('');
 
-  const areas = FAYOUM_AREAS[values.city] ?? [];
   const patch = (next: Partial<FormValues>) => setValues((current) => ({ ...current, ...next }));
 
   const submit = async () => {
@@ -92,7 +88,8 @@ export default function AddressesPage() {
         type: values.type,
         governorate: GOVERNORATE,
         city: values.city,
-        area: values.area,
+        // المنطقة = المركز نفسه بعد إزالة الأحياء
+        area: values.city,
         line: values.line,
         ...(values.landmark ? { landmark: values.landmark } : {}),
         ...(values.postalCode ? { postalCode: values.postalCode } : {}),
@@ -153,17 +150,8 @@ export default function AddressesPage() {
             <Field label="المركز" required>
               <Select
                 value={values.city}
-                onChange={(event) => patch({ city: event.target.value, area: '' })}
+                onChange={(event) => patch({ city: event.target.value })}
                 options={FAYOUM_CITIES.map((city) => ({ value: city, label: city }))}
-              />
-            </Field>
-
-            <Field label="المنطقة" required>
-              <Select
-                placeholder="اختر المنطقة"
-                value={values.area}
-                onChange={(event) => patch({ area: event.target.value })}
-                options={areas.map((area) => ({ value: area, label: area }))}
               />
             </Field>
 

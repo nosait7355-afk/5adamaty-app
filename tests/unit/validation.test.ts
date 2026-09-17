@@ -110,26 +110,28 @@ describe('passwordSchema', () => {
 });
 
 describe('textAddressSchema — نصي بحت', () => {
-  it('يقبل عنوانًا من مناطق الفيوم', () => {
+  it('يقبل عنوانًا بمركز من المراكز الخمسة', () => {
     const parsed = textAddressSchema.parse({
       city: 'الفيوم',
-      area: 'حي الجامعة',
+      area: 'الفيوم',
       line: 'شارع أحمد شوقي',
     });
     expect(parsed.governorate).toBe('الفيوم');
   });
 
-  it('يرفض منطقة خارج القائمة', () => {
-    expect(() =>
-      textAddressSchema.parse({ city: 'الفيوم', area: 'مدينة نصر', line: 'شارع' })
-    ).toThrow(/المنطقة/);
+  it('يرفض ما ليس مركزًا — حيًّا كان أو مدينة أخرى', () => {
+    for (const area of ['حي الجامعة', 'مدينة نصر']) {
+      expect(() =>
+        textAddressSchema.parse({ city: 'الفيوم', area, line: 'شارع' }), area
+      ).toThrow(/مراكز الفيوم/);
+    }
   });
 
   it('يرفض أي حقل إحداثيات', () => {
     expect(() =>
       textAddressSchema.parse({
         city: 'الفيوم',
-        area: 'حي الجامعة',
+        area: 'الفيوم',
         line: 'شارع',
         lat: 29.3,
         lng: 30.8,

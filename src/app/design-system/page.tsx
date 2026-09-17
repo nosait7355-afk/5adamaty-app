@@ -29,7 +29,7 @@ import { EmptyState, ErrorState } from '@/components/common/states';
 import { VerificationBadge } from '@/components/common/status-badge';
 import { Stepper } from '@/components/common/stepper';
 import { VERIFICATION_STATUSES } from '@/shared/constants/roles';
-import { ALL_FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
+import { COVERAGE_AREAS } from '@/shared/constants/fayoum-areas';
 import {
   formatAddress,
   formatDate,
@@ -135,7 +135,7 @@ export default function DesignSystemPage() {
               label="العنوان"
               value={formatAddress({
                 governorate: 'الفيوم',
-                area: 'حي الجامعة',
+                city: 'الفيوم',
                 line: 'شارع أحمد شوقي',
                 landmark: 'بجوار مدرسة النور',
               })}
@@ -189,13 +189,13 @@ export default function DesignSystemPage() {
               <Input id="d-err" invalid icon={<Phone size={20} />} placeholder="010 1234 5678" />
             </Field>
 
-            <Field label="المنطقة / الحي" required htmlFor="d-area">
+            <Field label="المركز" required htmlFor="d-area">
               <Select
                 id="d-area"
                 icon={<MapPin size={20} />}
-                placeholder="اختر منطقتك أو الحي"
+                placeholder="اختر المركز"
                 defaultValue=""
-                options={ALL_FAYOUM_AREAS.map((a) => ({ value: a, label: a }))}
+                options={COVERAGE_AREAS.map((a) => ({ value: a, label: a }))}
               />
             </Field>
 

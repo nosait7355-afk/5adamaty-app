@@ -159,7 +159,7 @@ const VALID_ADDRESS = {
   label: 'المنزل',
   type: 'HOME',
   city: 'الفيوم',
-  area: 'حي الجامعة',
+  area: 'الفيوم',
   line: 'شارع أحمد شوقي، عمارة 12، الدور الثالث',
   contactName: 'سارة محمود',
   contactPhone: '01033334444',

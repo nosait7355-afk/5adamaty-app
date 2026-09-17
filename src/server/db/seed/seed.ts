@@ -108,7 +108,7 @@ export async function runSeed(options: { clear?: boolean } = {}): Promise<SeedRe
       status: seed.approved ? 'ACTIVE' : 'PENDING_REVIEW',
       governorate: GOVERNORATE,
       city: GOVERNORATE,
-      area: seed.areas[0] ?? 'حي الجامعة',
+      area: toCoverageCities(seed.areas)[0] ?? 'الفيوم',
     });
     userCount += 1;
 

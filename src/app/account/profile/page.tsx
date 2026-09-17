@@ -16,7 +16,7 @@ import { MediaThumb } from '@/components/features/discovery/media-thumb';
 import { ApiClientError } from '@/lib/api-client';
 import { formatPhone } from '@/lib/format';
 import { useAccountSummary, useUpdateProfile } from '@/lib/queries/account';
-import { FAYOUM_AREAS, FAYOUM_CITIES } from '@/shared/constants/fayoum-areas';
+import { FAYOUM_CITIES } from '@/shared/constants/fayoum-areas';
 
 interface FormValues {
   fullName: string;
@@ -157,20 +157,8 @@ export default function AccountProfilePage() {
                 placeholder="اختر المركز"
                 options={FAYOUM_CITIES.map((city) => ({ value: city, label: city }))}
                 value={values.city}
-                onChange={(event) => patch({ city: event.target.value, area: '' })}
-              />
-            </Field>
-
-            <Field label="المنطقة">
-              <Select
-                placeholder="اختر المنطقة"
-                options={(FAYOUM_AREAS[values.city] ?? []).map((area) => ({
-                  value: area,
-                  label: area,
-                }))}
-                value={values.area}
-                onChange={(event) => patch({ area: event.target.value })}
-                disabled={!values.city}
+                // المنطقة = المركز نفسه بعد إزالة الأحياء
+                onChange={(event) => patch({ city: event.target.value, area: event.target.value })}
               />
             </Field>
 
