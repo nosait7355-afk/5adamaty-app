@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { objectIdSchema, paginationSchema, safeString, slugSchema } from './common.schema';
-import { ALL_FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
+import { isValidCoverageArea } from '@/shared/constants/fayoum-areas';
 
 /** معاملات قائمة التصنيفات. */
 export const listCategoriesQuerySchema = z
@@ -53,7 +53,7 @@ export const discoveryQuerySchema = paginationSchema
     area: z
       .string()
       .trim()
-      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'المنطقة غير صالحة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'المنطقة غير صالحة.' })
       .optional(),
     minRating: z.coerce.number().min(0).max(5).optional(),
     sort: z.enum(SORT_OPTIONS).default('rating'),

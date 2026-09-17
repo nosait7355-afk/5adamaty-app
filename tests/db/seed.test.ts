@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { buildAllIndexes, clearTestDb, startTestDb, stopTestDb } from '../helpers/db';
 import { runSeed } from '@/server/db/seed/seed';
 import { Category, Profession, Service, ServiceProvider, User } from '@/server/db/models';
-import { ALL_FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
+import { COVERAGE_AREAS } from '@/shared/constants/fayoum-areas';
 
 beforeAll(async () => {
   await startTestDb();
@@ -67,7 +67,7 @@ describe('البذر', () => {
 
     for (const provider of providers) {
       for (const area of provider.coverageAreas) {
-        expect(ALL_FAYOUM_AREAS, `${provider.displayName}: ${area}`).toContain(area);
+        expect(COVERAGE_AREAS, `${provider.displayName}: ${area}`).toContain(area);
       }
     }
   });

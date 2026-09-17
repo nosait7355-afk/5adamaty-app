@@ -166,12 +166,13 @@ describe('GET /api/v1/providers', () => {
 
   it('يفلتر بالمنطقة النصية', async () => {
     const response = await getProviders(
-      req(`/api/v1/providers?area=${encodeURIComponent('حي الجامعة')}&limit=50`),
+      req(`/api/v1/providers?area=${encodeURIComponent('الفيوم')}&limit=50`),
       undefined
     );
     const items = (await json(response)).data as { coverageAreas: string[] }[];
     expect(items.length).toBeGreaterThan(0);
-    expect(items.every((p) => p.coverageAreas.includes('حي الجامعة'))).toBe(true);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((p) => p.coverageAreas.includes('الفيوم'))).toBe(true);
   });
 
   it('يرفض منطقة خارج قائمة الفيوم الثابتة', async () => {
@@ -361,7 +362,7 @@ describe('GET /api/v1/services', () => {
   it('يجمع كل الفلاتر مع الترتيب في استعلام واحد', async () => {
     const response = await getServices(
       req(
-        `/api/v1/services?categoryId=${homeCategoryId}&area=${encodeURIComponent('حي الجامعة')}&minRating=4.5&sort=newest&limit=50`
+        `/api/v1/services?categoryId=${homeCategoryId}&area=${encodeURIComponent('الفيوم')}&minRating=4.5&sort=newest&limit=50`
       ),
       undefined
     );
@@ -372,7 +373,7 @@ describe('GET /api/v1/services', () => {
     }[];
 
     expect(items.every((s) => s.categoryId === homeCategoryId)).toBe(true);
-    expect(items.every((s) => s.areas.includes('حي الجامعة'))).toBe(true);
+    expect(items.every((s) => s.areas.includes('الفيوم'))).toBe(true);
     expect(items.every((s) => s.ratingAvg >= 4.5)).toBe(true);
   });
 

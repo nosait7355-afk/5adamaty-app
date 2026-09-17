@@ -19,8 +19,14 @@ import { config } from 'dotenv';
 config({ path: '.env.local', quiet: true });
 config({ path: '.env', quiet: true });
 
-const { RETIRED_CITY_MIGRATIONS, RETIRED_AREA_MIGRATIONS, isValidArea, isValidCity } =
-  await import('../src/shared/constants/fayoum-areas');
+const {
+  RETIRED_CITY_MIGRATIONS,
+  RETIRED_AREA_MIGRATIONS,
+  isValidArea,
+  isValidCity,
+  isValidCoverageArea,
+  toCoverageCities,
+} = await import('../src/shared/constants/fayoum-areas');
 const { connectToDatabase, disconnectFromDatabase } = await import('../src/server/db/mongoose');
 const { User, Address, ServiceProvider, ServiceRequest } = await import(
   '../src/server/db/models/index'
@@ -130,20 +136,16 @@ async function migrateProviders() {
   for await (const provider of cursor) {
     stats.providers.scanned += 1;
 
-    const original = provider.coverageAreas ?? [];
-    if (original.every((area) => isValidArea(area))) continue;
-
     /*
-     * `Set` ضروري لا تجميل: منطقتان ملغاتان قد تُحوَّلان إلى نفس البديل
-     * فينشأ تكرار يخالف قيد التفرّد في `coverageAreasSchema`.
+     * مناطق التغطية صارت **مراكز** لا أحياء، فالتحويل هنا إلى المركز لا إلى
+     * حيّ بديل — وإلا أعاد تشغيل هذا السكربت «الفيوم» إلى حيّ افتراضي.
+     * التحويل نفسه يتولّاه `migrate-coverage`؛ هذا فرع حماية فقط.
      */
-    const mapped = new Set<string>();
-    for (const area of original) {
-      const next = mapArea(area);
-      mapped.add(next ? next.area : area);
-    }
+    const original = provider.coverageAreas ?? [];
+    if (original.every((area) => isValidCoverageArea(area))) continue;
 
-    const coverageAreas = [...mapped];
+    const coverageAreas = toCoverageCities(original);
+    if (coverageAreas.length === 0) coverageAreas.push('الفيوم');
     stats.providers.changed += 1;
     note(`provider ${String(provider._id)}: [${original.join('، ')}] → [${coverageAreas.join('، ')}]`);
 

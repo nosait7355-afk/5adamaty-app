@@ -57,7 +57,41 @@ export const RETIRED_AREA_MIGRATIONS: Record<string, { city: FayoumCity; area: s
   الحامولي: { city: 'إبشواي', area: 'قصر الجبالي' },
 };
 
-/** كل المناطق في قائمة واحدة مسطّحة — للفلترة والبحث. */
+/**
+ * مناطق تغطية مقدم الخدمة وخدماته — **المراكز الخمسة فقط** بلا أحياء فرعية.
+ * الأحياء (`FAYOUM_AREAS`) باقية لعناوين العملاء وحدها.
+ */
+export const COVERAGE_AREAS: readonly FayoumCity[] = FAYOUM_CITIES;
+
+export function isValidCoverageArea(value: string): boolean {
+  return (COVERAGE_AREAS as readonly string[]).includes(value);
+}
+
+/**
+ * يحوّل قيمة تغطية قديمة (حيّ، أو مركز/حيّ ملغى) إلى مركزها. يُستخدم في
+ * الهجرة والبذر. يعيد `null` لقيمة لا يُعرف مركزها.
+ */
+export function coverageCityOf(value: string): FayoumCity | null {
+  if (isValidCoverageArea(value)) return value as FayoumCity;
+  if (RETIRED_CITY_MIGRATIONS[value]) return RETIRED_CITY_MIGRATIONS[value];
+  if (RETIRED_AREA_MIGRATIONS[value]) return RETIRED_AREA_MIGRATIONS[value].city;
+  for (const [city, areas] of Object.entries(FAYOUM_AREAS)) {
+    if (areas.includes(value) && isValidCoverageArea(city)) return city as FayoumCity;
+  }
+  return null;
+}
+
+/** يحوّل قائمة تغطية قديمة إلى مراكز بلا تكرار، محافظًا على الترتيب. */
+export function toCoverageCities(values: readonly string[]): FayoumCity[] {
+  const result: FayoumCity[] = [];
+  for (const value of values) {
+    const city = coverageCityOf(value);
+    if (city && !result.includes(city)) result.push(city);
+  }
+  return result;
+}
+
+/** كل المناطق في قائمة واحدة مسطّحة — لعناوين العملاء. */
 export const ALL_FAYOUM_AREAS: readonly string[] = Object.values(FAYOUM_AREAS).flat();
 
 /** مناطق التغطية المتاحة للمزوّد — نفس القائمة. */

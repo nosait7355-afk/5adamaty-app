@@ -12,6 +12,8 @@ import {
 import { PAYMENT_METHOD } from '@/shared/constants/order-status';
 import {
   ALL_FAYOUM_AREAS,
+  isValidCoverageArea,
+  toCoverageCities,
   FAYOUM_AREAS,
   isValidArea,
   isValidCity,
@@ -120,6 +122,14 @@ describe('القيود غير القابلة للتفاوض', () => {
 
   it('يتحقق من صحة المنطقة والمدينة', () => {
     expect(isValidArea('حي الجامعة')).toBe(true);
+    // التغطية مراكز فقط، والتحويل من الأحياء القديمة إلى مركزها بلا تكرار
+    expect(isValidCoverageArea('الفيوم')).toBe(true);
+    expect(isValidCoverageArea('حي الجامعة')).toBe(false);
+    expect(toCoverageCities(['حي الجامعة', 'الحوّاتم', 'سنورس البلد', 'يوسف الصديق'])).toEqual([
+      'الفيوم',
+      'سنورس',
+      'إبشواي',
+    ]);
     expect(isValidArea('منطقة وهمية')).toBe(false);
     expect(isValidCity('سنورس')).toBe(true);
     expect(isValidCity('القاهرة')).toBe(false);

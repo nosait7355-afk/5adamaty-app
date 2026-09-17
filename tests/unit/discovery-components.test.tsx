@@ -17,8 +17,8 @@ const service: ServiceCardDto = {
   id: 'svc1',
   title: 'تنظيف شقق وفلل',
   description: 'تنظيف شامل بمواد آمنة وفريق مدرّب.',
-  areas: ['حي الجامعة', 'الحوّاتم'],
-  area: 'حي الجامعة',
+  areas: ['الفيوم', 'سنورس'],
+  area: 'الفيوم',
   ratingAvg: 4.8,
   ratingCount: 128,
   ordersCount: 40,
@@ -49,8 +49,8 @@ const provider: ProviderCardDto = {
   professionName: 'عامل نظافة',
   professionIcon: 'sparkles',
   yearsOfExperience: 10,
-  area: 'حي الجامعة',
-  coverageAreas: ['حي الجامعة'],
+  area: 'الفيوم',
+  coverageAreas: ['الفيوم'],
   isVerifiedBadge: true,
   ratingAvg: 4.8,
   ratingCount: 128,
@@ -66,7 +66,7 @@ describe('ServiceCard (الصورة 09)', () => {
     expect(screen.getByText('تنظيف شقق وفلل')).toBeInTheDocument();
     expect(screen.getByText('خدمات منزلية')).toBeInTheDocument();
     expect(screen.getByText(/تنظيف شامل/)).toBeInTheDocument();
-    expect(screen.getByText('حي الجامعة')).toBeInTheDocument();
+    expect(screen.getByText('الفيوم')).toBeInTheDocument();
     expect(screen.getByText('+10 سنوات خبرة')).toBeInTheDocument();
   });
 
@@ -110,7 +110,7 @@ describe('ProviderMiniCard (الصورة 06)', () => {
 
     expect(screen.getByText('شركة النقاء للتنظيف')).toBeInTheDocument();
     expect(screen.getByText('عامل نظافة')).toBeInTheDocument();
-    expect(screen.getByText('حي الجامعة')).toBeInTheDocument();
+    expect(screen.getByText('الفيوم')).toBeInTheDocument();
     expect(screen.getByText('خدمات منزلية')).toBeInTheDocument();
   });
 
@@ -142,8 +142,14 @@ describe('FilterBar (الصورة 09)', () => {
     await userEvent.click(screen.getByText('كل المناطق'));
     expect(screen.getByText('المنطقة')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'دار الرماد' }));
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ area: 'دار الرماد' }));
+    // المراكز الخمسة فقط — بلا أحياء فرعية
+    for (const city of ['الفيوم', 'سنورس', 'طامية', 'إطسا', 'إبشواي']) {
+      expect(screen.getByRole('button', { name: city })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('button', { name: 'دار الرماد' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'سنورس' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ area: 'سنورس' }));
   });
 
   it('لا يعرض قرص السعر إطلاقًا', () => {
@@ -166,7 +172,7 @@ describe('FilterBar (الصورة 09)', () => {
     expect(screen.getByRole('button', { name: /تصفية/ })).toBeDisabled();
 
     rerender(
-      <FilterBar value={{ sort: 'rating', area: 'حي الجامعة', minRating: 4 }} onChange={vi.fn()} />
+      <FilterBar value={{ sort: 'rating', area: 'الفيوم', minRating: 4 }} onChange={vi.fn()} />
     );
     const reset = screen.getByRole('button', { name: /تصفية/ });
     expect(reset).toBeEnabled();
@@ -177,7 +183,7 @@ describe('FilterBar (الصورة 09)', () => {
     const onChange = vi.fn();
     render(
       <FilterBar
-        value={{ sort: 'newest', area: 'حي الجامعة', minRating: 4 }}
+        value={{ sort: 'newest', area: 'الفيوم', minRating: 4 }}
         onChange={onChange}
       />
     );

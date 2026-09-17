@@ -542,7 +542,7 @@ describe('ServiceProvider', () => {
       professionId: profession._id,
       yearsOfExperience: 10,
       bio: 'نوفر خدمات تنظيف احترافية بأعلى معايير الجودة.',
-      coverageAreas: ['حي الجامعة', 'الحوّاتم'],
+      coverageAreas: ['الفيوم', 'سنورس'],
       verification: { requestNumber: 'SRV-2025-000123' },
     });
 

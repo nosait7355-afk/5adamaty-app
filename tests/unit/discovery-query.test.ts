@@ -31,7 +31,7 @@ describe('buildProviderMatch', () => {
     const match = buildProviderMatch({
       categoryId: OID,
       professionId: OID_2,
-      area: 'حي الجامعة',
+      area: 'الفيوم',
       minRating: 4.5,
       q: 'سباك',
     });
@@ -48,8 +48,8 @@ describe('buildProviderMatch', () => {
   });
 
   it('المنطقة مطابقة نصية على مصفوفة التغطية — لا إحداثيات ولا نصف قطر', () => {
-    const match = buildProviderMatch({ area: 'دار الرماد' });
-    expect(match.coverageAreas).toBe('دار الرماد');
+    const match = buildProviderMatch({ area: 'سنورس' });
+    expect(match.coverageAreas).toBe('سنورس');
     expect(JSON.stringify(match)).not.toMatch(/lat|lng|coordinates|radius|geo/i);
   });
 
@@ -126,7 +126,9 @@ describe('مخطط فلاتر الاكتشاف', () => {
 
   it('يرفض منطقة خارج قائمة الفيوم', () => {
     expect(discoveryQuerySchema.safeParse({ area: 'المعادي' }).success).toBe(false);
-    expect(discoveryQuerySchema.safeParse({ area: 'حي الجامعة' }).success).toBe(true);
+    expect(discoveryQuerySchema.safeParse({ area: 'الفيوم' }).success).toBe(true);
+    // الفلترة بالمراكز فقط — الأحياء الفرعية مرفوضة
+    expect(discoveryQuerySchema.safeParse({ area: 'حي الجامعة' }).success).toBe(false);
   });
 
   it('يرفض أي مفتاح غير معرّف (mass-assignment)', () => {

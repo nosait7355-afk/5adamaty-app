@@ -22,7 +22,7 @@ import {
 } from '@/lib/queries/provider-services';
 import { ApiClientError } from '@/lib/api-client';
 import { MAX_SERVICES_PER_PROVIDER } from '@/shared/schemas/provider.schema';
-import { FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
+import { COVERAGE_AREAS } from '@/shared/constants/fayoum-areas';
 import type { ServiceDto } from '@/server/services/provider-services.service';
 
 interface FormValues {
@@ -219,23 +219,16 @@ export default function ProviderServicesPage() {
               </Field>
 
               <Field label="مناطق التغطية" hint="اختياري — اتركها فاضية لتغطية كل مناطقك">
-                <div className="flex flex-col gap-3 rounded-card border border-border p-3">
-                  {Object.entries(FAYOUM_AREAS).map(([city, areas]) => (
-                    <div key={city}>
-                      <p className="mb-2 text-meta font-bold text-ink-400">{city}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {areas.map((area) => (
-                          <Chip
-                            key={area}
-                            selected={values.areas.includes(area)}
-                            onClick={() => toggleArea(area)}
-                            icon={<MapPin size={14} />}
-                          >
-                            {area}
-                          </Chip>
-                        ))}
-                      </div>
-                    </div>
+                <div className="flex flex-wrap gap-2 rounded-card border border-border p-3">
+                  {COVERAGE_AREAS.map((area) => (
+                    <Chip
+                      key={area}
+                      selected={values.areas.includes(area)}
+                      onClick={() => toggleArea(area)}
+                      icon={<MapPin size={14} />}
+                    >
+                      {area}
+                    </Chip>
                   ))}
                 </div>
               </Field>

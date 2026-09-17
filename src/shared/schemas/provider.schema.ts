@@ -9,7 +9,7 @@ import {
   passwordSchema,
   safeString,
 } from './common.schema';
-import { ALL_FAYOUM_AREAS, FAYOUM_CITIES, GOVERNORATE } from '@/shared/constants/fayoum-areas';
+import { FAYOUM_CITIES, GOVERNORATE, isValidCoverageArea } from '@/shared/constants/fayoum-areas';
 import { VERIFICATION_STATUSES } from '@/shared/constants/roles';
 
 /**
@@ -111,16 +111,16 @@ const yearsOfExperienceSchema = z.preprocess(
     .optional()
 );
 
-/** مناطق التغطية: اختيار متعدد من قائمة الفيوم الثابتة — لا خريطة ولا نطاق. */
+/** مناطق التغطية: اختيار متعدد من مراكز الفيوم الخمسة — لا أحياء ولا خريطة. */
 const coverageAreasSchema = z
   .array(
     z
       .string()
       .trim()
-      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'منطقة غير صالحة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' })
   )
   .min(1, 'اختر منطقة تغطية واحدة على الأقل.')
-  .max(20, 'الحد الأقصى 20 منطقة.');
+  .max(5, 'الحد الأقصى 5 مراكز.');
 
 export const providerStep2Schema = z
   .object({
@@ -243,9 +243,9 @@ const serviceAreasSchema = z
     z
       .string()
       .trim()
-      .refine((value) => ALL_FAYOUM_AREAS.includes(value), { message: 'منطقة غير صالحة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' })
   )
-  .max(20, 'الحد الأقصى 20 منطقة.')
+  .max(5, 'الحد الأقصى 5 مراكز.')
   .default([]);
 
 const providerServiceBaseSchema = z.object({

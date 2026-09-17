@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/common/states';
 import { CatalogIcon } from '@/components/common/catalog-icon';
 import { useCategories, useProfessions } from '@/lib/queries/catalog';
-import { FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
+import { COVERAGE_AREAS } from '@/shared/constants/fayoum-areas';
 import { cn } from '@/lib/cn';
 
 export interface ProfessionValues {
@@ -168,26 +168,19 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
       >
         <div
           className={cn(
-            'flex flex-col gap-3 rounded-card border p-3',
+            'flex flex-wrap gap-2 rounded-card border p-3',
             errors.coverageAreas ? 'border-danger' : 'border-border'
           )}
         >
-          {Object.entries(FAYOUM_AREAS).map(([city, areas]) => (
-            <div key={city}>
-              <p className="mb-2 text-meta font-bold text-ink-400">{city}</p>
-              <div className="flex flex-wrap gap-2">
-                {areas.map((area) => (
-                  <Chip
-                    key={area}
-                    selected={values.coverageAreas.includes(area)}
-                    onClick={() => toggleArea(area)}
-                    icon={<MapPin size={14} />}
-                  >
-                    {area}
-                  </Chip>
-                ))}
-              </div>
-            </div>
+          {COVERAGE_AREAS.map((area) => (
+            <Chip
+              key={area}
+              selected={values.coverageAreas.includes(area)}
+              onClick={() => toggleArea(area)}
+              icon={<MapPin size={14} />}
+            >
+              {area}
+            </Chip>
           ))}
         </div>
       </Field>

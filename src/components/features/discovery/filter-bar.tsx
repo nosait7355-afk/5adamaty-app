@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, MapPin, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
+import { COVERAGE_AREAS } from '@/shared/constants/fayoum-areas';
 import { SORT_LABELS_AR, SORT_OPTIONS, type SortOption } from '@/shared/schemas/catalog.schema';
 import type { DiscoveryFilterState } from '@/lib/queries/discovery';
 
@@ -106,20 +106,13 @@ export function FilterBar({ value, onChange, className }: FilterBarProps) {
             selected={!value.area}
             onClick={() => patch({ area: undefined })}
           />
-          {Object.entries(FAYOUM_AREAS).map(([city, areas]) => (
-            <div key={city} className="col-span-full">
-              <p className="mb-1.5 mt-2 text-meta font-bold text-ink-400">{city}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {areas.map((area) => (
-                  <OptionButton
-                    key={area}
-                    label={area}
-                    selected={value.area === area}
-                    onClick={() => patch({ area })}
-                  />
-                ))}
-              </div>
-            </div>
+          {COVERAGE_AREAS.map((area) => (
+            <OptionButton
+              key={area}
+              label={area}
+              selected={value.area === area}
+              onClick={() => patch({ area })}
+            />
           ))}
         </OptionPanel>
       )}

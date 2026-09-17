@@ -31,7 +31,7 @@ const EMPTY: CompletionInput = {
 
 const FULL: CompletionInput = {
   bio: 'وصف خدمة مفصّل يتجاوز عشرين حرفًا بوضوح.',
-  coverageAreas: ['حي الجامعة'],
+  coverageAreas: ['الفيوم'],
   yearsOfExperience: 8,
   galleryCount: 3,
   email: 'p@example.com',
@@ -132,7 +132,7 @@ const VALID_STEP2 = {
   professionId: '507f1f77bcf86cd799439012',
   yearsOfExperience: 8,
   bio: 'سبّاك صحي بخبرة في كشف التسربات وتركيب السخانات.',
-  coverageAreas: ['حي الجامعة'],
+  coverageAreas: ['الفيوم'],
 };
 
 describe('الخطوة 1/3 — البيانات الأساسية', () => {

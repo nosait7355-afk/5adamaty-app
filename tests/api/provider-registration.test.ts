@@ -168,7 +168,7 @@ function step2(overrides: Record<string, unknown> = {}) {
     professionId: plumberProfessionId,
     yearsOfExperience: 8,
     bio: 'سبّاك صحي بخبرة في كشف التسربات وتركيب السخانات والأدوات الصحية.',
-    coverageAreas: ['حي الجامعة', 'دار الرماد'],
+    coverageAreas: ['الفيوم', 'سنورس'],
     ...overrides,
   };
 }

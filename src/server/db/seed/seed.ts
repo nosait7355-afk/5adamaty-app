@@ -1,3 +1,4 @@
+import { toCoverageCities } from '@/shared/constants/fayoum-areas';
 import { Types, trusted } from 'mongoose';
 import {
   Category,
@@ -119,7 +120,7 @@ export async function runSeed(options: { clear?: boolean } = {}): Promise<SeedRe
       professionId: profession._id,
       yearsOfExperience: seed.years,
       bio: seed.bio,
-      coverageAreas: seed.areas,
+      coverageAreas: toCoverageCities(seed.areas),
       ratingAvg: seed.ratingAvg,
       ratingCount: seed.ratingCount,
       completedOrders: seed.completedOrders,
@@ -146,7 +147,7 @@ export async function runSeed(options: { clear?: boolean } = {}): Promise<SeedRe
           professionId: profession._id,
           title,
           description: seed.bio,
-          areas: seed.areas,
+          areas: toCoverageCities(seed.areas),
           isActive: true,
           ratingAvg: seed.ratingAvg,
           ratingCount: seed.ratingCount,

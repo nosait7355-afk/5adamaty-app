@@ -81,7 +81,7 @@ async function makeProvider(options: {
     professionId: profession._id,
     yearsOfExperience: 5,
     bio: 'وصف الخدمة',
-    coverageAreas: ['حي الجامعة'],
+    coverageAreas: ['الفيوم'],
     isActive: options.approved ?? false,
     verification: {
       status: options.approved ? 'APPROVED' : 'PENDING_REVIEW',
