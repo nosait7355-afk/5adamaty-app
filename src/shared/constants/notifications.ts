@@ -26,35 +26,39 @@ export const NOTIFICATION_TYPES = [
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-/** التبويبات الظاهرة في الصورة 15: الكل / طلباتي / العروض / التنبيهات / الرسائل. */
-export const NOTIFICATION_TABS = ['ALL', 'ORDERS', 'PROMOTIONS', 'ALERTS', 'MESSAGES'] as const;
+/**
+ * تبويبات شاشة الإشعارات: الكل / المكالمات / الرسائل.
+ *
+ * التطبيق دليل اتصال مباشر، والمكالمات تتم خارج التطبيق ولا تُسجَّل — فتبويب
+ * «المكالمات» لا يطابقه أي نوع حاليًا ويظهر فارغًا. أنواع الإشعارات الأخرى
+ * (التوثيق، التقييمات، الإعلانات العامة) تظهر في «الكل» فقط.
+ */
+export const NOTIFICATION_TABS = ['ALL', 'CALLS', 'MESSAGES'] as const;
 export type NotificationTab = (typeof NOTIFICATION_TABS)[number];
 
 export const NOTIFICATION_TAB_LABELS_AR: Record<NotificationTab, string> = {
   ALL: 'الكل',
-  ORDERS: 'طلباتي',
-  PROMOTIONS: 'العروض',
-  ALERTS: 'التنبيهات',
+  CALLS: 'المكالمات',
   MESSAGES: 'الرسائل',
 };
 
-/** تصنيف كل نوع إلى تبويبه. */
-export const NOTIFICATION_TYPE_TAB: Record<NotificationType, Exclude<NotificationTab, 'ALL'>> = {
-  PROVIDER_REGISTRATION_SUBMITTED: 'ALERTS',
-  PROVIDER_APPROVED: 'ALERTS',
-  PROVIDER_REJECTED: 'ALERTS',
-  PROVIDER_RESUBMISSION_REQUIRED: 'ALERTS',
-  ORDER_CREATED: 'ORDERS',
-  ORDER_ACCEPTED: 'ORDERS',
-  ORDER_REJECTED: 'ORDERS',
-  ORDER_STATUS_CHANGED: 'ORDERS',
-  ORDER_COMPLETED: 'ORDERS',
-  ORDER_CANCELLED: 'ORDERS',
-  REVIEW_RECEIVED: 'ALERTS',
-  REVIEW_REMINDER: 'ALERTS',
+/** تصنيف كل نوع إلى تبويبه — `null` يعني «الكل» فقط. */
+export const NOTIFICATION_TYPE_TAB: Record<NotificationType, Exclude<NotificationTab, 'ALL'> | null> = {
+  PROVIDER_REGISTRATION_SUBMITTED: null,
+  PROVIDER_APPROVED: null,
+  PROVIDER_REJECTED: null,
+  PROVIDER_RESUBMISSION_REQUIRED: null,
+  ORDER_CREATED: null,
+  ORDER_ACCEPTED: null,
+  ORDER_REJECTED: null,
+  ORDER_STATUS_CHANGED: null,
+  ORDER_COMPLETED: null,
+  ORDER_CANCELLED: null,
+  REVIEW_RECEIVED: null,
+  REVIEW_REMINDER: null,
   MESSAGE_RECEIVED: 'MESSAGES',
-  PROMOTION: 'PROMOTIONS',
-  SYSTEM: 'ALERTS',
+  PROMOTION: null,
+  SYSTEM: null,
 };
 
 /** الكيانات التي قد يشير إليها الإشعار. */

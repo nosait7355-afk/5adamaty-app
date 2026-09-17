@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { objectIdSchema, paginationSchema, safeString, slugSchema } from './common.schema';
 import { USER_ROLES, USER_STATUSES } from '@/shared/constants/roles';
 import { DOCUMENT_ACCEPTED_MIME, DOCUMENT_KEYS, PROFESSION_KINDS } from '@/shared/constants/documents';
-import { ORDER_STATUSES } from '@/shared/constants/order-status';
 import { NOTIFICATION_TYPES } from '@/shared/constants/notifications';
 
 /**
@@ -142,17 +141,6 @@ export const setServiceActiveSchema = z
 export type SetServiceActiveInput = z.infer<typeof setServiceActiveSchema>;
 
 /* ================================================================== */
-/* الطلبات (قراءة إشرافية)                                             */
-/* ================================================================== */
-
-export const listAdminOrdersQuerySchema = paginationSchema
-  .extend({
-    status: z.enum(ORDER_STATUSES).optional(),
-    q: safeString(100).optional(),
-  })
-  .strict();
-
-/* ================================================================== */
 /* التقييمات (إشراف)                                                   */
 /* ================================================================== */
 
@@ -229,7 +217,6 @@ export const categoryIdParamSchema = z.object({ id: objectIdSchema }).strict();
 export const adminProfessionIdParamSchema = z.object({ id: objectIdSchema }).strict();
 export const adminServiceIdParamSchema = z.object({ id: objectIdSchema }).strict();
 export const adminReviewIdParamSchema = z.object({ id: objectIdSchema }).strict();
-export const adminOrderIdParamSchema = z.object({ id: objectIdSchema }).strict();
 
 // إعادة تصدير — يمنع استيراد NOTIFICATION_TYPES في مكانين مختلفين لو احتاجته الواجهة لاحقًا
 export { NOTIFICATION_TYPES };

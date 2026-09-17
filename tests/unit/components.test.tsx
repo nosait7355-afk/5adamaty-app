@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { BottomNav } from '@/components/layout/bottom-nav';
-import { OrderStatusBadge } from '@/components/common/status-badge';
 import { Stepper } from '@/components/common/stepper';
-import { ORDER_STATUSES, ORDER_STATUS_LABELS_AR } from '@/shared/constants/order-status';
 import { CUSTOMER_NAV, PROVIDER_NAV } from '@/shared/constants/navigation';
 
 describe('Button', () => {
@@ -102,14 +100,21 @@ describe('BottomNav', () => {
 
     // الترتيب في المصفوفة = ترتيب القراءة من اليمين لليسار
     const labels = items.map((item) => within(item).getByRole('link').textContent);
-    expect(labels).toEqual(['التصنيفات', 'الإشعارات', 'الرئيسية', 'طلباتي', 'حسابي']);
+    expect(labels).toEqual(['التصنيفات', 'الإشعارات', 'الرئيسية', 'المفضلة', 'حسابي']);
   });
 
-  it('يرسم شريط المزوّد بترتيبه المختلف (الرسائل بدل التصنيفات)', () => {
+  it('يرسم شريط المزوّد بلا طلبات ولا رسائل', () => {
     render(<BottomNav variant="provider" />);
 
     const labels = screen.getAllByRole('listitem').map((i) => within(i).getByRole('link').textContent);
-    expect(labels).toEqual(['الإشعارات', 'طلباتي', 'الرئيسية', 'الرسائل', 'حسابي']);
+    expect(labels).toEqual(['الإشعارات', 'خدماتي', 'الرئيسية', 'ملفي', 'حسابي']);
+  });
+
+  it('لا يشير أي عنصر إلى الطلبات أو الرسائل', () => {
+    for (const item of [...CUSTOMER_NAV, ...PROVIDER_NAV]) {
+      expect(item.href, item.label).not.toMatch(/orders|messages/);
+    }
+    expect(CUSTOMER_NAV.find((item) => item.key === 'favorites')?.href).toBe('/account/favorites');
   });
 
   it('«الرئيسية» في الوسط في كلا الشريطين', () => {
@@ -144,21 +149,6 @@ describe('BottomNav', () => {
     render(<BottomNav variant="customer" />);
     expect(screen.queryAllByLabelText('يوجد جديد')).toHaveLength(0);
     expect(screen.queryAllByLabelText(/غير مقروء/)).toHaveLength(0);
-  });
-});
-
-describe('OrderStatusBadge', () => {
-  it('يعرض التسمية العربية الصحيحة لكل حالة', () => {
-    for (const status of ORDER_STATUSES) {
-      const { unmount } = render(<OrderStatusBadge status={status} />);
-      expect(screen.getByText(ORDER_STATUS_LABELS_AR[status])).toBeInTheDocument();
-      unmount();
-    }
-  });
-
-  it('يغطي كل الحالات السبع بلا نقص', () => {
-    expect(ORDER_STATUSES).toHaveLength(7);
-    expect(Object.keys(ORDER_STATUS_LABELS_AR)).toHaveLength(7);
   });
 });
 

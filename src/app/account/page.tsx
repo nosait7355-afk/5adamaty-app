@@ -28,7 +28,6 @@ import { MediaThumb } from '@/components/features/discovery/media-thumb';
 import { api } from '@/lib/api-client';
 import { formatNumber, formatPhone } from '@/lib/format';
 import { useAccountSummary } from '@/lib/queries/account';
-import { ORDER_STATUS_LABELS_AR } from '@/shared/constants/order-status';
 
 /**
  * حسابي — الصورة 16.
@@ -71,14 +70,7 @@ export default function AccountPage() {
     );
   }
 
-  const { user, stats, orders } = account.data;
-
-  const orderCounts = {
-    NEW: (orders.NEW ?? 0) + (orders.ACCEPTED ?? 0),
-    IN_PROGRESS: (orders.IN_PROGRESS ?? 0) + (orders.ON_THE_WAY ?? 0),
-    COMPLETED: orders.COMPLETED ?? 0,
-    CANCELLED: (orders.CANCELLED ?? 0) + (orders.REJECTED ?? 0),
-  };
+  const { user, stats } = account.data;
 
   return (
     <>
@@ -134,41 +126,6 @@ export default function AccountPage() {
         <InfoAlert tone="info" title="وسائل الدفع">
           {stats.paymentMethodsNote}
         </InfoAlert>
-
-        {/* ---- طلباتي ---- */}
-        <section aria-label="طلباتي">
-          <h2 className="mb-3 text-section font-bold text-ink-900">طلباتي</h2>
-          <div className="grid grid-cols-2 gap-2">
-            <OrderTile
-              href="/orders?tab=ALL"
-              label={ORDER_STATUS_LABELS_AR.NEW}
-              value={orderCounts.NEW}
-              tone="bg-brand-50 text-brand-600"
-            />
-            <OrderTile
-              href="/orders?tab=ACTIVE"
-              label={ORDER_STATUS_LABELS_AR.IN_PROGRESS}
-              value={orderCounts.IN_PROGRESS}
-              tone="bg-warning-bg text-warning"
-            />
-            <OrderTile
-              href="/orders?tab=COMPLETED"
-              label={ORDER_STATUS_LABELS_AR.COMPLETED}
-              value={orderCounts.COMPLETED}
-              tone="bg-success-bg text-success"
-            />
-            <OrderTile
-              href="/orders?tab=CANCELLED"
-              label={ORDER_STATUS_LABELS_AR.CANCELLED}
-              value={orderCounts.CANCELLED}
-              tone="bg-danger-bg text-danger"
-            />
-          </div>
-
-          <LinkButton href="/orders" variant="secondary" fullWidth className="mt-3">
-            عرض جميع الطلبات
-          </LinkButton>
-        </section>
 
         {/* ---- قائمة الأدوات ---- */}
         <Card className="flex flex-col p-0">
@@ -253,28 +210,6 @@ function StatCellStatic({
       <span className="num text-label font-extrabold text-ink-900">{value}</span>
       <span className="text-badge text-ink-400">{label}</span>
     </div>
-  );
-}
-
-function OrderTile({
-  href,
-  label,
-  value,
-  tone,
-}: {
-  href: string;
-  label: string;
-  value: number;
-  tone: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center justify-between rounded-field px-3 py-3 text-label font-semibold ${tone}`}
-    >
-      <span>{label}</span>
-      <span className="num font-extrabold">{formatNumber(value)}</span>
-    </Link>
   );
 }
 

@@ -15,14 +15,11 @@ vi.mock('@/server/services/upload.service', () => ({
 }));
 
 import { runSeed } from '@/server/db/seed/seed';
-import { Notification, Review, ServiceProvider, ServiceRequest, User } from '@/server/db/models';
+import { Notification, ServiceProvider, User } from '@/server/db/models';
+import type { NotificationType } from '@/shared/constants/notifications';
 import { resetRateLimitStore } from '@/server/middleware/with-rate-limit';
 import { signAccessToken } from '@/server/lib/jwt';
 
-import { POST as createOrderRoute } from '@/app/api/v1/orders/route';
-import { PATCH as statusRoute } from '@/app/api/v1/orders/[id]/status/route';
-import { POST as completeRoute } from '@/app/api/v1/orders/[id]/complete/route';
-import { POST as reviewRoute } from '@/app/api/v1/orders/[id]/review/route';
 import { GET as notificationsRoute } from '@/app/api/v1/notifications/route';
 import { PATCH as readNotificationRoute } from '@/app/api/v1/notifications/[id]/read/route';
 import { POST as readAllRoute } from '@/app/api/v1/notifications/read-all/route';
@@ -38,16 +35,11 @@ import { PATCH as profileRoute } from '@/app/api/v1/me/profile/route';
 import { GET as accountRoute } from '@/app/api/v1/me/account/route';
 import { GET as faqsRoute } from '@/app/api/v1/faqs/route';
 import { POST as contactRoute } from '@/app/api/v1/support/contact/route';
-import { GET as providerReviewsRoute } from '@/app/api/v1/providers/[id]/reviews/route';
-import { POST as openThreadRoute } from '@/app/api/v1/orders/[id]/thread/route';
-import { GET as threadsRoute } from '@/app/api/v1/threads/route';
-import {
-  GET as messagesRoute,
-  POST as sendMessageRoute,
-} from '@/app/api/v1/threads/[id]/messages/route';
+
 
 /**
- * الأنظمة المساندة (Phase 9): الإشعارات والتقييمات والمراسلة والحساب.
+ * الأنظمة المساندة (Phase 9): الإشعارات والعناوين والمفضلة والحساب.
+ * لا طلبات ولا تقييمات جديدة ولا مراسلة — التطبيق دليل اتصال مباشر.
  *
  * المحور الأمني: **لا يقرأ أحد بيانات غيره** — إشعارات، عناوين، رسائل،
  * تقييمات. وكل محاولة تعيد 404 لا 403.
@@ -151,57 +143,16 @@ function ctx(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
-function tomorrow(): string {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  return date.toISOString().slice(0, 10);
-}
-
-async function newOrder(token = customerToken) {
-  const response = await createOrderRoute(
-    req('/api/v1/orders', {
-      method: 'POST',
-      token,
-      body: {
-        providerId,
-        serviceType: 'إصلاح تسريب',
-        details: 'تسريب أسفل حوض المطبخ يحتاج فحصًا وإصلاحًا سريعًا.',
-        address: { city: 'الفيوم', area: 'حي الجامعة', line: 'شارع أحمد شوقي 12' },
-        scheduledDate: tomorrow(),
-      },
-    }),
-    undefined
-  );
-  const body = await json(response);
-  if (!body.success) throw new Error(`فشل إنشاء الطلب: ${JSON.stringify(body.error)}`);
-  return body.data as unknown as { id: string; orderNumber: number };
-}
-
-async function setStatus(orderId: string, status: string) {
-  return statusRoute(
-    req(`/api/v1/orders/${orderId}/status`, {
-      method: 'PATCH',
-      token: providerToken,
-      body: { status },
-    }),
-    ctx(orderId)
-  );
-}
-
-/** طلب مكتمل جاهز للتقييم. */
-async function completedOrder() {
-  const order = await newOrder();
-  await setStatus(order.id, 'ACCEPTED');
-  await setStatus(order.id, 'IN_PROGRESS');
-  await completeRoute(
-    req(`/api/v1/orders/${order.id}/complete`, {
-      method: 'POST',
-      token: providerToken,
-      body: { serviceCompleted: true, cashReceivedConfirmed: true },
-    }),
-    ctx(order.id)
-  );
-  return order;
+/** ينشئ إشعارًا مباشرة — بديل الأحداث التي كانت تولّده دورة الطلب. */
+async function seedNotification(userId: string, type: NotificationType = 'SYSTEM') {
+  return Notification.create({
+    userId: new Types.ObjectId(userId),
+    type,
+    title: 'إشعار اختبار',
+    body: 'نص إشعار للاختبار.',
+    entityType: type === 'MESSAGE_RECEIVED' ? 'MESSAGE' : 'SYSTEM',
+    isRead: false,
+  });
 }
 
 const VALID_ADDRESS = {
@@ -220,7 +171,7 @@ const VALID_ADDRESS = {
 
 describe('GET /api/v1/notifications', () => {
   it('يعيد إشعارات المستخدم نفسه فقط', async () => {
-    await newOrder();
+    await seedNotification(providerUserId, 'PROVIDER_APPROVED');
 
     const response = await notificationsRoute(
       req('/api/v1/notifications', { token: providerToken, query: '?limit=50' }),
@@ -233,7 +184,7 @@ describe('GET /api/v1/notifications', () => {
     };
 
     expect(response.status).toBe(200);
-    expect(data.items.some((item) => item.type === 'ORDER_CREATED')).toBe(true);
+    expect(data.items.some((item) => item.type === 'PROVIDER_APPROVED')).toBe(true);
     expect(data.unreadTotal).toBeGreaterThan(0);
 
     // العميل لا يرى إشعار المزوّد
@@ -242,17 +193,38 @@ describe('GET /api/v1/notifications', () => {
       undefined
     );
     const mineData = (await json(mine)).data as unknown as { items: { type: string }[] };
-    expect(mineData.items.some((item) => item.type === 'ORDER_CREATED')).toBe(false);
+    expect(mineData.items.some((item) => item.type === 'PROVIDER_APPROVED')).toBe(false);
   });
 
-  it('يفلتر بالتبويب', async () => {
-    const response = await notificationsRoute(
-      req('/api/v1/notifications', { token: providerToken, query: '?tab=ORDERS&limit=50' }),
+  it('التبويبات: الكل / المكالمات / الرسائل', async () => {
+    await seedNotification(providerUserId, 'MESSAGE_RECEIVED');
+    await seedNotification(providerUserId, 'SYSTEM');
+
+    const messages = await notificationsRoute(
+      req('/api/v1/notifications', { token: providerToken, query: '?tab=MESSAGES&limit=50' }),
       undefined
     );
-    const data = (await json(response)).data as unknown as { items: { tab: string }[] };
+    const messagesData = (await json(messages)).data as unknown as {
+      items: { tab: string }[];
+      counts: Record<string, number>;
+    };
+    expect(messagesData.items.length).toBeGreaterThan(0);
+    expect(messagesData.items.every((item) => item.tab === 'MESSAGES')).toBe(true);
+    expect(Object.keys(messagesData.counts).sort()).toEqual(['ALL', 'CALLS', 'MESSAGES']);
 
-    expect(data.items.every((item) => item.tab === 'ORDERS')).toBe(true);
+    // المكالمات لا تُسجَّل، فالتبويب فارغ دائمًا
+    const calls = await notificationsRoute(
+      req('/api/v1/notifications', { token: providerToken, query: '?tab=CALLS&limit=50' }),
+      undefined
+    );
+    expect(((await json(calls)).data as unknown as { items: unknown[] }).items).toHaveLength(0);
+
+    // التبويبات القديمة لم تعد مقبولة
+    const legacy = await notificationsRoute(
+      req('/api/v1/notifications', { token: providerToken, query: '?tab=ORDERS' }),
+      undefined
+    );
+    expect(legacy.status).toBe(400);
   });
 
   it('يفلتر غير المقروء فقط', async () => {
@@ -280,7 +252,7 @@ describe('GET /api/v1/notifications', () => {
 
 describe('تعليم الإشعارات مقروءة', () => {
   it('يعلّم إشعارًا واحدًا', async () => {
-    await newOrder();
+    await seedNotification(providerUserId);
     const notification = await Notification.findOne({
       userId: new Types.ObjectId(providerUserId),
       isRead: false,
@@ -298,7 +270,7 @@ describe('تعليم الإشعارات مقروءة', () => {
   });
 
   it('إشعار مستخدم آخر يعيد 404 ولا يتغيّر', async () => {
-    await newOrder();
+    await seedNotification(providerUserId);
     const notification = await Notification.findOne({
       userId: new Types.ObjectId(providerUserId),
       isRead: false,
@@ -317,7 +289,7 @@ describe('تعليم الإشعارات مقروءة', () => {
   });
 
   it('«تعليم الكل كمقروء» يصفّر العدّاد', async () => {
-    await newOrder();
+    await seedNotification(providerUserId);
 
     await readAllRoute(
       req('/api/v1/notifications/read-all', { method: 'POST', token: providerToken }),
@@ -331,173 +303,6 @@ describe('تعليم الإشعارات مقروءة', () => {
     const data = (await json(response)).data as unknown as { notifications: number };
 
     expect(data.notifications).toBe(0);
-  });
-});
-
-/* ================================================================== */
-/* التقييمات                                                           */
-/* ================================================================== */
-
-describe('POST /api/v1/orders/:id/review', () => {
-  it('يقبل تقييم طلب مكتمل ويحدّث متوسط المزوّد', async () => {
-    const before = await ServiceProvider.findById(providerId);
-    const order = await completedOrder();
-
-    const response = await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 5, comment: 'خدمة ممتازة وسرعة في التنفيذ.' },
-      }),
-      ctx(order.id)
-    );
-    const data = (await json(response)).data as unknown as {
-      rating: number;
-      provider: { ratingAvg: number; ratingCount: number };
-    };
-
-    expect(response.status).toBe(201);
-    expect(data.rating).toBe(5);
-    expect(data.provider.ratingCount).toBeGreaterThan(0);
-
-    const after = await ServiceProvider.findById(providerId);
-    expect(after?.ratingCount).not.toBe(before?.ratingCount);
-  });
-
-  it('المتوسط محسوب من التقييمات الظاهرة فعلًا', async () => {
-    const first = await completedOrder();
-    const second = await completedOrder();
-
-    await reviewRoute(
-      req(`/api/v1/orders/${first.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 5 },
-      }),
-      ctx(first.id)
-    );
-    await reviewRoute(
-      req(`/api/v1/orders/${second.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 3 },
-      }),
-      ctx(second.id)
-    );
-
-    const visible = await Review.find({
-      providerId: new Types.ObjectId(providerId),
-      isVisible: true,
-    });
-    const expected =
-      Math.round((visible.reduce((sum, item) => sum + item.rating, 0) / visible.length) * 10) / 10;
-
-    const provider = await ServiceProvider.findById(providerId);
-    expect(provider?.ratingAvg).toBe(expected);
-    expect(provider?.ratingCount).toBe(visible.length);
-  });
-
-  it('يرفض تقييم طلب غير مكتمل بـ422', async () => {
-    const order = await newOrder();
-
-    const response = await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 5 },
-      }),
-      ctx(order.id)
-    );
-    const body = await json(response);
-
-    expect(response.status).toBe(422);
-    expect(body.error?.message).toContain('اكتماله');
-  });
-
-  it('يرفض التقييم المكرر بـ409', async () => {
-    const order = await completedOrder();
-    const payload = { method: 'POST', token: customerToken, body: { rating: 4 } } as const;
-
-    await reviewRoute(req(`/api/v1/orders/${order.id}/review`, payload), ctx(order.id));
-    const second = await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, payload),
-      ctx(order.id)
-    );
-
-    expect(second.status).toBe(409);
-    expect(await Review.countDocuments({ orderId: new Types.ObjectId(order.id) })).toBe(1);
-  });
-
-  it('يرفض تقييم طلب عميل آخر بـ404', async () => {
-    const order = await completedOrder();
-
-    const response = await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, {
-        method: 'POST',
-        token: otherCustomerToken,
-        body: { rating: 1 },
-      }),
-      ctx(order.id)
-    );
-
-    expect(response.status).toBe(404);
-    expect(await Review.countDocuments({ orderId: new Types.ObjectId(order.id) })).toBe(0);
-  });
-
-  it('يرفض تقييمًا خارج 1–5 أو غير صحيح', async () => {
-    const order = await completedOrder();
-
-    for (const rating of [0, 6, -1, 3.5]) {
-      const response = await reviewRoute(
-        req(`/api/v1/orders/${order.id}/review`, {
-          method: 'POST',
-          token: customerToken,
-          body: { rating },
-        }),
-        ctx(order.id)
-      );
-      expect(response.status, String(rating)).toBe(400);
-    }
-  });
-
-  it('يُخطر مقدم الخدمة بالتقييم الجديد', async () => {
-    const order = await completedOrder();
-    await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 5 },
-      }),
-      ctx(order.id)
-    );
-
-    const notification = await Notification.findOne({
-      userId: new Types.ObjectId(providerUserId),
-      type: 'REVIEW_RECEIVED',
-    });
-    expect(notification?.body).toContain('5');
-  });
-
-  it('التقييم يظهر في ملف المزوّد', async () => {
-    const order = await completedOrder();
-    await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 5, comment: 'تقييم يظهر في الملف العام.' },
-      }),
-      ctx(order.id)
-    );
-
-    const response = await providerReviewsRoute(
-      req(`/api/v1/providers/${providerId}/reviews`, { query: '?limit=50' }),
-      ctx(providerId)
-    );
-    const data = (await json(response)).data as unknown as {
-      items: { comment?: string }[];
-    };
-
-    expect(data.items.some((item) => item.comment?.includes('يظهر في الملف'))).toBe(true);
   });
 });
 
@@ -713,7 +518,6 @@ describe('حسابي ومركز المساعدة', () => {
     const response = await accountRoute(req('/api/v1/me/account', { token: customerToken }), undefined);
     const data = (await json(response)).data as unknown as {
       stats: { paymentMethodsNote: string; favorites: number; addresses: number };
-      orders: Record<string, number>;
     };
 
     expect(response.status).toBe(200);
@@ -791,237 +595,3 @@ describe('حسابي ومركز المساعدة', () => {
 
 /* ================================================================== */
 /* المراسلة                                                            */
-/* ================================================================== */
-
-describe('المراسلة', () => {
-  it('لا تُفتح المحادثة قبل قبول الطلب', async () => {
-    const order = await newOrder();
-
-    const response = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const body = await json(response);
-
-    expect(response.status).toBe(403);
-    expect(body.error?.message).toContain('قبول');
-  });
-
-  it('تُفتح بعد القبول ويشارك فيها الطرفان فقط', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const response = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const thread = (await json(response)).data as unknown as {
-      id: string;
-      counterpart: { fullName: string };
-    };
-
-    expect(response.status).toBe(200);
-    expect(thread.counterpart.fullName).toBeTruthy();
-
-    // فتحها مرتين لا ينشئ محادثتين
-    const again = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: providerToken }),
-      ctx(order.id)
-    );
-    const second = (await json(again)).data as unknown as { id: string };
-    expect(second.id).toBe(thread.id);
-  });
-
-  it('طرف ثالث لا يفتح محادثة طلب ليس له — 404', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const response = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: otherCustomerToken }),
-      ctx(order.id)
-    );
-    expect(response.status).toBe(404);
-  });
-
-  it('يرسل رسالة ويعلّمها غير مقروءة للطرف الآخر', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const threadResponse = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const { id: threadId } = (await json(threadResponse)).data as unknown as { id: string };
-
-    const sent = await sendMessageRoute(
-      req(`/api/v1/threads/${threadId}/messages`, {
-        method: 'POST',
-        token: customerToken,
-        body: { body: 'متى تتوقع الوصول؟' },
-      }),
-      ctx(threadId)
-    );
-    const message = (await json(sent)).data as unknown as { isMine: boolean; body: string };
-
-    expect(sent.status).toBe(201);
-    expect(message.isMine).toBe(true);
-
-    // المزوّد يرى الرسالة واردة وغير مقروءة
-    const threads = await threadsRoute(req('/api/v1/threads', { token: providerToken }), undefined);
-    const list = (await json(threads)).data as unknown as {
-      items: { id: string; unread: number }[];
-      unreadTotal: number;
-    };
-    expect(list.unreadTotal).toBeGreaterThan(0);
-    expect(list.items.find((item) => item.id === threadId)?.unread).toBe(1);
-  });
-
-  it('فتح المحادثة يعلّم رسائلها مقروءة', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const threadResponse = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const { id: threadId } = (await json(threadResponse)).data as unknown as { id: string };
-
-    await sendMessageRoute(
-      req(`/api/v1/threads/${threadId}/messages`, {
-        method: 'POST',
-        token: customerToken,
-        body: { body: 'رسالة تُقرأ' },
-      }),
-      ctx(threadId)
-    );
-
-    await messagesRoute(
-      req(`/api/v1/threads/${threadId}/messages`, { token: providerToken }),
-      ctx(threadId)
-    );
-
-    const after = await threadsRoute(req('/api/v1/threads', { token: providerToken }), undefined);
-    const list = (await json(after)).data as unknown as { items: { id: string; unread: number }[] };
-    expect(list.items.find((item) => item.id === threadId)?.unread).toBe(0);
-  });
-
-  it('غير المشارك لا يقرأ الرسائل ولا يرسل — 404', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const threadResponse = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const { id: threadId } = (await json(threadResponse)).data as unknown as { id: string };
-
-    const read = await messagesRoute(
-      req(`/api/v1/threads/${threadId}/messages`, { token: otherCustomerToken }),
-      ctx(threadId)
-    );
-    expect(read.status).toBe(404);
-
-    const send = await sendMessageRoute(
-      req(`/api/v1/threads/${threadId}/messages`, {
-        method: 'POST',
-        token: otherCustomerToken,
-        body: { body: 'رسالة متطفلة' },
-      }),
-      ctx(threadId)
-    );
-    expect(send.status).toBe(404);
-  });
-
-  it('لا إرسال على طلب أُلغي بعد فتح المحادثة', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const threadResponse = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const { id: threadId } = (await json(threadResponse)).data as unknown as { id: string };
-
-    await ServiceRequest.updateOne({ _id: order.id }, { $set: { status: 'CANCELLED' } });
-
-    const response = await sendMessageRoute(
-      req(`/api/v1/threads/${threadId}/messages`, {
-        method: 'POST',
-        token: customerToken,
-        body: { body: 'رسالة بعد الإلغاء' },
-      }),
-      ctx(threadId)
-    );
-    expect(response.status).toBe(403);
-  });
-
-  it('يرفض رسالة فارغة', async () => {
-    const order = await newOrder();
-    await setStatus(order.id, 'ACCEPTED');
-
-    const threadResponse = await openThreadRoute(
-      req(`/api/v1/orders/${order.id}/thread`, { method: 'POST', token: customerToken }),
-      ctx(order.id)
-    );
-    const { id: threadId } = (await json(threadResponse)).data as unknown as { id: string };
-
-    const response = await sendMessageRoute(
-      req(`/api/v1/threads/${threadId}/messages`, {
-        method: 'POST',
-        token: customerToken,
-        body: { body: '   ' },
-      }),
-      ctx(threadId)
-    );
-    expect(response.status).toBe(400);
-  });
-});
-
-/* ================================================================== */
-
-describe('E2E — إكمال طلب ← إشعار ← تقييم ← ظهوره في الملف', () => {
-  it('الحلقة كاملة', async () => {
-    const order = await completedOrder();
-
-    /* 1) إشعار الإكمال وصل للعميل */
-    const notifications = await notificationsRoute(
-      req('/api/v1/notifications', { token: customerToken, query: '?limit=50' }),
-      undefined
-    );
-    const list = (await json(notifications)).data as unknown as {
-      items: { type: string; entityId?: string }[];
-    };
-    expect(
-      list.items.some((item) => item.type === 'ORDER_COMPLETED' && item.entityId === order.id)
-    ).toBe(true);
-
-    /* 2) كتابة التقييم */
-    const review = await reviewRoute(
-      req(`/api/v1/orders/${order.id}/review`, {
-        method: 'POST',
-        token: customerToken,
-        body: { rating: 5, comment: 'تجربة كاملة من الطلب إلى التقييم.' },
-      }),
-      ctx(order.id)
-    );
-    expect(review.status).toBe(201);
-
-    /* 3) ظهوره في ملف المزوّد */
-    const reviews = await providerReviewsRoute(
-      req(`/api/v1/providers/${providerId}/reviews`, { query: '?limit=50' }),
-      ctx(providerId)
-    );
-    const data = (await json(reviews)).data as unknown as { items: { comment?: string }[] };
-    expect(data.items.some((item) => item.comment?.includes('من الطلب إلى التقييم'))).toBe(true);
-
-    /* 4) وإشعار التقييم وصل للمزوّد */
-    const providerNotifications = await notificationsRoute(
-      req('/api/v1/notifications', { token: providerToken, query: '?tab=ALERTS&limit=50' }),
-      undefined
-    );
-    const providerList = (await json(providerNotifications)).data as unknown as {
-      items: { type: string }[];
-    };
-    expect(providerList.items.some((item) => item.type === 'REVIEW_RECEIVED')).toBe(true);
-  });
-});

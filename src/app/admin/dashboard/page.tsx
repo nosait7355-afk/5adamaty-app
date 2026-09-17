@@ -14,10 +14,8 @@ import { AdminShell, AdminPageHeader } from '@/components/layout/admin-shell';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/common/states';
-import { OrderStatusBadge } from '@/components/common/status-badge';
 import { useAdminDashboard } from '@/lib/queries/admin';
 import { formatNumber, formatRating } from '@/lib/format';
-import type { OrderStatus } from '@/shared/constants/order-status';
 
 /**
  * لوحة القيادة — نظرة شاملة على المنصة.
@@ -83,20 +81,6 @@ export default function AdminDashboardPage() {
               value={dashboard.data.reviewsCount}
             />
           </div>
-
-          <Card>
-            <h2 className="mb-3 text-label font-bold text-ink-900">الطلبات حسب الحالة</h2>
-            <ul className="flex flex-col gap-2">
-              {dashboard.data.ordersByStatusLabeled.map((row) => (
-                <li key={row.status} className="flex items-center justify-between gap-2">
-                  <OrderStatusBadge status={row.status as OrderStatus} />
-                  <span className="num text-label font-bold text-ink-900">
-                    {formatNumber(row.count)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
 
         </>
       )}

@@ -6,7 +6,6 @@ import type { ReactNode } from 'react';
 import {
   BadgeCheck,
   Bell,
-  ClipboardList,
   FileClock,
   Grid2x2,
   LayoutDashboard,
@@ -38,7 +37,6 @@ const NAV_ITEMS = [
   { href: '/admin/categories', label: 'التصنيفات', icon: Grid2x2 },
   { href: '/admin/professions', label: 'المهن والمستندات', icon: Wrench },
   { href: '/admin/services', label: 'الخدمات', icon: ShoppingBag },
-  { href: '/admin/orders', label: 'الطلبات', icon: ClipboardList },
   { href: '/admin/reviews', label: 'التقييمات', icon: BadgeCheck },
   { href: '/admin/notifications', label: 'الإشعارات العامة', icon: Bell },
   { href: '/admin/settings', label: 'الإعدادات', icon: Settings },

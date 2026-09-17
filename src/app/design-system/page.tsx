@@ -26,10 +26,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { OrderCardSkeleton, ServiceCardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { InfoAlert } from '@/components/common/info-alert';
 import { EmptyState, ErrorState } from '@/components/common/states';
-import { OrderStatusBadge, VerificationBadge } from '@/components/common/status-badge';
+import { VerificationBadge } from '@/components/common/status-badge';
 import { Stepper } from '@/components/common/stepper';
-import { OrderTimeline } from '@/components/common/order-timeline';
-import { ORDER_STATUSES } from '@/shared/constants/order-status';
 import { VERIFICATION_STATUSES } from '@/shared/constants/roles';
 import { ALL_FAYOUM_AREAS } from '@/shared/constants/fayoum-areas';
 import {
@@ -239,11 +237,6 @@ export default function DesignSystemPage() {
         <Section title="الشارات والأقراص">
           <Card className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
-              {ORDER_STATUSES.map((s) => (
-                <OrderStatusBadge key={s} status={s} />
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
               {VERIFICATION_STATUSES.map((s) => (
                 <VerificationBadge key={s} status={s} />
               ))}
@@ -324,39 +317,6 @@ export default function DesignSystemPage() {
                 { label: 'قيد التنفيذ', hint: '04:30 م' },
                 { label: 'في الطريق', hint: '05:00 م' },
                 { label: 'مكتمل', hint: 'فقط الآن' },
-              ]}
-            />
-          </Card>
-        </Section>
-
-        {/* ---------- Timeline ---------- */}
-        <Section title="الخط الزمني للطلب">
-          <Card>
-            <OrderTimeline
-              items={[
-                {
-                  title: 'تم إرسال الطلب',
-                  description: 'تم استلام طلبك وجارٍ مراجعته',
-                  timestamp: '09:15 ص',
-                  state: 'done',
-                },
-                {
-                  title: 'تم قبول الطلب',
-                  description: 'تم قبول طلبك من قبل مقدم الخدمة',
-                  timestamp: '09:25 ص',
-                  state: 'done',
-                },
-                {
-                  title: 'جاري تنفيذ الخدمة',
-                  description: 'مقدم الخدمة يعمل حاليًا على الطلب',
-                  timestamp: '10:05 ص',
-                  state: 'current',
-                },
-                {
-                  title: 'تم إنجاز الطلب',
-                  description: 'سيتم إشعارك عند الانتهاء',
-                  state: 'pending',
-                },
               ]}
             />
           </Card>

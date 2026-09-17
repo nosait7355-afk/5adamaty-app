@@ -25,8 +25,6 @@ import { GET as listProfessionsRoute, POST as createProfessionRoute } from '@/ap
 import { PATCH as updateProfessionRoute } from '@/app/api/v1/admin/professions/[id]/route';
 import { GET as listServicesRoute } from '@/app/api/v1/admin/services/route';
 import { PATCH as setServiceActiveRoute } from '@/app/api/v1/admin/services/[id]/route';
-import { GET as listOrdersRoute } from '@/app/api/v1/admin/orders/route';
-import { GET as getOrderRoute } from '@/app/api/v1/admin/orders/[id]/route';
 import { GET as listReviewsRoute } from '@/app/api/v1/admin/reviews/route';
 import { PATCH as setReviewVisibilityRoute } from '@/app/api/v1/admin/reviews/[id]/route';
 import { POST as broadcastRoute } from '@/app/api/v1/admin/notifications/broadcast/route';
@@ -170,7 +168,6 @@ describe('RBAC — لوحة الإدارة', () => {
       listCategoriesRoute(req('/api/v1/admin/categories', { token: customerToken }), undefined),
       listProfessionsRoute(req('/api/v1/admin/professions', { token: customerToken, query: '?includeInactive=true' }), undefined),
       listServicesRoute(req('/api/v1/admin/services', { token: customerToken, query: '?page=1&limit=10' }), undefined),
-      listOrdersRoute(req('/api/v1/admin/orders', { token: customerToken, query: '?page=1&limit=10' }), undefined),
       listReviewsRoute(req('/api/v1/admin/reviews', { token: customerToken, query: '?page=1&limit=10' }), undefined),
       listSettingsRoute(req('/api/v1/admin/settings', { token: customerToken }), undefined),
       listAuditLogsRoute(req('/api/v1/admin/audit-logs', { token: customerToken, query: '?page=1&limit=10' }), undefined),
@@ -561,39 +558,6 @@ describe('إشراف الخدمات', () => {
     const body = await json(response);
     const items = body.data as Array<{ isActive: boolean }>;
     expect(items.every((s) => s.isActive)).toBe(true);
-  });
-});
-
-/* ================================================================== */
-/* الطلبات (قراءة إشرافية)                                             */
-/* ================================================================== */
-
-describe('قراءة الطلبات الإشرافية', () => {
-  it('تعيد قائمة وتفاصيل الطلب بلا أي تعديل حالة', async () => {
-    const token = await tokenFor(adminId, 'ADMIN');
-    const list = await listOrdersRoute(
-      req('/api/v1/admin/orders', { token, query: '?page=1&limit=5' })
-    , undefined);
-    expect(list.status).toBe(200);
-
-    const listBody = await json(list);
-    const items = listBody.data as Array<{ id: string }>;
-    if (items.length > 0) {
-      const detail = await getOrderRoute(
-        req(`/api/v1/admin/orders/${items[0]!.id}`, { token }),
-        ctx(items[0]!.id)
-      );
-      expect(detail.status).toBe(200);
-      const detailBody = await json(detail);
-      expect(detailBody.data).toHaveProperty('statusHistory');
-    }
-  });
-
-  it('يعيد 404 لطلب غير موجود', async () => {
-    const token = await tokenFor(adminId, 'ADMIN');
-    const fakeId = new Types.ObjectId().toString();
-    const response = await getOrderRoute(req(`/api/v1/admin/orders/${fakeId}`, { token }), ctx(fakeId));
-    expect(response.status).toBe(404);
   });
 });
 

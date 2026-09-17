@@ -1,34 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  BadgeCheck,
-  ChevronLeft,
-  ClipboardList,
-  Clock,
-  MapPin,
-  Settings,
-  Star,
-  UserRound,
-  Users,
-  Wrench,
-} from 'lucide-react';
+import { MapPin, MessageSquareQuote, Settings, Star, UserRound, Wrench } from 'lucide-react';
 import { AppHeader } from '@/components/layout/app-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer } from '@/components/layout/page-container';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InfoAlert } from '@/components/common/info-alert';
-import { EmptyState, ErrorState } from '@/components/common/states';
-import { ProviderOrderCard } from '@/components/features/orders/provider-order-card';
+import { ErrorState } from '@/components/common/states';
 import { formatNumber, formatRating } from '@/lib/format';
-import { useProviderDashboard } from '@/lib/queries/provider-orders';
+import { useProviderDashboard } from '@/lib/queries/provider';
 import { cn } from '@/lib/cn';
 
 /**
  * لوحة تحكم مقدم الخدمة — الصورة 24.
  *
- * بطاقة «أرباحك» أُزيلت: التسعير أُزيل من المنصة، فلا قيمة تُجمع.
+ * التطبيق دليل اتصال مباشر: لا طلبات ولا أرباح. المؤشرات من الملف نفسه —
+ * التقييم وعدد التقييمات وعدد الخدمات المعروضة.
  */
 export default function ProviderDashboardPage() {
   const dashboard = useProviderDashboard();
@@ -39,8 +28,8 @@ export default function ProviderDashboardPage() {
         <AppHeader notificationsHref="/provider/notifications" />
         <PageContainer className="flex flex-col gap-4 pt-4">
           <Skeleton className="h-16 w-full rounded-card" />
-          <div className="grid grid-cols-2 gap-3">
-            {Array.from({ length: 4 }, (_, index) => (
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }, (_, index) => (
               <Skeleton key={index} className="h-24 w-full rounded-card" />
             ))}
           </div>
@@ -67,7 +56,7 @@ export default function ProviderDashboardPage() {
     );
   }
 
-  const { provider, kpis, recentOrders } = dashboard.data;
+  const { provider, kpis } = dashboard.data;
 
   return (
     <>
@@ -77,39 +66,33 @@ export default function ProviderDashboardPage() {
         {/* ---- بانر حالة الحساب ---- */}
         {provider.isActive ? (
           <InfoAlert tone="success" title="حسابك مفعّل">
-            ملفك ظاهر للعملاء ويمكنك استقبال الطلبات.
+            ملفك ظاهر للعملاء ويمكنهم التواصل معك مباشرة بالهاتف أو واتساب.
           </InfoAlert>
         ) : (
-          <InfoAlert tone="warning" title="حسابك غير مفعّل بعد">
-            لن تستقبل طلبات حتى تعتمد الإدارة حسابك.
+          <InfoAlert tone="warning" title="حسابك غير مفعّل">
+            ملفك لا يظهر للعملاء حاليًا. أكمل تسجيلك أو تواصل مع الدعم.
           </InfoAlert>
         )}
 
-        {/* ---- المؤشرات الأربعة ---- */}
-        <div className="grid grid-cols-2 gap-3">
-          <KpiCard
-            icon={<ClipboardList size={20} />}
-            label="طلبات جديدة"
-            value={formatNumber(kpis.newOrders)}
-            tone="brand"
-          />
-          <KpiCard
-            icon={<Clock size={20} />}
-            label="قيد التنفيذ"
-            value={formatNumber(kpis.inProgress)}
-            tone="warning"
-          />
-          <KpiCard
-            icon={<BadgeCheck size={20} />}
-            label="مكتملة هذا الشهر"
-            value={formatNumber(kpis.completedThisMonth)}
-            tone="success"
-          />
+        {/* ---- المؤشرات ---- */}
+        <div className="grid grid-cols-3 gap-3">
           <KpiCard
             icon={<Star size={20} />}
             label="التقييم"
             value={formatRating(kpis.rating)}
             tone="star"
+          />
+          <KpiCard
+            icon={<MessageSquareQuote size={20} />}
+            label="التقييمات"
+            value={formatNumber(kpis.ratingCount)}
+            tone="success"
+          />
+          <KpiCard
+            icon={<Wrench size={20} />}
+            label="خدماتي"
+            value={formatNumber(kpis.servicesCount)}
+            tone="brand"
           />
         </div>
 
@@ -132,33 +115,6 @@ export default function ProviderDashboardPage() {
           </Link>
         </Card>
 
-        {/* ---- أحدث الطلبات ---- */}
-        <section aria-label="أحدث الطلبات">
-          <SectionHeader
-            title="أحدث الطلبات"
-            action={
-              <Link
-                href="/provider/orders"
-                className="inline-flex items-center gap-1 text-meta font-semibold text-brand-600"
-              >
-                عرض الكل
-                <ChevronLeft size={16} aria-hidden="true" />
-              </Link>
-            }
-            className="mb-3"
-          />
-
-          {recentOrders.length === 0 ? (
-            <EmptyState message="لا توجد طلبات بعد" compact />
-          ) : (
-            <div className="flex flex-col gap-3">
-              {recentOrders.map((order) => (
-                <ProviderOrderCard key={order.id} order={order} />
-              ))}
-            </div>
-          )}
-        </section>
-
         {/* ---- أدوات مقدم الخدمة ---- */}
         <section aria-label="أدوات مقدم الخدمة">
           <SectionHeader title="أدوات مقدم الخدمة" className="mb-3" />
@@ -167,7 +123,6 @@ export default function ProviderDashboardPage() {
             <ToolTile href="/provider/services" icon={<Wrench size={22} />} label="خدماتي" />
             <ToolTile href="/provider/profile" icon={<MapPin size={22} />} label="مناطق التغطية" />
             <ToolTile href="/provider/reviews" icon={<Star size={22} />} label="التقييمات" />
-            <ToolTile href="/provider/orders" icon={<Users size={22} />} label="العملاء" />
             <ToolTile href="/provider/account" icon={<Settings size={22} />} label="الإعدادات" />
           </div>
         </section>
@@ -183,7 +138,6 @@ export default function ProviderDashboardPage() {
 
 const KPI_TONES = {
   brand: 'bg-brand-50 text-brand-600',
-  warning: 'bg-warning-bg text-warning',
   success: 'bg-success-bg text-success',
   star: 'bg-warning-bg text-star',
 } as const;

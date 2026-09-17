@@ -31,11 +31,6 @@ export const queryKeys = {
     query: (q: string, type: string) => ['search', { q, type }] as const,
   },
 
-  orders: {
-    list: (filters: Record<string, unknown>) => ['orders', filters] as const,
-    detail: (id: string) => ['orders', id] as const,
-    counts: ['orders', 'counts'] as const,
-  },
 
   notifications: {
     list: (filters: Record<string, unknown>) => ['notifications', filters] as const,
@@ -52,19 +47,12 @@ export const queryKeys = {
     list: (q: string) => ['faqs', { q }] as const,
   },
 
-  threads: {
-    list: ['threads'] as const,
-    messages: (id: string) => ['threads', id, 'messages'] as const,
-  },
 
   provider: {
     dashboard: ['provider', 'dashboard'] as const,
     profile: ['provider', 'profile'] as const,
     services: ['provider', 'services'] as const,
     documents: ['provider', 'documents'] as const,
-    orders: (tab: string, q: string, sort: string) =>
-      ['provider', 'orders', { tab, q, sort }] as const,
-    order: (id: string) => ['provider', 'orders', id] as const,
   },
 
   admin: {
@@ -75,8 +63,6 @@ export const queryKeys = {
     categories: ['admin', 'categories'] as const,
     professions: (filters: Record<string, unknown>) => ['admin', 'professions', filters] as const,
     services: (filters: Record<string, unknown>) => ['admin', 'services', filters] as const,
-    orders: (filters: Record<string, unknown>) => ['admin', 'orders', filters] as const,
-    order: (id: string) => ['admin', 'orders', id] as const,
     reviews: (filters: Record<string, unknown>) => ['admin', 'reviews', filters] as const,
     settings: ['admin', 'settings'] as const,
     auditLogs: (filters: Record<string, unknown>) => ['admin', 'audit-logs', filters] as const,

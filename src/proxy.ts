@@ -20,14 +20,12 @@ const ACCESS_COOKIE = 'kf_at';
 /** مسارات يجب أن يكون المستخدم مسجّلًا للوصول إليها. */
 const PROTECTED_PREFIXES = [
   '/home',
-  '/orders',
   '/account',
   '/notifications',
   '/categories',
   '/services',
   '/providers',
   '/search',
-  '/messages',
   '/provider',
   '/admin',
 ];
@@ -45,12 +43,8 @@ const GUEST_ONLY = ['/login', '/register', '/role-select', '/forgot-password', '
 const GUEST_ONLY_EXCEPTIONS = ['/register/provider'];
 
 /** مساحة العميل — يُحوَّل عنها مقدم الخدمة إلى لوحته. */
-/*
- * مساحة العميل — يُحوَّل عنها مقدم الخدمة إلى لوحته.
- * `/messages` **ليست منها**: المحادثة بين الطرفين، ولكلٍّ مساره الخاص
- * (`/messages` للعميل و`/provider/messages` للمزوّد) بنفس المكوّن.
- */
-const CUSTOMER_SPACE = ['/home', '/orders', '/categories', '/services', '/providers', '/search'];
+/* مساحة العميل — يُحوَّل عنها مقدم الخدمة إلى لوحته. */
+const CUSTOMER_SPACE = ['/home', '/categories', '/services', '/providers', '/search'];
 
 /**
  * مطابقة مسار على بادئة **بحدود مقطعية**.

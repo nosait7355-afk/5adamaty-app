@@ -4,13 +4,11 @@ import { logger } from '@/server/lib/logger';
 import { writeAuditLog, createNotification } from '@/server/repositories/provider.repository';
 import {
   broadcastNotificationRecords,
-  findOrderByIdForAdmin,
   findReviewByIdForAdmin,
   findServiceByIdForAdmin,
   findUserByIdForAdmin,
   getDashboardCounts,
   listAuditLogsForAdmin,
-  listOrdersForAdmin,
   listReviewsForAdmin,
   listServicesForAdmin,
   listSettingsRecords,
@@ -36,7 +34,6 @@ import {
   updateProfessionRecord,
 } from '@/server/repositories/catalog.repository';
 import { validateRequirementsConsistency } from '@/shared/constants/documents';
-import { ORDER_STATUS_LABELS_AR } from '@/shared/constants/order-status';
 import type {
   BroadcastNotificationInput,
   CreateCategoryInput,
@@ -68,20 +65,10 @@ interface AdminActor {
 /* لوحة القيادة                                                        */
 /* ================================================================== */
 
-export interface DashboardDto extends DashboardCounts {
-  ordersByStatusLabeled: { status: string; label: string; count: number }[];
-}
+export type DashboardDto = DashboardCounts;
 
 export async function getDashboard(): Promise<DashboardDto> {
-  const counts = await getDashboardCounts();
-
-  const ordersByStatusLabeled = Object.entries(ORDER_STATUS_LABELS_AR).map(([status, label]) => ({
-    status,
-    label,
-    count: counts.ordersByStatus[status as keyof typeof counts.ordersByStatus] ?? 0,
-  }));
-
-  return { ...counts, ordersByStatusLabeled };
+  return getDashboardCounts();
 }
 
 /* ================================================================== */
@@ -594,69 +581,6 @@ export async function setServiceActive(
   return {
     id: String(updated._id),
     isActive: updated.isActive,
-  };
-}
-
-/* ================================================================== */
-/* الطلبات (قراءة إشرافية فقط)                                         */
-/* ================================================================== */
-
-export async function listOrders(options: {
-  page: number;
-  limit: number;
-  status?: import('@/shared/constants/order-status').OrderStatus | undefined;
-  q?: string | undefined;
-}) {
-  const { items, total } = await listOrdersForAdmin(options);
-  return {
-    items: items.map((item) => ({
-      id: String((item as { _id: Types.ObjectId })._id),
-      orderNumber: (item as { orderNumber: number }).orderNumber,
-      status: (item as { status: string }).status,
-      serviceType: (item as { serviceType: string }).serviceType,
-      agreedPrice: (item as { agreedPrice?: number }).agreedPrice,
-      createdAt: (item as { createdAt: Date }).createdAt.toISOString(),
-    })),
-    total,
-  };
-}
-
-export async function getOrderForAdmin(orderId: string) {
-  const order = await findOrderByIdForAdmin(orderId);
-  if (!order) throw notFound('الطلب غير موجود.');
-
-  const doc = order as unknown as {
-    _id: Types.ObjectId;
-    orderNumber: number;
-    status: string;
-    serviceType: string;
-    details: string;
-    agreedPrice?: number;
-    address: { governorate: string; city: string; area: string; line: string };
-    scheduledDate: Date;
-    statusHistory: Array<{ from: string | null; to: string; byRole: string; at: Date; note?: string }>;
-    cashReceivedConfirmed: boolean;
-    createdAt: Date;
-  };
-
-  return {
-    id: String(doc._id),
-    orderNumber: doc.orderNumber,
-    status: doc.status,
-    serviceType: doc.serviceType,
-    details: doc.details,
-    agreedPrice: doc.agreedPrice,
-    address: doc.address,
-    scheduledDate: doc.scheduledDate.toISOString(),
-    cashReceivedConfirmed: doc.cashReceivedConfirmed,
-    createdAt: doc.createdAt.toISOString(),
-    statusHistory: doc.statusHistory.map((entry) => ({
-      from: entry.from,
-      to: entry.to,
-      byRole: entry.byRole,
-      at: entry.at.toISOString(),
-      ...(entry.note ? { note: entry.note } : {}),
-    })),
   };
 }
 

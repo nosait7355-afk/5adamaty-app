@@ -7,6 +7,7 @@ import type {
   AdminProviderListItemDto,
   ProviderProfileDto,
 } from '@/server/services/provider.service';
+import type { ProviderDashboardDto } from '@/server/services/provider-dashboard.service';
 import type {
   ProviderStep1Values,
   ProviderStep2Values,
@@ -38,6 +39,15 @@ export function useMyDocuments(enabled = true) {
         )
       ).data,
     enabled,
+    retry: false,
+  });
+}
+
+/** لوحة تحكم مقدم الخدمة — الصورة 24. */
+export function useProviderDashboard() {
+  return useQuery({
+    queryKey: queryKeys.provider.dashboard,
+    queryFn: async () => (await api.get<ProviderDashboardDto>('/provider/dashboard')).data,
     retry: false,
   });
 }

@@ -43,8 +43,8 @@ describe('الزائر غير المسجّل', () => {
     }
   });
 
-  it('يُحوَّل إلى الدخول عند فتح الحساب أو الرسائل', async () => {
-    for (const path of ['/account', '/notifications', '/messages']) {
+  it('يُحوَّل إلى الدخول عند فتح الحساب أو الإشعارات', async () => {
+    for (const path of ['/account', '/notifications']) {
       expect(redirectTo(await request(path)), path).toBe('/login');
     }
   });
@@ -99,7 +99,7 @@ describe('العميل المسجّل', () => {
   });
 
   it('يفتح شاشات الحساب والرسائل بلا تحويل', async () => {
-    for (const path of ['/account', '/account/addresses', '/notifications', '/messages']) {
+    for (const path of ['/account', '/account/addresses', '/notifications']) {
       expect(redirectTo(await request(path, 'CUSTOMER')), path).toBeNull();
     }
   });
@@ -116,7 +116,7 @@ describe('العميل المسجّل', () => {
 
 describe('مقدم الخدمة المسجّل', () => {
   it('يُحوَّل من مساحة العميل إلى لوحته', async () => {
-    for (const path of ['/home', '/categories', '/services', '/search', '/orders']) {
+    for (const path of ['/home', '/categories', '/services', '/search', '/providers/507f1f77bcf86cd799439011']) {
       expect(redirectTo(await request(path, 'PROVIDER')), path).toBe('/provider/dashboard');
     }
   });
@@ -125,13 +125,11 @@ describe('مقدم الخدمة المسجّل', () => {
     expect(redirectTo(await request('/provider/dashboard', 'PROVIDER'))).toBeNull();
   });
 
-  it('الرسائل مشتركة بين الطرفين — لا تُحوَّل عن المزوّد', async () => {
-    /*
-     * المحادثة بين طرفَي الطلب، فلكلٍّ مساره بنفس المكوّن. `/messages`
-     * ليست من مساحة العميل الحصرية.
-     */
-    expect(redirectTo(await request('/messages', 'PROVIDER'))).toBeNull();
-    expect(redirectTo(await request('/provider/messages', 'PROVIDER'))).toBeNull();
+  it('الصفحات القانونية عامة للجميع', async () => {
+    for (const path of ['/terms', '/privacy']) {
+      expect(redirectTo(await request(path)), path).toBeNull();
+      expect(redirectTo(await request(path, 'PROVIDER')), path).toBeNull();
+    }
   });
 });
 

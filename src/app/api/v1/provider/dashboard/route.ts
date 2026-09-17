@@ -2,7 +2,7 @@ import { withErrorHandler } from '@/server/middleware/with-error-handler';
 import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-limit';
 import { requireRole } from '@/server/middleware/with-auth';
 import { ok } from '@/server/lib/api-response';
-import { getProviderDashboard } from '@/server/services/provider-orders.service';
+import { getProviderDashboard } from '@/server/services/provider-dashboard.service';
 
 export const dynamic = 'force-dynamic';
 

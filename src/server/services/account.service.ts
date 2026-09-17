@@ -1,22 +1,19 @@
-import { conflict, notFound, unprocessable } from '@/server/lib/errors';
+import { notFound, unprocessable } from '@/server/lib/errors';
 import { logger } from '@/server/lib/logger';
 import {
   countAddresses,
   countFavorites,
   countNotifications,
   createAddress,
-  createReview as insertReview,
   deleteAddress,
   findAddressById,
   findAddresses,
   findFaqs,
   findFavorites,
   findNotifications,
-  findReviewByOrder,
   markAllNotificationsRead,
   markNotificationRead,
   recordFaqFeedback,
-  refreshProviderRating,
   setDefaultAddress,
   toggleFavorite,
   updateAddress,
@@ -25,21 +22,16 @@ import {
 } from '@/server/repositories/account.repository';
 import {
   createNotification,
-  findProviderById,
   findUserById,
   updateUser,
 } from '@/server/repositories/provider.repository';
-import { findOrderById } from '@/server/repositories/order.repository';
 import { findProviders, findServices } from '@/server/repositories/discovery.repository';
-import { countUnreadMessages } from '@/server/repositories/messaging.repository';
 import { verifyAndBuildMediaRef } from './upload.service';
-import { canReview } from '@/server/policies/order-state-machine';
 import { toAuthUserDto, type AuthUserDto } from './auth.service';
 import { NOTIFICATION_TYPE_TAB, type NotificationTab } from '@/shared/constants/notifications';
 import type {
   CreateAddressInput,
   CreateFavoriteInput,
-  CreateReviewInput,
   ListNotificationsQuery,
   SupportContactInput,
   UpdateProfileInput,
@@ -75,7 +67,7 @@ function toNotificationDto(notification: NotificationLean): NotificationDto {
   return {
     id: String(notification._id),
     type: notification.type,
-    tab: NOTIFICATION_TYPE_TAB[notification.type],
+    tab: NOTIFICATION_TYPE_TAB[notification.type] ?? 'ALL',
     title: notification.title,
     body: notification.body,
     entityType: notification.entityType,
@@ -98,11 +90,11 @@ export async function listNotifications(user: SessionUser, query: ListNotificati
   const counts = await countNotifications(user.id);
 
   /* عدّاد لكل تبويب — مشتق من عدّادات الأنواع بلا استعلام إضافي */
-  const tabCounts: Record<string, number> = { ALL: 0 };
+  const tabCounts: Record<string, number> = { ALL: 0, CALLS: 0, MESSAGES: 0 };
   let all = 0;
   for (const [type, count] of Object.entries(counts.byType)) {
     const tab = NOTIFICATION_TYPE_TAB[type as keyof typeof NOTIFICATION_TYPE_TAB];
-    tabCounts[tab] = (tabCounts[tab] ?? 0) + count;
+    if (tab) tabCounts[tab] = (tabCounts[tab] ?? 0) + count;
     all += count;
   }
   tabCounts.ALL = all;
@@ -130,104 +122,10 @@ export async function readAllNotifications(user: SessionUser) {
   return { updated };
 }
 
-/** شارة غير المقروء: إشعارات + رسائل. */
+/** شارة غير المقروء — الإشعارات فقط؛ لا مراسلة داخل التطبيق. */
 export async function getUnreadSummary(user: SessionUser) {
-  const [notifications, messages] = await Promise.all([
-    countNotifications(user.id),
-    countUnreadMessages(user.id),
-  ]);
-
-  return { notifications: notifications.unreadTotal, messages };
-}
-
-/* ================================================================== */
-/* التقييمات                                                           */
-/* ================================================================== */
-
-export interface ReviewResultDto {
-  id: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-  provider: { id: string; ratingAvg: number; ratingCount: number };
-}
-
-/**
- * كتابة تقييم لطلب مكتمل.
- *
- * أربعة شروط، كلها على الخادم:
- *   1. الطلب موجود ويخصّ هذا العميل (وإلا 404 — لا 403).
- *   2. حالته `COMPLETED` (تحكمها الـState Machine لا شرط مكرر هنا).
- *   3. لم يُقيَّم من قبل — ويحرسه أيضًا **فهرس فريد** على `orderId`، فحتى
- *      طلبان متزامنان لا ينتجان تقييمين.
- *   4. التقييم عدد صحيح 1–5 (من المخطط).
- */
-export async function createReview(
-  user: SessionUser,
-  orderId: string,
-  input: CreateReviewInput
-): Promise<ReviewResultDto> {
-  const order = await findOrderById(orderId);
-  if (!order) throw notFound('الطلب المطلوب غير موجود.');
-
-  if (String(order.customerId) !== user.id) {
-    logger.warn('محاولة تقييم طلب مستخدم آخر', { userId: user.id, orderId });
-    throw notFound('الطلب المطلوب غير موجود.');
-  }
-
-  if (!canReview(order.status)) {
-    throw unprocessable('لا يمكن تقييم الطلب قبل اكتماله.');
-  }
-
-  const existing = await findReviewByOrder(orderId);
-  if (existing) throw conflict('سبق أن قيّمت هذا الطلب.');
-
-  let review;
-  try {
-    review = await insertReview({
-      orderId,
-      customerId: user.id,
-      providerId: String(order.providerId),
-      rating: input.rating,
-      ...(input.comment ? { comment: input.comment } : {}),
-    });
-  } catch (error) {
-    // الفهرس الفريد أمسك سباقًا بين طلبين متزامنين
-    if (isDuplicateKey(error)) throw conflict('سبق أن قيّمت هذا الطلب.');
-    throw error;
-  }
-
-  await refreshProviderRating(String(order.providerId));
-
-  const provider = await findProviderById(String(order.providerId));
-
-  await createNotification({
-    userId: String(provider?.userId ?? order.providerId),
-    type: 'REVIEW_RECEIVED',
-    title: 'تقييم جديد',
-    body: `قيّم العميل الطلب رقم #${order.orderNumber} بـ${input.rating} من 5.`,
-    entityType: 'REVIEW',
-    entityId: String(review._id),
-    actionUrl: `/provider/orders/${orderId}`,
-  });
-
-  logger.info('أُضيف تقييم', { orderId, rating: input.rating });
-
-  return {
-    id: String(review._id),
-    rating: review.rating,
-    ...(review.comment ? { comment: review.comment } : {}),
-    createdAt: new Date(review.createdAt).toISOString(),
-    provider: {
-      id: String(order.providerId),
-      ratingAvg: provider?.ratingAvg ?? 0,
-      ratingCount: provider?.ratingCount ?? 0,
-    },
-  };
-}
-
-function isDuplicateKey(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && (error as { code?: number }).code === 11000;
+  const notifications = await countNotifications(user.id);
+  return { notifications: notifications.unreadTotal };
 }
 
 /* ================================================================== */
@@ -405,7 +303,6 @@ export interface AccountSummaryDto {
     paymentMethodsNote: string;
     unreadNotifications: number;
   };
-  orders: Record<string, number>;
 }
 
 export async function getAccountSummary(user: SessionUser): Promise<AccountSummaryDto> {
@@ -418,9 +315,6 @@ export async function getAccountSummary(user: SessionUser): Promise<AccountSumma
     countNotifications(user.id),
   ]);
 
-  const { countOrdersByStatus } = await import('@/server/repositories/order.repository');
-  const orders = await countOrdersByStatus({ customerId: user.id });
-
   return {
     user: toAuthUserDto(account as never),
     stats: {
@@ -429,7 +323,6 @@ export async function getAccountSummary(user: SessionUser): Promise<AccountSumma
       paymentMethodsNote: 'الدفع كاش مباشرة لمقدم الخدمة — لا يوجد دفع إلكتروني في التطبيق.',
       unreadNotifications: notifications.unreadTotal,
     },
-    orders,
   };
 }
 

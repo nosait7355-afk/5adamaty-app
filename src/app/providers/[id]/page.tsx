@@ -6,7 +6,6 @@ import Image from 'next/image';
 import {
   CalendarDays,
   ChevronLeft,
-  Clock,
   Gavel,
   Heart,
   ImageIcon,
@@ -15,7 +14,8 @@ import {
   Phone,
   Share2,
   ShieldCheck,
-  Users,
+  Star,
+  Wrench,
 } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { PageContainer } from '@/components/layout/page-container';
@@ -34,8 +34,8 @@ import {
   formatDateShort,
   formatExperience,
   formatNumber,
+  formatRating,
   formatRelativeTime,
-  pluralizeAr,
 } from '@/lib/format';
 import { useProvider, useProviderReviews, useServices } from '@/lib/queries/discovery';
 import { useMe } from '@/lib/queries/auth';
@@ -201,18 +201,14 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             value={data.memberSince ? formatDateShort(data.memberSince).split(' ').slice(-1)[0] ?? '—' : '—'}
           />
           <StatCell
-            icon={<Users size={18} />}
-            label="العملاء"
-            value={formatNumber(data.customersCount)}
+            icon={<Star size={18} />}
+            label="التقييم"
+            value={data.ratingCount > 0 ? formatRating(data.ratingAvg) : '—'}
           />
           <StatCell
-            icon={<Clock size={18} />}
-            label="متوسط الرد"
-            value={
-              data.avgResponseMinutes != null
-                ? pluralizeAr(data.avgResponseMinutes, 'دقيقة', 'دقيقتين', 'دقائق')
-                : '—'
-            }
+            icon={<Wrench size={18} />}
+            label="الخدمات"
+            value={formatNumber(data.servicesCount)}
           />
         </Card>
 

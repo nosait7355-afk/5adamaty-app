@@ -208,50 +208,6 @@ export function useSetServiceActive() {
 }
 
 /* ================================================================== */
-/* الطلبات (قراءة إشرافية)                                             */
-/* ================================================================== */
-
-export interface AdminOrderDto {
-  id: string;
-  orderNumber: number;
-  status: string;
-  serviceType: string;
-  agreedPrice?: number;
-  createdAt: string;
-}
-
-export interface OrdersFilter {
-  [key: string]: string | number | boolean | undefined;
-  status?: string;
-  q?: string;
-  page: number;
-  limit: number;
-}
-
-export function useAdminOrders(filter: OrdersFilter) {
-  return useQuery({
-    queryKey: queryKeys.admin.orders(filter),
-    queryFn: async () => api.get<AdminOrderDto[]>('/admin/orders', { query: filter }),
-  });
-}
-
-export interface AdminOrderDetailDto extends AdminOrderDto {
-  details: string;
-  address: { governorate: string; city: string; area: string; line: string };
-  scheduledDate: string;
-  cashReceivedConfirmed: boolean;
-  statusHistory: Array<{ from: string | null; to: string; byRole: string; at: string; note?: string }>;
-}
-
-export function useAdminOrder(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.admin.order(id ?? ''),
-    queryFn: async () => (await api.get<AdminOrderDetailDto>(`/admin/orders/${id}`)).data,
-    enabled: Boolean(id),
-  });
-}
-
-/* ================================================================== */
 /* التقييمات (إشراف)                                                   */
 /* ================================================================== */
 

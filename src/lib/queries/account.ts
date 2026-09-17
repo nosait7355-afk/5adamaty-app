@@ -7,9 +7,7 @@ import type {
   AccountSummaryDto,
   AddressDto,
   NotificationDto,
-  ReviewResultDto,
 } from '@/server/services/account.service';
-import type { MessageDto, ThreadDto } from '@/server/services/messaging.service';
 import type { AuthUserDto } from '@/server/services/auth.service';
 import type { NotificationTab } from '@/shared/constants/notifications';
 
@@ -36,7 +34,7 @@ export function useUnreadCounts() {
   return useQuery({
     queryKey: queryKeys.notifications.unreadCount,
     queryFn: async () =>
-      (await api.get<{ notifications: number; messages: number }>('/notifications/unread-count'))
+      (await api.get<{ notifications: number }>('/notifications/unread-count'))
         .data,
     retry: false,
   });
@@ -61,25 +59,6 @@ export function useReadAllNotifications() {
     mutationFn: async () => (await api.post<{ updated: number }>('/notifications/read-all')).data,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-  });
-}
-
-/* ================================================================== */
-/* التقييمات                                                           */
-/* ================================================================== */
-
-export function useCreateReview() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (input: { orderId: string; rating: number; comment?: string }) => {
-      const { orderId, ...body } = input;
-      return (await api.post<ReviewResultDto>(`/orders/${orderId}/review`, body)).data;
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['orders'] });
-      void queryClient.invalidateQueries({ queryKey: ['providers'] });
     },
   });
 }
@@ -225,61 +204,5 @@ export function useContactSupport() {
   return useMutation({
     mutationFn: async (input: { subject: string; message: string }) =>
       (await api.post<{ received: true }>('/support/contact', input)).data,
-  });
-}
-
-/* ================================================================== */
-/* المراسلة                                                            */
-/* ================================================================== */
-
-export function useThreads() {
-  return useQuery({
-    queryKey: queryKeys.threads.list,
-    queryFn: async () =>
-      (await api.get<{ items: ThreadDto[]; unreadTotal: number }>('/threads', { query: { limit: 50 } }))
-        .data,
-  });
-}
-
-/**
- * رسائل المحادثة.
- *
- * `refetchInterval` استقصاء دوري بدل SSE: يكفي لمحادثة تشغيلية قصيرة حول
- * طلب، ويتجنّب تعقيد اتصال دائم على استضافة serverless.
- */
-export function useThreadMessages(threadId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.threads.messages(threadId ?? ''),
-    queryFn: async () =>
-      (
-        await api.get<{ thread: ThreadDto; items: MessageDto[] }>(
-          `/threads/${threadId}/messages`,
-          { query: { limit: 50 } }
-        )
-      ).data,
-    enabled: Boolean(threadId),
-    refetchInterval: 15_000,
-  });
-}
-
-export function useOpenOrderThread() {
-  return useMutation({
-    mutationFn: async (orderId: string) =>
-      (await api.post<ThreadDto>(`/orders/${orderId}/thread`)).data,
-  });
-}
-
-export function useSendMessage() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (input: { threadId: string; body: string }) =>
-      (await api.post<MessageDto>(`/threads/${input.threadId}/messages`, { body: input.body })).data,
-    onSuccess: (_message, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.threads.messages(variables.threadId),
-      });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.threads.list });
-    },
   });
 }

@@ -6,14 +6,12 @@ import {
   Review,
   Service,
   ServiceProvider,
-  ServiceRequest,
   Setting,
   User,
 } from '@/server/db/models';
 import type { UserLean } from './user.repository';
 import type { AuditAction } from '@/server/db/models/misc.model';
 import type { NotificationType } from '@/shared/constants/notifications';
-import type { OrderStatus } from '@/shared/constants/order-status';
 import type { UserRole, UserStatus } from '@/shared/constants/roles';
 
 /**
@@ -34,7 +32,6 @@ export interface DashboardCounts {
   totalProviders: number;
   pendingVerifications: number;
   activeProviders: number;
-  ordersByStatus: Record<OrderStatus, number>;
   reviewsCount: number;
   avgPlatformRating: number;
   servicesActive: number;
@@ -50,7 +47,6 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     totalProviders,
     pendingVerifications,
     activeProviders,
-    orderStatusAgg,
     reviewsCount,
     avgRatingAgg,
     servicesActive,
@@ -61,9 +57,6 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     User.countDocuments({ role: 'PROVIDER' }),
     ServiceProvider.countDocuments({ 'verification.status': 'PENDING_REVIEW' }),
     ServiceProvider.countDocuments({ isActive: true }),
-    ServiceRequest.aggregate<{ _id: OrderStatus; count: number }>([
-      { $group: { _id: '$status', count: { $sum: 1 } } },
-    ]),
     Review.countDocuments({ isVisible: true }),
     ServiceProvider.aggregate<{ avg: number }>([
       { $match: { isActive: true, ratingCount: { $gt: 0 } } },
@@ -75,17 +68,11 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     (await import('@/server/db/models')).Profession.countDocuments({}),
   ]);
 
-  const ordersByStatus = orderStatusAgg.reduce(
-    (acc, row) => ({ ...acc, [row._id]: row.count }),
-    {} as Record<OrderStatus, number>
-  );
-
   return {
     totalCustomers,
     totalProviders,
     pendingVerifications,
     activeProviders,
-    ordersByStatus,
     reviewsCount,
     avgPlatformRating: Math.round((avgRatingAgg[0]?.avg ?? 0) * 10) / 10,
     servicesActive,
@@ -201,40 +188,6 @@ export async function setServiceActiveRecord(id: string, isActive: boolean) {
   return Service.findByIdAndUpdate(id, { $set: { isActive } }, { returnDocument: 'after' }).lean<
     AdminServiceLean | null
   >();
-}
-
-/* ================================================================== */
-/* الطلبات (قراءة إشرافية)                                             */
-/* ================================================================== */
-
-export async function listOrdersForAdmin(options: {
-  page: number;
-  limit: number;
-  status?: OrderStatus | undefined;
-  q?: string | undefined;
-}) {
-  await connectToDatabase();
-
-  const filter: Record<string, unknown> = {};
-  if (options.status) filter.status = options.status;
-  if (options.q) {
-    const asNumber = Number(options.q);
-    if (Number.isFinite(asNumber)) filter.orderNumber = asNumber;
-  }
-
-  const skip = (options.page - 1) * options.limit;
-  const [items, total] = await Promise.all([
-    ServiceRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(options.limit).lean(),
-    ServiceRequest.countDocuments(filter),
-  ]);
-
-  return { items, total };
-}
-
-export async function findOrderByIdForAdmin(id: string) {
-  await connectToDatabase();
-  if (!Types.ObjectId.isValid(id)) return null;
-  return ServiceRequest.findById(id).lean();
 }
 
 /* ================================================================== */
