@@ -201,3 +201,24 @@ export const supportContactSchema = z
   .strict();
 
 export type SupportContactInput = z.output<typeof supportContactSchema>;
+
+/* ================================================================== */
+/* حذف الحساب                                                          */
+/* ================================================================== */
+
+/**
+ * تأكيد حذف الحساب: كلمة المرور، أو البريد لحساب جوجل بلا كلمة مرور.
+ * أيّهما مطلوب يُقرَّر على الخادم حسب نوع الحساب.
+ */
+export const deleteAccountSchema = z
+  .object({
+    password: z.string().max(128).optional(),
+    confirmEmail: z.string().trim().max(160).optional(),
+  })
+  .strict()
+  .refine((data) => Boolean(data.password || data.confirmEmail), {
+    message: 'اكتب كلمة المرور لتأكيد الحذف.',
+    path: ['password'],
+  });
+
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

@@ -16,6 +16,7 @@ import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api-client';
+import { DeleteAccountCard } from '@/components/features/account/delete-account-card';
 
 /**
  * الإعدادات — عميل (أداة «الإعدادات» في حسابي، الصورة 16).
@@ -57,6 +58,8 @@ export default function AccountSettingsPage() {
         <Button variant="danger" fullWidth onClick={() => void logout()} iconStart={<LogOut size={20} />}>
           تسجيل الخروج
         </Button>
+
+        <DeleteAccountCard />
       </PageContainer>
 
       <BottomNav />

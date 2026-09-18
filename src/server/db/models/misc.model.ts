@@ -49,6 +49,8 @@ export const AUDIT_ACTIONS = [
   'REVIEW_MODERATED',
   'SETTING_CHANGED',
   'NOTIFICATION_BROADCAST',
+  // حذف الحساب بطلب صاحبه — مطلب Google Play
+  'ACCOUNT_DELETED',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

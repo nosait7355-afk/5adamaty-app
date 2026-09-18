@@ -15,6 +15,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { AppHeader } from '@/components/layout/app-header';
+import { DeleteAccountCard } from '@/components/features/account/delete-account-card';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer } from '@/components/layout/page-container';
 import { Card } from '@/components/ui/card';
@@ -115,6 +116,8 @@ export default function ProviderAccountPage() {
         >
           تسجيل الخروج
         </Button>
+
+        <DeleteAccountCard isProvider />
       </PageContainer>
 
       <BottomNav variant="provider" />
