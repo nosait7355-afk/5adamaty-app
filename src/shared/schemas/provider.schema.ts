@@ -41,13 +41,22 @@ export const GENDER_LABELS_AR: Record<(typeof GENDERS)[number], string> = {
 /** تاريخ ميلاد منطقي: 18 سنة على الأقل و100 على الأكثر. */
 const birthDateSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'صيغة التاريخ غير صالحة.')
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'أكمل اليوم والشهر والسنة.')
   .refine((value) => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return false;
-    const age = (Date.now() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+    /*
+     * التحقق من أن التاريخ موجود فعلًا: `new Date('2000-02-31')` لا يفشل
+     * دائمًا بل قد يُرحَّل إلى مارس، فنقارن الأجزاء بعد التحويل.
+     */
+    const [year, month, day] = value.split('-').map(Number) as [number, number, number];
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return (
+      date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+    );
+  }, 'هذا التاريخ غير موجود — راجع اليوم والشهر.')
+  .refine((value) => {
+    const age = (Date.now() - new Date(value).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
     return age >= 18 && age <= 100;
-  }, 'يجب أن يكون عمرك 18 سنة على الأقل.');
+  }, 'يجب أن يكون عمرك بين 18 و100 سنة.');
 
 /**
  * البريد **إلزامي** لمقدم الخدمة (بعكس العميل) — كما هو معلّم بـ`*` في

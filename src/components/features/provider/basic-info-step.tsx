@@ -1,11 +1,12 @@
 'use client';
 
 import { useId } from 'react';
-import { CalendarDays, Home, Lock, Mail, MapPin, MessageCircle, Phone, User } from 'lucide-react';
+import { Home, Lock, Mail, MapPin, MessageCircle, Phone, User } from 'lucide-react';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePartsInput } from '@/components/ui/date-parts-input';
 import { InfoAlert } from '@/components/common/info-alert';
 import { FAYOUM_CITIES, GOVERNORATE } from '@/shared/constants/fayoum-areas';
 import {
@@ -255,14 +256,12 @@ export function BasicInfoStep({ values, errors, onChange, mode = 'create' }: Bas
           />
         </Field>
 
-        <Field htmlFor={ids.birthDate} label="تاريخ الميلاد" error={errors.birthDate}>
-          <Input
+        <Field htmlFor={ids.birthDate} label="تاريخ الميلاد" hint="اختياري" error={errors.birthDate}>
+          <DatePartsInput
             id={ids.birthDate}
-            type="date"
-            icon={<CalendarDays size={20} />}
             value={values.birthDate}
             invalid={Boolean(errors.birthDate)}
-            onChange={(event) => onChange({ birthDate: event.target.value })}
+            onChange={(birthDate) => onChange({ birthDate })}
           />
         </Field>
       </div>

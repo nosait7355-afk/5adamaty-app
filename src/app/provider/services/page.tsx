@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import { ArrowLeft, MapPin, Pencil, Plus, Save, Trash2, Wrench } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
+import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -134,7 +135,7 @@ export default function ProviderServicesPage() {
     <>
       <BackHeader onBack={mode === 'form' ? () => setMode('list') : undefined} />
 
-      <PageContainer withBottomNav={false} className="pb-10">
+      <PageContainer className="pb-10">
         {mode === 'list' ? (
           <>
             <PageTitle title="خدماتي" subtitle="القوائم التي تظهر للعملاء عند البحث" />
@@ -271,6 +272,8 @@ export default function ProviderServicesPage() {
           </>
         )}
       </PageContainer>
+
+      <BottomNav variant="provider" />
     </>
   );
 }

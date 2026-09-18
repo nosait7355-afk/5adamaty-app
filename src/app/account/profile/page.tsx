@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Save, User } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
+import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -92,7 +93,7 @@ export default function AccountProfilePage() {
     <>
       <BackHeader />
 
-      <PageContainer withBottomNav={false} className="pb-10">
+      <PageContainer className="pb-10">
         <PageTitle title="تعديل الملف الشخصي" subtitle="بياناتك الشخصية الظاهرة في حسابك" />
 
         {account.isPending ? (
@@ -183,6 +184,8 @@ export default function AccountProfilePage() {
           </div>
         )}
       </PageContainer>
+
+      <BottomNav />
     </>
   );
 }

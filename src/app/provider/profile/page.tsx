@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Save } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
+import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -85,7 +86,7 @@ export default function ProviderProfilePage() {
     <>
       <BackHeader />
 
-      <PageContainer withBottomNav={false} className="pb-10">
+      <PageContainer className="pb-10">
         <PageTitle title="الملف الشخصي" subtitle="بيانات مهنتك وخدمتك الظاهرة للعملاء" />
 
         {profile.isPending ? (
@@ -132,6 +133,8 @@ export default function ProviderProfilePage() {
           </>
         )}
       </PageContainer>
+
+      <BottomNav variant="provider" />
     </>
   );
 }
