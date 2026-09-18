@@ -212,19 +212,14 @@ describe('User', () => {
 });
 
 describe('Profession — محرّك المستندات الديناميكية', () => {
-  it('كل مهنة تعرض المستندات الأربعة، والهوية وحدها إلزامية', async () => {
+  it('كل مهنة تعرض الهوية والصورة فقط، والهوية وحدها إلزامية', async () => {
     const category = await makeCategory();
 
     for (const kind of ['CRAFT', 'REGULATED'] as const) {
       const profession = await makeProfession(category._id, kind);
       const keys = profession.documentRequirements.map((r) => r.key);
 
-      expect(keys, kind).toEqual([
-        'NATIONAL_ID',
-        'PERSONAL_PHOTO',
-        'PROFESSIONAL_CERT',
-        'PRACTICE_LICENSE',
-      ]);
+      expect(keys, kind).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
 
       const required = profession.documentRequirements.filter((r) => r.required);
       expect(required.map((r) => r.key), kind).toEqual(['NATIONAL_ID']);

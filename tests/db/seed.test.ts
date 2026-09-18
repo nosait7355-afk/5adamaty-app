@@ -41,7 +41,7 @@ describe('البذر', () => {
     expect(regulated).toBeGreaterThan(0);
   });
 
-  it('كل مهنة تعرض المستندات الأربعة، والهوية وحدها إلزامية، ولا إثبات عنوان', async () => {
+  it('كل مهنة تعرض الهوية والصورة فقط، والهوية وحدها إلزامية', async () => {
     await runSeed();
     const professions = await Profession.find().lean();
 
@@ -49,12 +49,7 @@ describe('البذر', () => {
 
     for (const profession of professions) {
       const keys = profession.documentRequirements.map((r) => r.key);
-      expect(keys, profession.name).toEqual([
-        'NATIONAL_ID',
-        'PERSONAL_PHOTO',
-        'PROFESSIONAL_CERT',
-        'PRACTICE_LICENSE',
-      ]);
+      expect(keys, profession.name).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
 
       const required = profession.documentRequirements.filter((r) => r.required).map((r) => r.key);
       expect(required, profession.name).toEqual(['NATIONAL_ID']);

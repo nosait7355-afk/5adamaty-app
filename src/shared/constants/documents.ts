@@ -97,12 +97,12 @@ function requirement(
  * قاعدة الاتساق (PROJECT_PLAN — قواعد المستندات الديناميكية):
  *   - NATIONAL_ID      → دائمًا Required — وهو **المستند الإلزامي الوحيد**
  *   - PERSONAL_PHOTO   → يظهر دائمًا، اختياري
- *   - PROFESSIONAL_CERT→ يظهر دائمًا، اختياري
- *   - PRACTICE_LICENSE → يظهر دائمًا، اختياري
  *
- * تخفيف الإلزام قرار منتج صريح: التسجيل كان يتعثّر عند مستندات يصعب على
- * الحرفي توفيرها فورًا. `requiresQualification` و`requiresLicense` ما زالا
- * يُقرآن، لكنهما لم يعودا يرفعان المستند إلى إلزامي.
+ * `PROFESSIONAL_CERT` و`PRACTICE_LICENSE` **أُزيلا من القائمة** لكل المهن
+ * بقرار منتج صريح: المنصة دليل إعلانات لا جهة اعتماد، فلا تطلب مؤهلًا ولا
+ * ترخيصًا. يبقيان مفتاحين صالحين في `DOCUMENT_KEYS` كي تظل المستندات
+ * المرفوعة سابقًا قابلة للقراءة، لكن لا شيء يُنشئهما تلقائيًا.
+ * `requiresQualification` و`requiresLicense` ما زالا يُقرآن ولا أثر لهما.
  *
  * ملاحظة: `ADDRESS_PROOF` كان يُضاف تلقائيًا (Optional) لكل مهنة — أُزيل من
  * القائمة الافتراضية بقرار صريح، ويبقى مفتاحًا صالحًا في `DOCUMENT_KEYS`
@@ -118,11 +118,9 @@ export function buildDocumentRequirements(options: {
   const list: DocumentRequirement[] = [
     requirement('NATIONAL_ID', true, 1),
     requirement('PERSONAL_PHOTO', false, 2),
-    requirement('PROFESSIONAL_CERT', false, 3),
-    requirement('PRACTICE_LICENSE', false, 4),
   ];
 
-  const order = 5;
+  const order = 3;
 
   if (options.custom?.length) {
     options.custom.forEach((item, index) => {

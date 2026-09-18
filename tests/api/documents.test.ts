@@ -156,27 +156,19 @@ describe('حفظ المستندات — المحرّك الديناميكي', ()
     ).rejects.toThrow(/غير مطلوب لمهنتك/);
   });
 
-  it('يقبل المؤهل والترخيص لمهنة حرفية — صارا اختياريين لكل المهن', async () => {
-    const { session } = await makeProvider({ kind: 'CRAFT', slug: 'plumber3' });
-    const publicId = documentPublicId(session.id);
-    mockCloudinaryAsset(publicId);
+  it('🔐 يرفض المؤهل والترخيص — أُزيلا من كل المهن', async () => {
+    for (const [kind, slug] of [['CRAFT', 'plumber3'], ['REGULATED', 'doctor']] as const) {
+      const { session } = await makeProvider({ kind, slug });
+      const publicId = documentPublicId(session.id);
+      mockCloudinaryAsset(publicId);
 
-    await expect(
-      saveDocument(session, { requirementKey: 'PROFESSIONAL_CERT', publicId })
-    ).resolves.toBeTruthy();
-  });
-
-  it('يقبل المؤهل والترخيص لمهنة منظَّمة', async () => {
-    const { session } = await makeProvider({ kind: 'REGULATED', slug: 'doctor' });
-    const publicId = documentPublicId(session.id);
-    mockCloudinaryAsset(publicId);
-
-    await expect(
-      saveDocument(session, { requirementKey: 'PROFESSIONAL_CERT', publicId })
-    ).resolves.toBeDefined();
-    await expect(
-      saveDocument(session, { requirementKey: 'PRACTICE_LICENSE', publicId })
-    ).resolves.toBeDefined();
+      for (const requirementKey of ['PROFESSIONAL_CERT', 'PRACTICE_LICENSE'] as const) {
+        await expect(
+          saveDocument(session, { requirementKey, publicId }),
+          `${slug}/${requirementKey}`
+        ).rejects.toThrow(/غير مطلوب لمهنتك/);
+      }
+    }
   });
 
   it('🔐 يرفض حفظ أصل خارج مجلد المستخدم', async () => {
@@ -264,7 +256,7 @@ describe('قائمة المستندات', () => {
     mockCloudinaryAsset(publicId);
 
     const before = await listMyDocuments(session);
-    expect(before.requirements).toHaveLength(4);
+    expect(before.requirements).toHaveLength(2);
     expect(before.isComplete).toBe(false);
     // الهوية وحدها إلزامية
     expect(before.missingRequired).toEqual(['الهوية الشخصية']);

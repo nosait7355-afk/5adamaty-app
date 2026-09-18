@@ -181,24 +181,14 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
     expect(data.requiresQualification).toBe(false);
     expect(data.requiresLicense).toBe(false);
 
-    expect(data.requirements.map((r) => r.key)).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'PROFESSIONAL_CERT',
-      'PRACTICE_LICENSE',
-    ]);
+    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
     // الهوية وحدها إلزامية في كل المهن
     expect(data.requirements.filter((r) => r.required).map((r) => r.key)).toEqual(['NATIONAL_ID']);
   });
 
   it('كهربائي (حرفية): نفس مستندات السبّاك', async () => {
     const { data } = await requirementsFor('electrician');
-    expect(data.requirements.map((r) => r.key)).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'PROFESSIONAL_CERT',
-      'PRACTICE_LICENSE',
-    ]);
+    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
   });
 
   it('طبيب (منظَّمة): 4 مستندات، الهوية وحدها إلزامية', async () => {
@@ -206,19 +196,17 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
 
     expect(data.requiresQualification).toBe(true);
     expect(data.requiresLicense).toBe(true);
-    expect(data.requirements.map((r) => r.key)).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'PROFESSIONAL_CERT',
-      'PRACTICE_LICENSE',
-    ]);
+    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
     expect(data.requirements.filter((r) => r.required).map((r) => r.key)).toEqual(['NATIONAL_ID']);
   });
 
-  it('محامٍ (منظَّمة): نفس مستندات الطبيب', async () => {
-    const { data } = await requirementsFor('lawyer');
-    expect(data.requirements).toHaveLength(4);
-    expect(data.requirements.map((r) => r.key)).toContain('PRACTICE_LICENSE');
+  it('لا مؤهل ولا ترخيص في أي مهنة — حتى المنظَّمة منها', async () => {
+    for (const slug of ['lawyer', 'doctor', 'private-tutor', 'plumber']) {
+      const { data } = await requirementsFor(slug);
+      const keys = data.requirements.map((r) => r.key);
+      expect(keys, slug).not.toContain('PROFESSIONAL_CERT');
+      expect(keys, slug).not.toContain('PRACTICE_LICENSE');
+    }
   });
 
   it('مدرّس خصوصي: نفس القائمة — الأعلام لم تعد تُخفي مستندًا', async () => {
@@ -226,12 +214,7 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
 
     expect(data.requiresQualification).toBe(true);
     expect(data.requiresLicense).toBe(false);
-    expect(data.requirements.map((r) => r.key)).toEqual([
-      'NATIONAL_ID',
-      'PERSONAL_PHOTO',
-      'PROFESSIONAL_CERT',
-      'PRACTICE_LICENSE',
-    ]);
+    expect(data.requirements.map((r) => r.key)).toEqual(['NATIONAL_ID', 'PERSONAL_PHOTO']);
     expect(data.requirements.filter((r) => r.required).map((r) => r.key)).toEqual(['NATIONAL_ID']);
   });
 
