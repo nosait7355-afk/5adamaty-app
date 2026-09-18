@@ -63,8 +63,10 @@ function mapCity(city: string | undefined | null): string | null {
 /** المنطقة البديلة لمنطقة ملغاة، أو `null` إذا كانت سليمة بالفعل. */
 function mapArea(area: string | undefined | null): { city: string; area: string } | null {
   if (!area) return null;
-  if (isValidArea(area)) return null;
-  return RETIRED_AREA_MIGRATIONS[area] ?? { city: 'الفيوم', area: 'حي الجامعة' };
+  // المنطقة صارت مركزًا؛ المركز والحي القديم كلاهما سليم هنا ولا يُعاد تحويله
+  if (isValidCoverageArea(area) || isValidArea(area)) return null;
+  const retired = RETIRED_AREA_MIGRATIONS[area];
+  return retired ? { city: retired.city, area: retired.city } : { city: 'الفيوم', area: 'الفيوم' };
 }
 
 /* ------------------------------------------------------------------ */
