@@ -93,11 +93,16 @@ async function migrateServices() {
 async function migrateUserAreas() {
   let scanned = 0;
   let changed = 0;
-  const cursor = User.find({ area: { $exists: true, $ne: null } }, 'area city').cursor();
+  /*
+   * بلا مرشّح على \`area\`: الاتصال يرفض مُعاملات الاستعلام ($exists…) حمايةً
+   * من حقن NoSQL، فنقرأ الكل ونتخطّى الفارغ هنا.
+   */
+  const cursor = User.find({}, 'area city').cursor();
 
   for await (const user of cursor) {
+    if (!user.area) continue;
     scanned += 1;
-    const [next] = toCoverageCities([user.area ?? '']);
+    const [next] = toCoverageCities([user.area]);
     if (!next || next === user.area) continue;
 
     changed += 1;
