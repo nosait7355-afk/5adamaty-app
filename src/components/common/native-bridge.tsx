@@ -13,9 +13,10 @@ import { useRouter } from 'next/navigation';
  * زر الرجوع: يتنقّل ضمن سجل Next.js أولًا، ولا يُنهي التطبيق إلا حين لا
  * يبقى سجل تصفح — سلوك أندرويد المعتاد.
  *
- * الإشعارات: تسجيل الجهاز فقط. لا معالجة توكن هنا لأن الإشعارات العامة
- * تُبثّ عبر قناة داخل التطبيق (`admin/notifications`) — Push طبقة تنبيه
- * موازية اختيارية، وربطها بمزوّد فعلي (FCM) خطوة تشغيلية لاحقة منفصلة.
+ * إشعارات Push **معطّلة عمدًا**: `PushNotifications.register()` يتطلب Firebase
+ * (`android/app/google-services.json`)، وهو غير مُعدّ. استدعاؤه بدونه يُسقط
+ * التطبيق فور موافقة المستخدم على الإذن. الإشعارات تصل عبر القناة الداخلية
+ * (`/notifications`)؛ تفعيل Push يبدأ بإضافة ملف Firebase ثم إعادة الاستدعاء.
  */
 export function NativeBridge() {
   const router = useRouter();
@@ -27,10 +28,9 @@ export function NativeBridge() {
       const { Capacitor } = await import('@capacitor/core');
       if (!Capacitor.isNativePlatform()) return;
 
-      const [{ App }, { StatusBar, Style }, { PushNotifications }] = await Promise.all([
+      const [{ App }, { StatusBar, Style }] = await Promise.all([
         import('@capacitor/app'),
         import('@capacitor/status-bar'),
-        import('@capacitor/push-notifications'),
       ]);
 
       await StatusBar.setStyle({ style: Style.Dark }).catch(() => undefined);
@@ -40,13 +40,6 @@ export function NativeBridge() {
         if (canGoBack) router.back();
         else App.exitApp();
       });
-
-      PushNotifications.requestPermissions()
-        .then((result) => {
-          if (result.receive === 'granted') return PushNotifications.register();
-          return undefined;
-        })
-        .catch(() => undefined);
 
       cleanup = () => {
         void backListener.remove();
