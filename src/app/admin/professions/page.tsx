@@ -26,7 +26,7 @@ import type { CreateProfessionInput } from '@/shared/schemas/admin.schema';
 import {
   buildDocumentRequirements,
   DOCUMENT_ACCEPTED_MIME,
-  DOCUMENT_MAX_SIZE_MB,
+  DOCUMENT_DEFAULT_MAX_SIZE_MB,
   PROFESSION_KINDS,
   validateRequirementsConsistency,
   type DocumentKey,
@@ -264,7 +264,7 @@ function ProfessionForm({
         required: false,
         order: prev.length + 1,
         accept: [...DOCUMENT_ACCEPTED_MIME],
-        maxSizeMB: DOCUMENT_MAX_SIZE_MB,
+        maxSizeMB: DOCUMENT_DEFAULT_MAX_SIZE_MB,
         isActive: true,
       },
     ]);

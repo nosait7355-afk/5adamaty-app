@@ -53,7 +53,10 @@ export interface ProviderCardDto {
 }
 
 export interface ProviderDetailDto extends ProviderCardDto {
+  /** صور «سابقة الأعمال» فقط — الفيديوهات في `videos`. */
   gallery: string[];
+  /** مقاطع «سابقة الأعمال» — روابط Cloudinary عامة قابلة للتشغيل مباشرة. */
+  videos: string[];
   customersCount: number;
   avgResponseMinutes?: number;
   memberSince?: string;
@@ -143,7 +146,13 @@ function toProviderCard(row: ProviderRow): ProviderCardDto {
 function toProviderDetail(row: ProviderRow, servicesCount: number): ProviderDetailDto {
   return {
     ...toProviderCard(row),
-    gallery: (row.gallery ?? []).map((image) => image.url),
+    // المعرض يخزّن النوعين معًا، والواجهة تعرضهما بعنصرين مختلفين
+    gallery: (row.gallery ?? [])
+      .filter((item) => item.resourceType !== 'video')
+      .map((image) => image.url),
+    videos: (row.gallery ?? [])
+      .filter((item) => item.resourceType === 'video')
+      .map((video) => video.url),
     customersCount: row.customersCount ?? 0,
     ...(row.avgResponseMinutes != null ? { avgResponseMinutes: row.avgResponseMinutes } : {}),
     ...(row.memberSince ? { memberSince: new Date(row.memberSince).toISOString() } : {}),

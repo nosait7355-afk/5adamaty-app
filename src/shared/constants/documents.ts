@@ -59,7 +59,33 @@ export const DOCUMENT_ACCEPTED_MIME = [
   'application/pdf',
 ] as const;
 
-export const DOCUMENT_MAX_SIZE_MB = 3;
+/**
+ * الحدّ الافتراضي لأي مستند لم يُخصَّص له حدّ أكبر.
+ */
+export const DOCUMENT_DEFAULT_MAX_SIZE_MB = 3;
+
+/**
+ * السقف المطلق لأي مستند — أكبر قيمة في `DOCUMENT_MAX_SIZE_BY_KEY`.
+ *
+ * يُستخدم حدًّا أعلى للتحقق في النموذج ولوحة Admin، لا كحدّ معروض: الحدّ
+ * المعروض لكل بطاقة هو `requirement.maxSizeMB` نفسه.
+ */
+export const DOCUMENT_MAX_SIZE_MB = 5;
+
+/**
+ * حدّ الحجم لكل نوع مستند.
+ *
+ * الهوية الشخصية 5MB: صورة الوجهين من كاميرا هاتف حديث تتجاوز 3MB بسهولة،
+ * وكانت أكثر أسباب فشل الرفع في خطوة المستندات.
+ */
+export const DOCUMENT_MAX_SIZE_BY_KEY: Partial<Record<DocumentKey, number>> = {
+  NATIONAL_ID: 5,
+};
+
+/** حدّ الحجم لمفتاح مستند — المخصَّص له إن وُجد، وإلا الافتراضي. */
+export function maxSizeForDocument(key: DocumentKey): number {
+  return DOCUMENT_MAX_SIZE_BY_KEY[key] ?? DOCUMENT_DEFAULT_MAX_SIZE_MB;
+}
 
 export interface DocumentRequirement {
   key: DocumentKey;
@@ -86,7 +112,7 @@ function requirement(
     required,
     order,
     accept: [...DOCUMENT_ACCEPTED_MIME],
-    maxSizeMB: DOCUMENT_MAX_SIZE_MB,
+    maxSizeMB: maxSizeForDocument(key),
     isActive: true,
   };
 }

@@ -277,3 +277,35 @@ export const updateProviderServiceSchema = providerServiceBaseSchema.partial().s
 export type UpdateProviderServiceInput = z.output<typeof updateProviderServiceSchema>;
 
 export const listMyServicesQuerySchema = paginationSchema.strict();
+
+/* ================================================================== */
+/* سابقة الأعمال — صور وفيديوهات ملف مقدم الخدمة                        */
+/* ================================================================== */
+
+/**
+ * إضافة عنصر إلى «سابقة أعمالي».
+ *
+ * `publicId` وحده هو ما يقبله السيرفر: كل ما عداه (الحجم، الصيغة، الأبعاد)
+ * يُقرأ من Cloudinary مباشرة عند الحفظ، فادعاء العميل عن ملفه لا يُخزَّن
+ * أصلًا (ARCHITECTURE §8).
+ */
+export const addPortfolioItemSchema = z
+  .object({
+    publicId: safeString(300).refine((value) => value.length > 0, {
+      message: 'معرّف الملف مطلوب.',
+    }),
+    kind: z.enum(['IMAGE', 'VIDEO']),
+  })
+  .strict();
+
+export type AddPortfolioItemInput = z.output<typeof addPortfolioItemSchema>;
+
+export const removePortfolioItemSchema = z
+  .object({
+    publicId: safeString(300).refine((value) => value.length > 0, {
+      message: 'معرّف الملف مطلوب.',
+    }),
+  })
+  .strict();
+
+export type RemovePortfolioItemInput = z.output<typeof removePortfolioItemSchema>;

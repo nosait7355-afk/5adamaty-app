@@ -14,12 +14,21 @@ export const UPLOAD_PURPOSES = [
   'ORDER_ATTACHMENT',
   'PROVIDER_DOCUMENT',
   'MESSAGE_ATTACHMENT',
+  'PROVIDER_PORTFOLIO_VIDEO',
 ] as const;
 
 export type UploadPurpose = (typeof UPLOAD_PURPOSES)[number];
 
 /** صيغ الصور المسموح بها. */
 export const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
+/**
+ * صيغ الفيديو المسموح بها في «سابقة أعمالي».
+ *
+ * `video/quicktime` مدرج لأن كاميرا iPhone تنتج `.mov` افتراضيًا — استبعاده
+ * يعني رفض نصف المستخدمين عند أول محاولة.
+ */
+export const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'] as const;
 
 /** المستندات الرسمية تقبل PDF إضافةً للصور. */
 export const DOCUMENT_MIME_TYPES = [...IMAGE_MIME_TYPES, 'application/pdf'] as const;
@@ -54,7 +63,7 @@ export interface UploadRule {
    * `upload` = أصل عام قابل للعرض مباشرة.
    */
   accessMode: 'public' | 'authenticated';
-  resourceType: 'image' | 'raw';
+  resourceType: 'image' | 'raw' | 'video';
   /** أقصى عدد ملفات لهذا الغرض (للتحقق في الواجهة والسيرفر). */
   maxFiles: number;
 }
@@ -68,6 +77,7 @@ export const UPLOAD_RULES: Record<UploadPurpose, UploadRule> = {
     resourceType: 'image',
     maxFiles: 1,
   },
+  /** صور «سابقة أعمالي» في ملف مقدم الخدمة. */
   PROVIDER_GALLERY: {
     accept: IMAGE_MIME_TYPES,
     maxSizeMB: 5,
@@ -75,6 +85,19 @@ export const UPLOAD_RULES: Record<UploadPurpose, UploadRule> = {
     accessMode: 'public',
     resourceType: 'image',
     maxFiles: 12,
+  },
+  /**
+   * فيديوهات «سابقة أعمالي» — غرض منفصل عن الصور لا توسعة لها، لأن
+   * `resourceType` و`maxSizeMB` مختلفان جذريًا: Cloudinary يرفع الفيديو على
+   * نقطة `/video/upload` لا `/image/upload`، وحدّ 5MB يرفض أي مقطع واقعي.
+   */
+  PROVIDER_PORTFOLIO_VIDEO: {
+    accept: VIDEO_MIME_TYPES,
+    maxSizeMB: 50,
+    folder: 'khadamaty/providers/videos',
+    accessMode: 'public',
+    resourceType: 'video',
+    maxFiles: 3,
   },
   SERVICE_IMAGE: {
     accept: IMAGE_MIME_TYPES,
@@ -98,8 +121,12 @@ export const UPLOAD_RULES: Record<UploadPurpose, UploadRule> = {
    * `authenticated` إجباري — لا يجوز أن تكون قابلة للفتح برابط عام.
    */
   PROVIDER_DOCUMENT: {
+    /*
+     * سقف الغرض كله — الحدّ الفعلي لكل مستند يأتي من
+     * `documentRequirements[i].maxSizeMB` (الهوية 5MB، الباقي 3MB).
+     */
     accept: DOCUMENT_MIME_TYPES,
-    maxSizeMB: 3,
+    maxSizeMB: 5,
     folder: 'khadamaty/documents',
     accessMode: 'authenticated',
     resourceType: 'image',
@@ -123,6 +150,9 @@ export const MIME_EXTENSION: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
   'application/pdf': 'pdf',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
 };
 
 export const MIME_LABEL_AR: Record<string, string> = {
@@ -130,6 +160,9 @@ export const MIME_LABEL_AR: Record<string, string> = {
   'image/png': 'PNG',
   'image/webp': 'WEBP',
   'application/pdf': 'PDF',
+  'video/mp4': 'MP4',
+  'video/webm': 'WEBM',
+  'video/quicktime': 'MOV',
 };
 
 /**
@@ -145,7 +178,17 @@ export const MAGIC_SIGNATURES: Record<string, readonly number[][]> = {
   // WEBP = "RIFF" ثم 4 بايت حجم ثم "WEBP" — نتحقق من المقطعين
   'image/webp': [[0x52, 0x49, 0x46, 0x46]],
   'application/pdf': [[0x25, 0x50, 0x44, 0x46]], // %PDF
+  // WEBM/Matroska = ترويسة EBML
+  'video/webm': [[0x1a, 0x45, 0xdf, 0xa3]],
+  /*
+   * MP4/MOV ليسا هنا: توقيعهما صندوق `ftyp` يبدأ عند البايت 4 لا 0 (أول
+   * أربع بايتات هي طول الصندوق)، والتمييز بينهما من العلامة التجارية
+   * (brand) في البايتات 8..11 — يُعالَجان بإزاحة في `sniffMimeType`.
+   */
 };
+
+/** علامة `ftyp` — تُفحص عند الإزاحة 4 في ملفات MP4/MOV. */
+export const FTYP_SIGNATURE = [0x66, 0x74, 0x79, 0x70] as const;
 
 /** أقصى عدد بايتات نحتاج قراءتها للتعرّف على النوع. */
 export const MAGIC_HEADER_BYTES = 16;

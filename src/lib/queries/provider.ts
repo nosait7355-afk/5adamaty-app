@@ -113,6 +113,36 @@ export function useSubmitVerification() {
 }
 
 /* ================================================================== */
+/* سابقة الأعمال                                                       */
+/* ================================================================== */
+
+/** يضيف صورة أو فيديو مرفوعًا إلى «سابقة أعمالي». */
+export function useAddPortfolioItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { publicId: string; kind: 'IMAGE' | 'VIDEO' }) =>
+      (await api.post<ProviderProfileDto>('/provider/portfolio', input)).data,
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.provider.profile, profile);
+    },
+  });
+}
+
+/** يحذف عنصرًا من «سابقة أعمالي» — من القاعدة ومن Cloudinary معًا. */
+export function useRemovePortfolioItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (publicId: string) =>
+      (await api.delete<ProviderProfileDto>('/provider/portfolio', { body: { publicId } })).data,
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.provider.profile, profile);
+    },
+  });
+}
+
+/* ================================================================== */
 /* الإدارة                                                             */
 /* ================================================================== */
 

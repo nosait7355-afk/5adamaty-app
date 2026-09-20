@@ -76,12 +76,17 @@ const serviceProviderSchema = new Schema<ServiceProviderDocument>(
       },
     },
 
+    /*
+     * «سابقة أعمالي» — صور وفيديوهات معًا. الحدّ هنا هو مجموع السقفين
+     * (12 صورة + 3 فيديوهات) لأن المصفوفة واحدة؛ فصل الحدّين حسب النوع
+     * يتم في `addPortfolioItem`، وهذا حارس أخير لا أكثر.
+     */
     gallery: {
       type: [mediaRefSchema],
       default: [],
       validate: {
-        validator: (list: MediaRef[]) => list.length <= 12,
-        message: 'الحد الأقصى 12 صورة في المعرض.',
+        validator: (list: MediaRef[]) => list.length <= 15,
+        message: 'الحد الأقصى 12 صورة و3 فيديوهات في سابقة الأعمال.',
       },
     },
 

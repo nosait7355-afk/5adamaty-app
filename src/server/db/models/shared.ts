@@ -22,8 +22,8 @@ export interface MediaRef {
   bytes: number;
   width?: number;
   height?: number;
-  /** authenticated للمستندات الحسّاسة، upload للصور العامة. */
-  resourceType: 'image' | 'raw';
+  /** `video` لمقاطع «سابقة أعمالي» — Cloudinary يخدمها من مسار مختلف. */
+  resourceType: 'image' | 'raw' | 'video';
   accessMode: 'public' | 'authenticated';
   uploadedAt: Date;
 }
@@ -45,7 +45,7 @@ export const mediaRefSchema = new Schema<MediaRef>(
     bytes: { type: Number, required: true, min: 1 },
     width: { type: Number, min: 1 },
     height: { type: Number, min: 1 },
-    resourceType: { type: String, enum: ['image', 'raw'], default: 'image' },
+    resourceType: { type: String, enum: ['image', 'raw', 'video'], default: 'image' },
     accessMode: { type: String, enum: ['public', 'authenticated'], default: 'public' },
     uploadedAt: { type: Date, default: () => new Date() },
   },

@@ -112,6 +112,8 @@ export function createUploadSignature(options: {
   publicId: string;
   accessMode: 'public' | 'authenticated';
   allowedFormats: readonly string[];
+  /** يحدد نقطة الرفع: /image/upload أو /video/upload. */
+  resourceType?: 'image' | 'raw' | 'video';
   /** وسوم للتتبّع وتنظيف الأصول اليتيمة. */
   tags?: readonly string[];
 }): UploadSignature {
@@ -139,7 +141,7 @@ export function createUploadSignature(options: {
     timestamp,
     apiKey: config.apiKey,
     cloudName: config.cloudName,
-    uploadUrl: `https://api.cloudinary.com/v1_1/${config.cloudName}/image/upload`,
+    uploadUrl: `https://api.cloudinary.com/v1_1/${config.cloudName}/${options.resourceType ?? 'image'}/upload`,
     params,
   };
 }
@@ -214,7 +216,7 @@ export function buildSignedAssetUrl(options: {
   publicId: string;
   format: string;
   ttlSeconds: number;
-  resourceType?: 'image' | 'raw';
+  resourceType?: 'image' | 'raw' | 'video';
 }): SignedAssetUrl {
   const config = getCloudinaryConfig();
   const env = getEnv();
@@ -266,7 +268,7 @@ export interface CloudinaryAsset {
  */
 export async function fetchAssetDetails(params: {
   publicId: string;
-  resourceType?: 'image' | 'raw';
+  resourceType?: 'image' | 'raw' | 'video';
   type?: 'upload' | 'authenticated';
 }): Promise<CloudinaryAsset | null> {
   const config = getCloudinaryConfig();
@@ -311,7 +313,7 @@ export async function fetchAssetDetails(params: {
 /** يحذف أصلًا — يُستدعى عند حذف الكيان المرتبط لتفادي الملفات اليتيمة. */
 export async function deleteAsset(params: {
   publicId: string;
-  resourceType?: 'image' | 'raw';
+  resourceType?: 'image' | 'raw' | 'video';
   type?: 'upload' | 'authenticated';
 }): Promise<boolean> {
   const config = getCloudinaryConfig();

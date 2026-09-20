@@ -18,7 +18,8 @@ import { saveProviderDocument } from '@/lib/upload-client';
 import { useDocumentRequirements } from '@/lib/queries/catalog';
 import { useMyDocuments } from '@/lib/queries/provider';
 import type { DocumentRequirementDto } from '@/server/services/catalog.service';
-import { DOCUMENT_MAX_SIZE_MB } from '@/shared/constants/documents';
+import type { DocumentKey } from '@/shared/constants/documents';
+import { DOCUMENT_MAX_SIZE_MB, maxSizeForDocument } from '@/shared/constants/documents';
 
 /**
  * خطوة المستندات (3/4) — الصورة 21.
@@ -92,6 +93,19 @@ export function DocumentsStep({
 
   const keyOf = (requirement: DocumentRequirementDto) =>
     `${requirement.key}:${requirement.customKey ?? ''}`;
+
+  /*
+   * الحدّ المعروض والمطبَّق لكل بطاقة.
+   *
+   * `Math.max` لا `Math.min`: المهن المخزَّنة قبل رفع حدّ الهوية إلى 5MB ما
+   * زالت تحمل 3MB في قاعدة البيانات، فلو أخذنا الأصغر لظلّ الحدّ الجديد بلا
+   * أثر حتى تُشغَّل الهجرة. السقف `DOCUMENT_MAX_SIZE_MB` يحدّه من الأعلى.
+   */
+  const maxSizeFor = (requirement: DocumentRequirementDto) =>
+    Math.min(
+      DOCUMENT_MAX_SIZE_MB,
+      Math.max(requirement.maxSizeMB, maxSizeForDocument(requirement.key as DocumentKey))
+    );
 
   const isPresent = useCallback(
     (item: DocumentRequirementDto) => Boolean(uploaded[keyOf(item)] ?? savedByKey[keyOf(item)]),
@@ -193,7 +207,7 @@ export function DocumentsStep({
             description={requirement.description}
             required={requirement.required}
             accept={requirement.accept}
-            maxSizeMB={Math.min(requirement.maxSizeMB, DOCUMENT_MAX_SIZE_MB)}
+            maxSizeMB={maxSizeFor(requirement)}
             {...(savedByKey[keyOf(requirement)] ? { existing: savedByKey[keyOf(requirement)] } : {})}
             purpose="PROVIDER_DOCUMENT"
             onUploaded={(asset) => handleUploaded(requirement, asset)}
@@ -203,7 +217,7 @@ export function DocumentsStep({
       </div>
 
       <InfoAlert tone="info">
-        الهوية الشخصية إلزامية، وباقي المستندات اختيارية. الحد الأقصى لكل ملف {DOCUMENT_MAX_SIZE_MB}MB.
+        الهوية الشخصية إلزامية (حتى {DOCUMENT_MAX_SIZE_MB}MB)، وباقي المستندات اختيارية.
       </InfoAlert>
 
       {missingRequired.length > 0 && (

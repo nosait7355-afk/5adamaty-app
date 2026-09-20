@@ -14,6 +14,7 @@ import {
   ProfessionStep,
   type ProfessionValues,
 } from '@/components/features/provider/profession-step';
+import { PortfolioSection } from '@/components/features/provider/portfolio-section';
 import { ApiClientError } from '@/lib/api-client';
 import { useMyProviderProfile, useUpdateProviderProfile } from '@/lib/queries/provider';
 import { providerStep2Schema } from '@/shared/schemas/provider.schema';
@@ -120,6 +121,12 @@ export default function ProviderProfilePage() {
                 setValues((current) => ({ ...current, ...patch }));
               }}
             />
+
+            {/*
+              * فوق زر الحفظ لا تحته: الإضافة والحذف يحفظان فورًا بنداء
+              * مستقل، فوضعه بعد زر «حفظ التعديلات» يوحي بأنه ينتظره.
+              */}
+            <PortfolioSection items={profile.data.portfolio} className="mt-8" />
 
             <Button
               fullWidth

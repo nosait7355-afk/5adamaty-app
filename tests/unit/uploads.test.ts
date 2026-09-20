@@ -18,6 +18,7 @@ import {
   UPLOAD_RULES,
 } from '@/shared/constants/uploads';
 import { uploadSignatureSchema, publicIdSchema } from '@/shared/schemas/upload.schema';
+import { buildDocumentRequirements, maxSizeForDocument } from '@/shared/constants/documents';
 import type { SessionUser } from '@/server/middleware/with-auth';
 
 beforeAll(() => {
@@ -73,6 +74,25 @@ describe('التعرّف على نوع الملف من محتواه', () => {
   it('يرفض المخزن الفارغ أو القصير', () => {
     expect(sniffMimeType(new Uint8Array([]))).toBeNull();
     expect(sniffMimeType(new Uint8Array([0xff]))).toBeNull();
+  });
+
+  it('يتعرّف على MP4 وMOV من صندوق ftyp عند الإزاحة 4', () => {
+    const ftyp = (brand: string) =>
+      new Uint8Array([
+        0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70,
+        ...[...brand].map((character) => character.charCodeAt(0)),
+        0x00, 0x00, 0x00, 0x00,
+      ]);
+
+    expect(sniffMimeType(ftyp('isom'))).toBe('video/mp4');
+    expect(sniffMimeType(ftyp('mp42'))).toBe('video/mp4');
+    // كاميرا iPhone تنتج qt — يجب أن يُميَّز عن MP4
+    expect(sniffMimeType(ftyp('qt  '))).toBe('video/quicktime');
+  });
+
+  it('يتعرّف على WEBM من ترويسة EBML', () => {
+    const webm = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0x01, 0x00, 0x00, 0x00]);
+    expect(sniffMimeType(webm)).toBe('video/webm');
   });
 
   it('لا يقبل RIFF بلا WEBP (ملف WAV مثلًا)', () => {
@@ -418,7 +438,27 @@ describe('قواعد الرفع', () => {
     expect(UPLOAD_RULES.ORDER_ATTACHMENT.maxFiles).toBe(5);
   });
 
-  it('حد المستندات 3MB', () => {
-    expect(UPLOAD_RULES.PROVIDER_DOCUMENT.maxSizeMB).toBe(3);
+  /*
+   * سقف الغرض 5MB وهو حدّ الهوية الشخصية — أكبر مستند مسموح. الحدّ الأدق
+   * لكل مستند على حدة يأتي من `documentRequirements[i].maxSizeMB`
+   * (`maxSizeForDocument`)، ويُختبر في مجموعة المستندات لا هنا.
+   */
+  it('سقف المستندات 5MB — حدّ الهوية الشخصية', () => {
+    expect(UPLOAD_RULES.PROVIDER_DOCUMENT.maxSizeMB).toBe(5);
+  });
+
+  it('الهوية الشخصية وحدها بحدّ 5MB، وباقي المستندات 3MB', () => {
+    const requirements = buildDocumentRequirements({});
+    const byKey = new Map(requirements.map((item) => [item.key, item]));
+
+    expect(byKey.get('NATIONAL_ID')?.maxSizeMB).toBe(5);
+    expect(byKey.get('PERSONAL_PHOTO')?.maxSizeMB).toBe(3);
+    expect(maxSizeForDocument('NATIONAL_ID')).toBe(5);
+    expect(maxSizeForDocument('ADDRESS_PROOF')).toBe(3);
+  });
+
+  it('فيديو سابقة الأعمال يُرفع على resourceType فيديو', () => {
+    expect(UPLOAD_RULES.PROVIDER_PORTFOLIO_VIDEO.resourceType).toBe('video');
+    expect(UPLOAD_RULES.PROVIDER_PORTFOLIO_VIDEO.accept).not.toContain('image/jpeg');
   });
 });

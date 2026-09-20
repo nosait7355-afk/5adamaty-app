@@ -51,9 +51,15 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     order: 5,
   },
   {
-    name: 'سباكة وكهرباء',
+    /*
+     * كان اسمه «سباكة وكهرباء» ويضمّ مهنتين فقط، بينما النجّار والنقّاش
+     * متفرّقان في «خدمات منزلية». جُمعت المهن الحرفية الأربع هنا بقرار
+     * منتج: العميل يبحث عن «حرفي» لا عن تصنيف إداري. الـslug لم يتغيّر
+     * كي لا تنكسر الروابط ولا صفوف قاعدة البيانات المرتبطة به.
+     */
+    name: 'مهن حرفية',
     slug: 'plumbing-electric',
-    description: 'سباكة، كهرباء، كشف تسربات وتركيبات',
+    description: 'سباك، كهربائي، نقاش ونجار',
     icon: 'wrench',
     order: 6,
   },
@@ -78,6 +84,13 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     icon: 'party-popper',
     order: 9,
   },
+  {
+    name: 'عقارات',
+    slug: 'real-estate',
+    description: 'تسويق عقاري، وساطة وبيع وإيجار',
+    icon: 'building-2',
+    order: 10,
+  },
 ];
 
 export interface SeedProfession {
@@ -101,9 +114,9 @@ export const SEED_PROFESSIONS: SeedProfession[] = [
   /* ---- مهن حرفية (CRAFT) ---- */
   { categorySlug: 'plumbing-electric', name: 'سبّاك', slug: 'plumber', icon: 'wrench', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 1 },
   { categorySlug: 'plumbing-electric', name: 'كهربائي', slug: 'electrician', icon: 'zap', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 2 },
-  { categorySlug: 'home-services', name: 'نقّاش', slug: 'painter', icon: 'paint-roller', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 3 },
+  { categorySlug: 'plumbing-electric', name: 'نقّاش', slug: 'painter', icon: 'paint-roller', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 3 },
   { categorySlug: 'home-services', name: 'فني تكييف', slug: 'ac-technician', icon: 'air-vent', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 4 },
-  { categorySlug: 'home-services', name: 'نجّار', slug: 'carpenter', icon: 'hammer', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 5 },
+  { categorySlug: 'plumbing-electric', name: 'نجّار', slug: 'carpenter', icon: 'hammer', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 4 },
   { categorySlug: 'home-services', name: 'عامل نظافة', slug: 'cleaner', icon: 'sparkles', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 6 },
   { categorySlug: 'home-services', name: 'مكافحة حشرات', slug: 'pest-control', icon: 'bug', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 7 },
   { categorySlug: 'home-services', name: 'فني أجهزة منزلية', slug: 'appliance-technician', icon: 'washing-machine', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 8 },
@@ -125,6 +138,10 @@ export const SEED_PROFESSIONS: SeedProfession[] = [
   /* ---- مناسبات وفعاليات — كانت بلا مهن ---- */
   { categorySlug: 'events', name: 'منظّم مناسبات', slug: 'event-planner', icon: 'party-popper', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 19 },
   { categorySlug: 'events', name: 'مصوّر فوتوغرافي', slug: 'photographer', icon: 'camera', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 20 },
+
+  /* ---- إضافات لاحقة ---- */
+  { categorySlug: 'car-services', name: 'سائق', slug: 'driver', icon: 'car-taxi-front', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 21 },
+  { categorySlug: 'real-estate', name: 'تسويق عقارات', slug: 'real-estate-marketing', icon: 'building-2', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 22 },
 ];
 
 /** يبني قائمة المستندات لمهنة من مفاتيح تحكّمها. */

@@ -36,6 +36,7 @@ const PURPOSE_ROLES: Record<UploadPurpose, ReadonlyArray<SessionUser['role']>> =
   ORDER_ATTACHMENT: ['CUSTOMER', 'ADMIN'],
   PROVIDER_DOCUMENT: ['PROVIDER', 'ADMIN'],
   MESSAGE_ATTACHMENT: ['CUSTOMER', 'PROVIDER', 'ADMIN'],
+  PROVIDER_PORTFOLIO_VIDEO: ['PROVIDER', 'ADMIN'],
 };
 
 export interface SignatureRequest {
@@ -110,6 +111,7 @@ export function issueUploadSignature(
     publicId,
     accessMode: rule.accessMode,
     allowedFormats: rule.accept.map((mime) => MIME_EXTENSION[mime] ?? '').filter(Boolean),
+    resourceType: rule.resourceType,
     tags: [request.purpose.toLowerCase(), `user_${user.id}`],
   });
 

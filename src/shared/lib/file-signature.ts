@@ -1,5 +1,6 @@
 import {
   FORBIDDEN_MIME_TYPES,
+  FTYP_SIGNATURE,
   MAGIC_HEADER_BYTES,
   MAGIC_SIGNATURES,
 } from '@/shared/constants/uploads';
@@ -28,11 +29,26 @@ function isWebp(bytes: Uint8Array): boolean {
 }
 
 /**
+ * MP4/MOV: صندوق `ftyp` عند الإزاحة 4، ثم العلامة التجارية (brand) في
+ * 8..11 تميّز بينهما — `qt  ` تعني QuickTime (`.mov` من iPhone)، وأي علامة
+ * أخرى (`isom`, `mp42`, `avc1`, `3gp…`) تُعامل MP4.
+ */
+function sniffIsoMedia(bytes: Uint8Array): string | null {
+  if (!startsWith(bytes, FTYP_SIGNATURE, 4)) return null;
+
+  const brand = String.fromCharCode(...bytes.slice(8, 12));
+  return brand.startsWith('qt') ? 'video/quicktime' : 'video/mp4';
+}
+
+/**
  * يعيد نوع MIME الحقيقي، أو `null` إذا لم يطابق أي نوع مسموح.
  * `null` تعني «ارفض» — لا نخمّن ولا نتساهل.
  */
 export function sniffMimeType(header: Uint8Array): string | null {
   if (isWebp(header)) return 'image/webp';
+
+  const isoMedia = sniffIsoMedia(header);
+  if (isoMedia) return isoMedia;
 
   for (const [mime, signatures] of Object.entries(MAGIC_SIGNATURES)) {
     if (mime === 'image/webp') continue; // عولج أعلاه
@@ -77,7 +93,7 @@ export function validateFileHeader(params: {
   if (!detectedMime) {
     return {
       ok: false,
-      error: 'تعذّر التعرّف على نوع الملف. ارفع صورة JPG أو PNG أو WEBP أو ملف PDF.',
+      error: 'تعذّر التعرّف على نوع الملف. ارفع صورة JPG أو PNG أو WEBP، أو ملف PDF، أو فيديو MP4.',
     };
   }
 

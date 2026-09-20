@@ -3,6 +3,7 @@ import { baseSchemaOptions, defineModel } from './shared';
 import {
   DOCUMENT_ACCEPTED_MIME,
   DOCUMENT_KEYS,
+  DOCUMENT_DEFAULT_MAX_SIZE_MB,
   DOCUMENT_MAX_SIZE_MB,
   PROFESSION_KINDS,
   validateRequirementsConsistency,
@@ -52,7 +53,13 @@ const documentRequirementSchema = new Schema<DocumentRequirement>(
         message: 'صيغة ملف غير مسموح بها.',
       },
     },
-    maxSizeMB: { type: Number, default: DOCUMENT_MAX_SIZE_MB, min: 1, max: DOCUMENT_MAX_SIZE_MB },
+    // الافتراضي 3MB، والسقف 5MB — الهوية وحدها تستخدم السقف حاليًا.
+    maxSizeMB: {
+      type: Number,
+      default: DOCUMENT_DEFAULT_MAX_SIZE_MB,
+      min: 1,
+      max: DOCUMENT_MAX_SIZE_MB,
+    },
     isActive: { type: Boolean, default: true },
   },
   { _id: false }

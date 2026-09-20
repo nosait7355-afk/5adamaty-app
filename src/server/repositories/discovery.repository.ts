@@ -173,7 +173,26 @@ const PROVIDER_CARD_PROJECT = {
   ratingAvg: 1,
   ratingCount: 1,
   completedOrders: 1,
-  avatar: { $first: '$gallery.url' },
+  /*
+   * أول صورة في المعرض — مع استبعاد الفيديوهات صراحةً بعد أن صار المعرض
+   * يخلط النوعين: `$first` على المصفوفة كاملة كان سيضع رابط مقطع mp4 داخل
+   * `<img>` في بطاقة المزوّد.
+   */
+  avatar: {
+    $first: {
+      $map: {
+        input: {
+          $filter: {
+            input: { $ifNull: ['$gallery', []] },
+            as: 'item',
+            cond: { $ne: ['$$item.resourceType', 'video'] },
+          },
+        },
+        as: 'item',
+        in: '$$item.url',
+      },
+    },
+  },
   categoryName: { $first: '$category.name' },
   categorySlug: { $first: '$category.slug' },
   professionName: { $first: '$profession.name' },
@@ -244,7 +263,7 @@ export interface ProviderRow {
   memberSince?: Date;
   createdAt?: Date;
   avatar?: string;
-  gallery?: { url: string; publicId: string }[];
+  gallery?: { url: string; publicId: string; resourceType?: string }[];
   categoryName?: string;
   categorySlug?: string;
   professionName?: string;

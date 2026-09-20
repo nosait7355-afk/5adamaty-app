@@ -3,6 +3,7 @@ import { buildAllIndexes, startTestDb, stopTestDb } from '../helpers/db';
 import { runSeed } from '@/server/db/seed/seed';
 import { Profession } from '@/server/db/models';
 import { resetRateLimitStore } from '@/server/middleware/with-rate-limit';
+import { maxSizeForDocument, type DocumentKey } from '@/shared/constants/documents';
 
 import { GET as getCategories } from '@/app/api/v1/categories/route';
 import { GET as getCategoryBySlug } from '@/app/api/v1/categories/[slug]/route';
@@ -221,7 +222,8 @@ describe('GET /api/v1/professions/:id/document-requirements — المستندا
   it('يعيد قيود الملفات مع كل مستند', async () => {
     const { data } = await requirementsFor('plumber');
     for (const requirement of data.requirements) {
-      expect(requirement.maxSizeMB).toBe(3);
+      // الحدّ لكل مفتاح — الهوية 5MB وباقي المستندات 3MB
+      expect(requirement.maxSizeMB).toBe(maxSizeForDocument(requirement.key as DocumentKey));
       expect(requirement.label.length).toBeGreaterThan(0);
     }
   });

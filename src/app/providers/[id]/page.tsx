@@ -230,7 +230,11 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           tabs={[
             { key: 'about', label: 'نبذة' },
             { key: 'services', label: 'الخدمات', count: data.servicesCount },
-            { key: 'gallery', label: 'الصور', count: data.gallery.length },
+            {
+              key: 'gallery',
+              label: 'سابقة الأعمال',
+              count: data.gallery.length + data.videos.length,
+            },
             { key: 'reviews', label: 'التقييمات', count: reviewsTotal },
           ]}
           active={tab}
@@ -269,20 +273,39 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             ))}
 
           {tab === 'gallery' &&
-            (data.gallery.length === 0 ? (
-              <EmptyState message="لا توجد صور في المعرض" compact />
+            (data.gallery.length === 0 && data.videos.length === 0 ? (
+              <EmptyState message="لا توجد أعمال سابقة بعد" compact />
             ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {data.gallery.map((url) => (
-                  <MediaThumb
-                    key={url}
-                    url={url}
-                    alt={`صورة من أعمال ${data.displayName}`}
-                    size={104}
-                    rounded="field"
-                    className="w-full"
-                  />
-                ))}
+              <div className="flex flex-col gap-3">
+                {data.videos.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {data.videos.map((url) => (
+                      <video
+                        key={url}
+                        src={url}
+                        controls
+                        preload="metadata"
+                        playsInline
+                        className="w-full rounded-field bg-ink-900"
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {data.gallery.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {data.gallery.map((url) => (
+                      <MediaThumb
+                        key={url}
+                        url={url}
+                        alt={`صورة من أعمال ${data.displayName}`}
+                        size={104}
+                        rounded="field"
+                        className="w-full"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 

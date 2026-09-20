@@ -20,7 +20,13 @@ import {
 } from '@/server/repositories/provider.repository';
 import { listDocumentsByProvider } from '@/server/repositories/document.repository';
 import { findProfessionById } from '@/server/repositories/catalog.repository';
+import { deleteAsset } from '@/server/lib/cloudinary';
+import { verifyAndBuildMediaRef } from './upload.service';
+import { UPLOAD_RULES } from '@/shared/constants/uploads';
+import type { SessionUser } from '@/server/middleware/with-auth';
+import type { MediaRef } from '@/server/db/models';
 import type {
+  AddPortfolioItemInput,
   RegisterProviderInput,
   UpdateProviderProfileInput,
   VerificationDecisionInput,
@@ -43,6 +49,16 @@ import { VERIFICATION_LABELS_AR, type VerificationStatus } from '@/shared/consta
 /* أشكال الإخراج                                                       */
 /* ================================================================== */
 
+/** عنصر واحد في «سابقة أعمالي». */
+export interface PortfolioItemDto {
+  publicId: string;
+  url: string;
+  kind: 'IMAGE' | 'VIDEO';
+  format: string;
+  bytes: number;
+  uploadedAt: string;
+}
+
 export interface ProviderProfileDto {
   id: string;
   displayName: string;
@@ -53,6 +69,8 @@ export interface ProviderProfileDto {
   yearsOfExperience?: number;
   bio: string;
   coverageAreas: string[];
+  /** «سابقة أعمالي» — صور وفيديوهات يضيفها المزوّد لملفه. */
+  portfolio: PortfolioItemDto[];
   /** حالة التوثيق — للقراءة فقط من جهة المزوّد. */
   verification: {
     status: VerificationStatus;
@@ -308,6 +326,7 @@ export async function getMyProviderProfile(userId: string): Promise<ProviderProf
       : {}),
     bio: provider.bio,
     coverageAreas: provider.coverageAreas ?? [],
+    portfolio: toPortfolioDto(provider.gallery),
     verification: {
       status: provider.verification.status,
       statusLabel: VERIFICATION_LABELS_AR[provider.verification.status],
@@ -399,6 +418,122 @@ export async function updateMyProviderProfile(
   if (Object.keys(userPatch).length > 0) await updateUser(userId, userPatch);
   if (Object.keys(providerPatch).length > 0) {
     await updateProvider(String(provider._id), providerPatch);
+  }
+
+  return getMyProviderProfile(userId);
+}
+
+/* ================================================================== */
+/* سابقة الأعمال                                                       */
+/* ================================================================== */
+
+/** يحوّل `gallery` المخزّن إلى شكل العرض، بترتيب الأحدث أولًا. */
+function toPortfolioDto(gallery: MediaRef[] | undefined): PortfolioItemDto[] {
+  return [...(gallery ?? [])]
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    .map((item) => ({
+      publicId: item.publicId,
+      url: item.url,
+      kind: item.resourceType === 'video' ? ('VIDEO' as const) : ('IMAGE' as const),
+      format: item.format,
+      bytes: item.bytes,
+      uploadedAt: new Date(item.uploadedAt).toISOString(),
+    }));
+}
+
+/**
+ * يضيف صورة أو فيديو إلى «سابقة أعمالي».
+ *
+ * الحدّان منفصلان (12 صورة، 3 فيديوهات) ومفروضان هنا على الخادم لا في
+ * الواجهة: عدّاد `maxFiles` في `UPLOAD_RULES` يصف الغرض، ولا شيء يمنع
+ * استدعاء المسار مباشرة بتجاوزه.
+ *
+ * بخلاف باقي بيانات الملف، الإضافة مسموحة في كل حالات التوثيق: معرض
+ * الأعمال لا يؤثر في قرار الاعتماد، ومنعه بعد الاعتماد يجمّد ملف المزوّد
+ * إلى الأبد.
+ */
+export async function addPortfolioItem(
+  userId: string,
+  input: AddPortfolioItemInput
+): Promise<ProviderProfileDto> {
+  const provider = await requireOwnProvider(userId);
+  const gallery = provider.gallery ?? [];
+
+  const purpose = input.kind === 'VIDEO' ? 'PROVIDER_PORTFOLIO_VIDEO' : 'PROVIDER_GALLERY';
+  const rule = UPLOAD_RULES[purpose];
+
+  const sameKind = gallery.filter((item) =>
+    input.kind === 'VIDEO' ? item.resourceType === 'video' : item.resourceType !== 'video'
+  );
+
+  if (sameKind.length >= rule.maxFiles) {
+    throw unprocessable(
+      input.kind === 'VIDEO'
+        ? `الحد الأقصى ${rule.maxFiles} فيديوهات في سابقة الأعمال.`
+        : `الحد الأقصى ${rule.maxFiles} صور في سابقة الأعمال.`
+    );
+  }
+
+  if (gallery.some((item) => item.publicId === input.publicId)) {
+    throw conflict('هذا الملف مضاف بالفعل.');
+  }
+
+  /*
+   * المصدر الوحيد للبيانات هو Cloudinary — لا ما أرسله العميل. الدالة تتحقق
+   * أيضًا أن `publicId` داخل مجلد هذا المستخدم، فلا يمكن ربط أصل مستخدم آخر
+   * بالملف.
+   */
+  const actor: SessionUser = { id: userId, role: 'PROVIDER', status: 'ACTIVE' };
+  const media = await verifyAndBuildMediaRef({
+    user: actor,
+    purpose,
+    publicId: input.publicId,
+  });
+
+  await updateProvider(String(provider._id), { gallery: [...gallery, media] });
+
+  logger.info('أُضيف عنصر إلى سابقة الأعمال', {
+    userId,
+    providerId: String(provider._id),
+    kind: input.kind,
+  });
+
+  return getMyProviderProfile(userId);
+}
+
+/**
+ * يحذف عنصرًا من «سابقة أعمالي» — من قاعدة البيانات ومن Cloudinary معًا.
+ *
+ * حذف المرجع وحده يترك الملف معلّقًا في Cloudinary بلا ما يشير إليه، وهو
+ * ما يُراكم أصولًا يتيمة مدفوعة الثمن.
+ */
+export async function removePortfolioItem(
+  userId: string,
+  publicId: string
+): Promise<ProviderProfileDto> {
+  const provider = await requireOwnProvider(userId);
+  const gallery = provider.gallery ?? [];
+
+  const item = gallery.find((entry) => entry.publicId === publicId);
+  if (!item) throw notFound('العنصر غير موجود في سابقة أعمالك.');
+
+  await updateProvider(String(provider._id), {
+    gallery: gallery.filter((entry) => entry.publicId !== publicId),
+  });
+
+  /*
+   * الحذف من Cloudinary بعد الحفظ لا قبله: لو فشل الحذف هناك بقي العنصر
+   * مخفيًا عن المستخدم (وهو ما طلبه) وصار مجرد أصل يتيم يُنظَّف لاحقًا —
+   * أهون من تركه ظاهرًا لأن مكالمة شبكة تعثّرت.
+   */
+  const deleted = await deleteAsset({
+    publicId: item.publicId,
+    resourceType: item.resourceType,
+    type: item.accessMode === 'authenticated' ? 'authenticated' : 'upload',
+  });
+
+  if (!deleted) {
+    logger.warn('حُذف عنصر سابقة الأعمال من القاعدة دون Cloudinary', { userId, publicId });
   }
 
   return getMyProviderProfile(userId);
