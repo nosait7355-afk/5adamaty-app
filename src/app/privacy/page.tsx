@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { LegalPage, LegalSection } from '@/components/features/legal/legal-page';
 import { APP_NAME_AR } from '@/shared/constants/legal';
 
@@ -56,7 +57,11 @@ export default function PrivacyPage() {
         <p>
           يمكنك تعديل بياناتك من داخل التطبيق، وحذف حسابك وكل بياناتك نهائيًا في أي وقت من{' '}
           <strong>الإعدادات ← حذف الحساب</strong> بعد إدخال كلمة المرور. يُحذف الحساب وملفاتك فورًا
-          ولا يمكن استرجاعها.
+          ولا يمكن استرجاعها. ويمكنك طلب الحذف دون الدخول إلى التطبيق من صفحة{' '}
+          <Link href="/delete-account" className="text-brand-600 underline">
+            حذف الحساب
+          </Link>
+          .
         </p>
       </LegalSection>
 

@@ -20,6 +20,8 @@ const config: CapacitorConfig = {
   server: {
     url: process.env.CAPACITOR_SERVER_URL ?? 'https://5adamaty-app.vercel.app',
     cleartext: false,
+    // صفحة محلية تظهر بدل خطأ WebView حين يتعذّر تحميل الموقع (لا إنترنت).
+    errorPath: 'native-offline.html',
   },
   android: {
     allowMixedContent: false,

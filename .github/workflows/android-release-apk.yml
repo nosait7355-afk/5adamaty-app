@@ -1,4 +1,4 @@
-name: Android Release APK (signed)
+name: Android Release APK + AAB (signed)
 
 # يبني APK ريليز موقّع فعليًا — يتطلب الأسرار الأربعة من
 # generate-release-keystore.yml مضبوطة مسبقًا في Settings > Secrets and
@@ -41,17 +41,24 @@ jobs:
           fi
           echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > khadamaty-release.jks
 
-      - name: Build signed release APK
+      - name: Build signed release APK and AAB
         working-directory: android
         env:
           RELEASE_STORE_FILE: khadamaty-release.jks
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon
+        # AAB هو الصيغة الوحيدة المقبولة على Google Play؛ الـAPK للتثبيت المباشر.
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: khadamaty-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: khadamaty-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
