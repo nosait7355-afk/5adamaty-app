@@ -32,6 +32,22 @@ export function useMe() {
   });
 }
 
+/**
+ * شريط التنقّل والإشعارات الصحيحان لصفحات التصفّح المشتركة
+ * (`/home`, `/categories`, `/services`, `/search`) — تُستخدم من العميل
+ * ومقدم الخدمة معًا (مقدم الخدمة عميل محتمل أيضًا ويطلب خدمات من غيره).
+ * قبل تحميل هوية المستخدم تُفترض واجهة العميل، فلا تظهر ومضة شريط خاطئ
+ * لعميل زائر ثم تختفي.
+ */
+export function useDiscoveryNav(): { variant: 'customer' | 'provider'; notificationsHref: string } {
+  const { data: user } = useMe();
+  const isProvider = user?.role === 'PROVIDER';
+  return {
+    variant: isProvider ? 'provider' : 'customer',
+    notificationsHref: isProvider ? '/provider/notifications' : '/notifications',
+  };
+}
+
 export function useLogin() {
   const queryClient = useQueryClient();
 
@@ -120,7 +136,8 @@ export function resolveHomeRoute(user: AuthUserDto | null): string {
       return '/admin/dashboard';
     case 'PROVIDER':
       // المزوّد غير المعتمد يُوجَّه لشاشة «قيد المراجعة» (الصورة 23)
-      return user.status === 'ACTIVE' ? '/provider/dashboard' : '/provider/pending-review';
+      // المزوّد المعتمد يهبط على نفس صفحة تصفّح الخدمات — تبويبه «الرئيسية»
+      return user.status === 'ACTIVE' ? '/home' : '/provider/pending-review';
     default:
       return '/home';
   }

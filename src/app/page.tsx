@@ -15,7 +15,7 @@ import { resolveHomeRoute, useMe } from '@/lib/queries/auth';
  *
  * المنطق: تفحص الجلسة ثم توجّه حسب الدور والحالة:
  *   مسجّل عميل   → /home
- *   مزوّد معتمد   → /provider/dashboard
+ *   مزوّد معتمد   → /home (نفس صفحة العميل — تبويبه «الرئيسية»)
  *   مزوّد قيد المراجعة → /provider/pending-review
  *   غير مسجّل     → /role-select
  */

@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChevronLeft,
@@ -25,9 +24,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { InfoAlert } from '@/components/common/info-alert';
 import { ErrorState } from '@/components/common/states';
 import { MediaThumb } from '@/components/features/discovery/media-thumb';
-import { api } from '@/lib/api-client';
 import { formatNumber, formatPhone } from '@/lib/format';
 import { useAccountSummary } from '@/lib/queries/account';
+import { useLogout } from '@/lib/queries/auth';
 
 /**
  * حسابي — الصورة 16.
@@ -36,13 +35,8 @@ import { useAccountSummary } from '@/lib/queries/account';
  * كسطر يشرح أن الدفع كاش مباشرة — بلا أي بوابة أو بطاقة (ARCHITECTURE §0.1).
  */
 export default function AccountPage() {
-  const router = useRouter();
   const account = useAccountSummary();
-
-  const logout = async () => {
-    await api.post('/auth/logout', {}).catch(() => undefined);
-    router.push('/login');
-  };
+  const logout = useLogout();
 
   if (account.isPending) {
     return (
@@ -155,7 +149,13 @@ export default function AccountPage() {
           </Button>
         </Card>
 
-        <Button variant="danger" fullWidth onClick={() => void logout()} iconStart={<LogOut size={20} />}>
+        <Button
+          variant="danger"
+          fullWidth
+          onClick={() => logout.mutate(undefined)}
+          disabled={logout.isPending}
+          iconStart={<LogOut size={20} />}
+        >
           تسجيل الخروج
         </Button>
       </PageContainer>

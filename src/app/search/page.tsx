@@ -15,6 +15,7 @@ import { ServiceCard } from '@/components/features/discovery/service-card';
 import { SectionHeader } from '@/components/ui/card';
 import { formatNumber } from '@/lib/format';
 import { MIN_SEARCH_LENGTH, useSearch } from '@/lib/queries/discovery';
+import { useDiscoveryNav } from '@/lib/queries/auth';
 
 /**
  * شاشة البحث — مشتقّة من حقل البحث في الصور 06–09 (`UI_ANALYSIS §0.1`).
@@ -43,6 +44,7 @@ function SearchScreen() {
 
   const query = useSearch(term, tab);
   const result = query.data;
+  const nav = useDiscoveryNav();
 
   return (
     <>
@@ -126,12 +128,14 @@ function SearchScreen() {
         )}
       </PageContainer>
 
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }
 
 function SearchFallback() {
+  const nav = useDiscoveryNav();
+
   return (
     <>
       <BackHeader />
@@ -140,7 +144,7 @@ function SearchFallback() {
         <Skeleton className="h-10 w-2/3 rounded-pill" />
         <SkeletonList count={3} Item={ServiceCardSkeleton} />
       </PageContainer>
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }

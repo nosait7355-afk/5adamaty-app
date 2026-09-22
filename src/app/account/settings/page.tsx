@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
   KeyRound,
@@ -15,8 +14,8 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api-client';
 import { DeleteAccountCard } from '@/components/features/account/delete-account-card';
+import { useLogout } from '@/lib/queries/auth';
 
 /**
  * الإعدادات — عميل (أداة «الإعدادات» في حسابي، الصورة 16).
@@ -26,12 +25,7 @@ import { DeleteAccountCard } from '@/components/features/account/delete-account-
  * (المساعدة، الشروط، الخصوصية، عن التطبيق).
  */
 export default function AccountSettingsPage() {
-  const router = useRouter();
-
-  const logout = async () => {
-    await api.post('/auth/logout', {}).catch(() => undefined);
-    router.push('/login');
-  };
+  const logout = useLogout();
 
   return (
     <>
@@ -55,7 +49,13 @@ export default function AccountSettingsPage() {
           <SettingsRow href="/privacy" icon={<ShieldCheck size={18} />} label="سياسة الخصوصية" last />
         </Card>
 
-        <Button variant="danger" fullWidth onClick={() => void logout()} iconStart={<LogOut size={20} />}>
+        <Button
+          variant="danger"
+          fullWidth
+          onClick={() => logout.mutate(undefined)}
+          disabled={logout.isPending}
+          iconStart={<LogOut size={20} />}
+        >
           تسجيل الخروج
         </Button>
 

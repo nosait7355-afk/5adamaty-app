@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChevronLeft,
@@ -24,19 +23,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/common/states';
 import { VerificationBadge } from '@/components/common/status-badge';
 import { MediaThumb } from '@/components/features/discovery/media-thumb';
-import { api } from '@/lib/api-client';
 import { formatPhone } from '@/lib/format';
 import { useMyProviderProfile } from '@/lib/queries/provider';
+import { useLogout } from '@/lib/queries/auth';
 
 /** حسابي — مقدم الخدمة. نسخة ما بعد الاعتماد من صفحة الملف/الإعدادات. */
 export default function ProviderAccountPage() {
-  const router = useRouter();
   const profile = useMyProviderProfile();
-
-  const logout = async () => {
-    await api.post('/auth/logout', {}).catch(() => undefined);
-    router.push('/login');
-  };
+  const logout = useLogout();
 
   if (profile.isPending) {
     return (
@@ -111,7 +105,8 @@ export default function ProviderAccountPage() {
         <Button
           variant="danger"
           fullWidth
-          onClick={() => void logout()}
+          onClick={() => logout.mutate(undefined)}
+          disabled={logout.isPending}
           iconStart={<LogOut size={20} />}
         >
           تسجيل الخروج

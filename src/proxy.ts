@@ -42,10 +42,6 @@ const GUEST_ONLY = ['/login', '/register', '/role-select', '/forgot-password', '
  */
 const GUEST_ONLY_EXCEPTIONS = ['/register/provider'];
 
-/** مساحة العميل — يُحوَّل عنها مقدم الخدمة إلى لوحته. */
-/* مساحة العميل — يُحوَّل عنها مقدم الخدمة إلى لوحته. */
-const CUSTOMER_SPACE = ['/home', '/categories', '/services', '/providers', '/search'];
-
 /**
  * مطابقة مسار على بادئة **بحدود مقطعية**.
  *
@@ -130,6 +126,17 @@ export async function proxy(request: NextRequest) {
   };
 
   const isProtected = PROTECTED_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix));
+
+  /*
+   * صفحة محمية بـ`Cache-Control: no-store` لا يضعها المتصفح في bfcache
+   * (Back-Forward Cache). بدونها: تسجيل الخروج ثم الضغط على «رجوع» يعيد
+   * عرض نسخة الصفحة المحفوظة في الذاكرة مباشرة — بلا طلب شبكة جديد، وبلا
+   * مرور على هذا الحارس من الأساس — فتظهر بيانات الحساب رغم الخروج.
+   */
+  const withNoStore = (response: NextResponse) => {
+    if (isProtected) response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    return response;
+  };
   const isGuestOnly =
     GUEST_ONLY.some((prefix) => matchesPrefix(pathname, prefix)) &&
     !GUEST_ONLY_EXCEPTIONS.some((prefix) => matchesPrefix(pathname, prefix));
@@ -163,21 +170,15 @@ export async function proxy(request: NextRequest) {
     if (matchesPrefix(pathname, '/register/provider') && claims.role !== 'PROVIDER') {
       return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
     }
-    if (
-      claims.role === 'PROVIDER' &&
-      CUSTOMER_SPACE.some((prefix) => matchesPrefix(pathname, prefix))
-    ) {
-      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
-    }
   }
 
-  return withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
+  return withNoStore(withCsp(NextResponse.next({ request: { headers: requestHeaders } })));
 }
 
 function homeFor(claims: TokenClaims): string {
   if (claims.role === 'ADMIN') return '/admin/dashboard';
   if (claims.role === 'PROVIDER') {
-    return claims.status === 'ACTIVE' ? '/provider/dashboard' : '/provider/pending-review';
+    return claims.status === 'ACTIVE' ? '/home' : '/provider/pending-review';
   }
   return '/home';
 }

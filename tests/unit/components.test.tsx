@@ -119,7 +119,7 @@ describe('BottomNav', () => {
 
   it('«الرئيسية» في الوسط في كلا الشريطين', () => {
     expect(CUSTOMER_NAV[2]?.key).toBe('home');
-    expect(PROVIDER_NAV[2]?.key).toBe('dashboard');
+    expect(PROVIDER_NAV[2]?.key).toBe('home');
   });
 
   it('يعلّم العنصر النشط بـ aria-current', () => {

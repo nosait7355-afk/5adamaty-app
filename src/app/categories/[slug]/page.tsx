@@ -13,6 +13,7 @@ import { EmptyState, ErrorState } from '@/components/common/states';
 import { ProfessionCard } from '@/components/features/discovery/category-cards';
 import { SearchBox } from '@/components/features/discovery/search-box';
 import { useCategories, useProfessions } from '@/lib/queries/catalog';
+import { useDiscoveryNav } from '@/lib/queries/auth';
 
 /**
  * المهن داخل تصنيف — الصورة 07.
@@ -32,6 +33,7 @@ export default function CategoryProfessionsPage({
   const categories = useCategories();
   const category = categories.data?.find((entry) => entry.slug === slug);
   const professions = useProfessions(category?.id);
+  const nav = useDiscoveryNav();
 
   return (
     <>
@@ -121,7 +123,7 @@ export default function CategoryProfessionsPage({
         </section>
       </PageContainer>
 
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }

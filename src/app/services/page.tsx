@@ -15,6 +15,7 @@ import { SearchBox } from '@/components/features/discovery/search-box';
 import { ServiceCard } from '@/components/features/discovery/service-card';
 import { useCategories, useProfessions } from '@/lib/queries/catalog';
 import { useServices, type DiscoveryFilterState } from '@/lib/queries/discovery';
+import { useDiscoveryNav } from '@/lib/queries/auth';
 import { pluralizeAr } from '@/lib/format';
 
 /**
@@ -57,6 +58,7 @@ function ServicesScreen() {
   );
 
   const services = useServices(effectiveFilters);
+  const nav = useDiscoveryNav();
   const items = services.data?.pages.flatMap((page) => page.data) ?? [];
   const total = services.data?.pages[0]?.meta?.total ?? 0;
 
@@ -129,13 +131,15 @@ function ServicesScreen() {
         )}
       </PageContainer>
 
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }
 
 /** نفس هيكل الشاشة أثناء قراءة معاملات الرابط — يمنع أي قفزة تخطيط. */
 function ServicesFallback() {
+  const nav = useDiscoveryNav();
+
   return (
     <>
       <BackHeader />
@@ -148,7 +152,7 @@ function ServicesFallback() {
         <Skeleton className="h-10 w-full rounded-pill" />
         <SkeletonList count={3} Item={ServiceCardSkeleton} />
       </PageContainer>
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }

@@ -97,11 +97,11 @@ export const createAddressSchema = z
 
     governorate: z.string().trim().max(60).default(GOVERNORATE),
     city: z.enum(FAYOUM_CITIES, { message: 'المدينة/المركز غير صالح.' }),
-    // المنطقة = أحد مراكز الفيوم الخمسة — لا أحياء فرعية
+    // المنطقة = أحد مراكز الفيوم المعتمدة — لا أحياء فرعية
     area: z
       .string()
       .trim()
-      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' }),
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم المعتمدة.' }),
     line: safeString(200).refine((value) => value.length >= 5, {
       message: 'العنوان التفصيلي قصير جدًا.',
     }),
@@ -156,7 +156,7 @@ export const updateProfileSchema = z
     area: z
       .string()
       .trim()
-      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم المعتمدة.' })
       .optional(),
     gender: z.enum(['MALE', 'FEMALE']).optional(),
     avatarPublicId: safeString(200).optional(),

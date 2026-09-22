@@ -82,7 +82,7 @@ describe('معالج تسجيل مقدم الخدمة', () => {
   });
 
   it('باقي صفحات الضيوف تبقى مغلقة على المسجّلين', async () => {
-    expect(redirectTo(await request('/register', 'PROVIDER'))).toBe('/provider/dashboard');
+    expect(redirectTo(await request('/register', 'PROVIDER'))).toBe('/home');
   });
 });
 
@@ -115,14 +115,20 @@ describe('العميل المسجّل', () => {
 });
 
 describe('مقدم الخدمة المسجّل', () => {
-  it('يُحوَّل من مساحة العميل إلى لوحته', async () => {
+  /*
+   * مقدم الخدمة عميل محتمل أيضًا: تبويب "الرئيسية" في شريط تنقّله يفتح
+   * نفس شاشات تصفّح الخدمات التي يستخدمها العميل، فيقدر يطلب خدمة من
+   * مقدم خدمة آخر (لم يعد يُطرد منها إلى لوحته كما في السابق).
+   */
+  it('يتصفّح شاشات الاكتشاف بلا تحويل — مثل العميل تمامًا', async () => {
     for (const path of ['/home', '/categories', '/services', '/search', '/providers/507f1f77bcf86cd799439011']) {
-      expect(redirectTo(await request(path, 'PROVIDER')), path).toBe('/provider/dashboard');
+      expect(redirectTo(await request(path, 'PROVIDER')), path).toBeNull();
     }
   });
 
   it('يفتح مساحته بلا تحويل', async () => {
     expect(redirectTo(await request('/provider/dashboard', 'PROVIDER'))).toBeNull();
+    expect(redirectTo(await request('/provider/profile', 'PROVIDER'))).toBeNull();
   });
 
   it('الصفحات القانونية عامة للجميع', async () => {

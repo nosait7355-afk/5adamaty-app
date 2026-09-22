@@ -39,6 +39,7 @@ import {
 } from '@/lib/format';
 import { useProvider, useProviderReviews, useServices } from '@/lib/queries/discovery';
 import { useMe } from '@/lib/queries/auth';
+import { useMyProviderProfile } from '@/lib/queries/provider';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProviderContactDto } from '@/server/services/discovery.service';
 
@@ -57,6 +58,13 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
   const services = useServices({ providerId: id, limit: 20 }, Boolean(provider.data));
   const reviews = useProviderReviews(id, Boolean(provider.data));
   const me = useMe();
+  /*
+   * مقدم الخدمة يتصفّح ملفات مقدمي خدمة آخرين من نفس هذه الشاشة (تبويب
+   * "الرئيسية" صار مشتركًا). لو فتح ملفه هو بنفسه، زرّا التواصل لا معنى
+   * لهما — يستبدلان برسالة + رابط لتعديل ملفه.
+   */
+  const myProfile = useMyProviderProfile(me.data?.role === 'PROVIDER');
+  const isOwnProfile = Boolean(myProfile.data && myProfile.data.id === id);
   const [contactPending, setContactPending] = useState<'call' | 'whatsapp' | null>(null);
   const [contactError, setContactError] = useState('');
 
@@ -343,7 +351,14 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
 
       {/* ---- فوتر التواصل الثابت ---- */}
       <div className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-sm">
-        {me.data ? (
+        {isOwnProfile ? (
+          <div className="mx-auto flex w-full max-w-[520px] items-center justify-between gap-3 px-page py-3 pb-safe">
+            <span className="text-meta text-ink-600">هذا ملفك الشخصي — لا يمكنك التواصل مع نفسك.</span>
+            <LinkButton href="/provider/profile" size="sm">
+              تعديل الملف
+            </LinkButton>
+          </div>
+        ) : me.data ? (
           <div className="mx-auto flex w-full max-w-[520px] items-center gap-3 px-page py-3 pb-safe">
             <Button
               size="lg"

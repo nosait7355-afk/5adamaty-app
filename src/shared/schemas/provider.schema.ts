@@ -120,16 +120,16 @@ const yearsOfExperienceSchema = z.preprocess(
     .optional()
 );
 
-/** مناطق التغطية: اختيار متعدد من مراكز الفيوم الخمسة — لا أحياء ولا خريطة. */
+/** مناطق التغطية: اختيار متعدد من مراكز الفيوم المعتمدة — لا أحياء ولا خريطة. */
 const coverageAreasSchema = z
   .array(
     z
       .string()
       .trim()
-      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم المعتمدة.' })
   )
   .min(1, 'اختر منطقة تغطية واحدة على الأقل.')
-  .max(5, 'الحد الأقصى 5 مراكز.');
+  .max(FAYOUM_CITIES.length, `الحد الأقصى ${FAYOUM_CITIES.length} مراكز.`);
 
 export const providerStep2Schema = z
   .object({
@@ -252,9 +252,9 @@ const serviceAreasSchema = z
     z
       .string()
       .trim()
-      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' })
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم المعتمدة.' })
   )
-  .max(5, 'الحد الأقصى 5 مراكز.')
+  .max(FAYOUM_CITIES.length, `الحد الأقصى ${FAYOUM_CITIES.length} مراكز.`)
   .default([]);
 
 const providerServiceBaseSchema = z.object({

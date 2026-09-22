@@ -27,11 +27,11 @@ export const registerCustomerSchema = z
     fullName: fullNameSchema,
     phone: egyptPhoneSchema.optional().or(z.literal('').transform(() => undefined)),
     email: emailSchema,
-    // المنطقة = أحد مراكز الفيوم الخمسة — لا أحياء فرعية
+    // المنطقة = أحد مراكز الفيوم المعتمدة — لا أحياء فرعية
     area: z
       .string()
       .trim()
-      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' }),
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم المعتمدة.' }),
     city: z.enum(FAYOUM_CITIES).default(GOVERNORATE),
     password: passwordSchema,
     confirmPassword: z.string(),

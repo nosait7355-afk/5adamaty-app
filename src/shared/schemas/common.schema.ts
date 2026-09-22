@@ -83,11 +83,11 @@ export const textAddressSchema = z
   .object({
     governorate: z.string().trim().max(60).default(GOVERNORATE),
     city: z.enum(FAYOUM_CITIES, { message: 'المدينة/المركز غير صالح.' }),
-    // المنطقة = أحد مراكز الفيوم الخمسة — لا أحياء فرعية
+    // المنطقة = أحد مراكز الفيوم المعتمدة — لا أحياء فرعية
     area: z
       .string()
       .trim()
-      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم الخمسة.' }),
+      .refine((value) => isValidCoverageArea(value), { message: 'اختر من مراكز الفيوم المعتمدة.' }),
     line: z.string().trim().min(3, 'العنوان قصير جدًا.').max(200),
     landmark: z.string().trim().max(120).optional(),
     postalCode: z.string().trim().regex(/^\d{5}$/, 'الرمز البريدي غير صالح.').optional(),

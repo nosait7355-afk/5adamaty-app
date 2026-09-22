@@ -13,6 +13,7 @@ import { CategoryCard } from '@/components/features/discovery/category-cards';
 import { SearchBox } from '@/components/features/discovery/search-box';
 import { PopularServices } from '@/components/features/discovery/popular-services';
 import { useCategories } from '@/lib/queries/catalog';
+import { useDiscoveryNav } from '@/lib/queries/auth';
 
 /**
  * التصنيفات — الصورة 08، موحّدة مع الصورة 07 حسب قرار `UI_ANALYSIS §2`.
@@ -24,10 +25,11 @@ export default function CategoriesPage() {
   const router = useRouter();
   const [term, setTerm] = useState('');
   const categories = useCategories();
+  const nav = useDiscoveryNav();
 
   return (
     <>
-      <AppHeader />
+      <AppHeader notificationsHref={nav.notificationsHref} />
 
       <PageContainer className="flex flex-col gap-5">
         <PageTitle title="التصنيفات" subtitle="اختر التصنيف المناسب لخدمتك" />
@@ -87,7 +89,7 @@ export default function CategoriesPage() {
         </section>
       </PageContainer>
 
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }

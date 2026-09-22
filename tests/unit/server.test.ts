@@ -125,11 +125,14 @@ describe('القيود غير القابلة للتفاوض', () => {
     // التغطية مراكز فقط، والتحويل من الأحياء القديمة إلى مركزها بلا تكرار
     expect(isValidCoverageArea('الفيوم')).toBe(true);
     expect(isValidCoverageArea('حي الجامعة')).toBe(false);
+    // «يوسف الصديق» مركز معتمد الآن — يتحوّل إلى نفسه لا إلى إبشواي
     expect(toCoverageCities(['حي الجامعة', 'الحوّاتم', 'سنورس البلد', 'يوسف الصديق'])).toEqual([
       'الفيوم',
       'سنورس',
-      'إبشواي',
+      'يوسف الصديق',
     ]);
+    // «الحادقة» مركز ملغى فعليًا — لا يزال يتحوّل عبر RETIRED_CITY_MIGRATIONS
+    expect(toCoverageCities(['الحادقة'])).toEqual(['الفيوم']);
     expect(isValidArea('منطقة وهمية')).toBe(false);
     expect(isValidCity('سنورس')).toBe(true);
     expect(isValidCity('القاهرة')).toBe(false);

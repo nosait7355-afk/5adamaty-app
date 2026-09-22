@@ -610,7 +610,7 @@ export async function submitVerification(
     body: `اكتمل تسجيلك رقم ${provider.verification.requestNumber}. حسابك نشط الآن ويمكنك استقبال الطلبات.`,
     entityType: 'PROVIDER',
     entityId: String(provider._id),
-    actionUrl: '/provider/dashboard',
+    actionUrl: '/provider/profile',
   });
 
   logger.info('فُعّل حساب مقدم خدمة تلقائيًا', {
@@ -824,7 +824,7 @@ function buildDecisionNotification(
       type: 'PROVIDER_APPROVED',
       title: 'تم اعتماد حسابك',
       body: `تهانينا! تم اعتماد طلبك رقم ${requestNumber}. أصبح ملفك ظاهرًا للعملاء ويمكنك استقبال الطلبات.`,
-      actionUrl: '/provider/dashboard',
+      actionUrl: '/provider/profile',
     };
   }
 

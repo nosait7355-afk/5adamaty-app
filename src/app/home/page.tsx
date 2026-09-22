@@ -22,6 +22,7 @@ import { ServiceCard } from '@/components/features/discovery/service-card';
 import { SupportCta } from '@/components/features/discovery/support-cta';
 import { useCategories } from '@/lib/queries/catalog';
 import { useProviders, useServices } from '@/lib/queries/discovery';
+import { useDiscoveryNav } from '@/lib/queries/auth';
 
 /**
  * الرئيسية — الصورة 06.
@@ -52,6 +53,7 @@ const HOME_TILES = 5;
 export default function HomePage() {
   const router = useRouter();
   const [term, setTerm] = useState('');
+  const nav = useDiscoveryNav();
 
   const categories = useCategories();
   const featured = useProviders({ sort: 'rating', limit: 8 });
@@ -62,7 +64,7 @@ export default function HomePage() {
 
   return (
     <>
-      <AppHeader />
+      <AppHeader notificationsHref={nav.notificationsHref} />
 
       <PageContainer className="flex flex-col gap-5 pt-4">
         <SearchBox
@@ -184,7 +186,7 @@ export default function HomePage() {
         <SupportCta />
       </PageContainer>
 
-      <BottomNav />
+      <BottomNav variant={nav.variant} />
     </>
   );
 }

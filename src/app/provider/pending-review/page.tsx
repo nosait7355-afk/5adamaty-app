@@ -147,8 +147,8 @@ export default function PendingReviewPage() {
       {/* ---- الإجراءات ---- */}
       <div className="flex flex-col gap-3">
         {isApproved ? (
-          <LinkButton href="/provider/dashboard" fullWidth>
-            الذهاب إلى لوحة التحكم
+          <LinkButton href="/provider/profile" fullWidth>
+            الذهاب إلى ملفي
           </LinkButton>
         ) : needsResubmission || isDraft ? (
           <LinkButton href="/register/provider" fullWidth>

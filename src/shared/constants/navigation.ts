@@ -28,11 +28,15 @@ export const CUSTOMER_NAV: readonly NavItem[] = [
  * الإشعارات (أقصى اليمين) · خدماتي · الرئيسية (الوسط) · ملفي · حسابي.
  *
  * لا طلبات ولا مراسلة داخل التطبيق — التواصل مباشر بالهاتف أو واتساب.
+ *
+ * "الرئيسية" تفتح نفس صفحة تصفّح الخدمات التي يستخدمها العميل (`/home`):
+ * مقدم الخدمة عميل محتمل أيضًا ويحتاج طلب خدمة من مقدم خدمة آخر. مؤشرات
+ * حسابه (التقييم، اكتمال الملف) انتقلت إلى أعلى تبويب "ملفي".
  */
 export const PROVIDER_NAV: readonly NavItem[] = [
   { key: 'notifications', label: 'الإشعارات', href: '/provider/notifications', icon: Bell },
   { key: 'services', label: 'خدماتي', href: '/provider/services', icon: Wrench },
-  { key: 'dashboard', label: 'الرئيسية', href: '/provider/dashboard', icon: Home },
+  { key: 'home', label: 'الرئيسية', href: '/home', icon: Home },
   { key: 'profile', label: 'ملفي', href: '/provider/profile', icon: UserRound },
   { key: 'account', label: 'حسابي', href: '/provider/account', icon: User },
 ];
