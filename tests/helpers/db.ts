@@ -21,7 +21,9 @@ export async function startTestDb(): Promise<string> {
   dbPath = path.join(process.cwd(), '.tmp-test-db', randomUUID());
   mkdirSync(dbPath, { recursive: true });
 
-  server = await MongoMemoryServer.create({ instance: { dbPath, storageEngine: 'wiredTiger' } });
+  server = await MongoMemoryServer.create({
+    instance: { dbPath, storageEngine: 'wiredTiger', launchTimeout: 60_000 },
+  });
   const uri = server.getUri();
   await mongoose.connect(uri, { dbName: 'khadamaty_test' });
   return uri;

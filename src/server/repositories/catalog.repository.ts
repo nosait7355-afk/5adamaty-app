@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { connectToDatabase } from '@/server/db/mongoose';
 import { Category, Profession } from '@/server/db/models';
 import type { CategoryDocument } from '@/server/db/models/category.model';
@@ -65,7 +65,12 @@ export async function findCategoryById(id: string) {
 export async function categorySlugExists(slug: string, excludeId?: string): Promise<boolean> {
   await connectToDatabase();
   const filter: Record<string, unknown> = { slug };
-  if (excludeId) filter._id = { $ne: new Types.ObjectId(excludeId) };
+  /*
+   * `$ne` هنا مُولَّد من الكود لا من إدخال المستخدم، لكن `sanitizeFilter`
+   * العام (ARCHITECTURE §7) يجرّد أي مفتاح `$` بلا تمييز — `mongoose.trusted`
+   * يعلن صراحةً أن هذا المُعامل موثوق فيه.
+   */
+  if (excludeId) filter._id = mongoose.trusted({ $ne: new Types.ObjectId(excludeId) });
   return Boolean(await Category.exists(filter));
 }
 
@@ -91,7 +96,7 @@ export async function countProfessionsInCategory(categoryId: string): Promise<nu
 export async function professionSlugExists(slug: string, excludeId?: string): Promise<boolean> {
   await connectToDatabase();
   const filter: Record<string, unknown> = { slug };
-  if (excludeId) filter._id = { $ne: new Types.ObjectId(excludeId) };
+  if (excludeId) filter._id = mongoose.trusted({ $ne: new Types.ObjectId(excludeId) });
   return Boolean(await Profession.exists(filter));
 }
 

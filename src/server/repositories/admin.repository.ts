@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { connectToDatabase } from '@/server/db/mongoose';
 import {
   AuditLog,
@@ -326,7 +326,7 @@ export async function broadcastNotificationRecords(params: {
 
   const roleFilter: Record<string, unknown> =
     params.audience === 'ALL'
-      ? { role: { $in: ['CUSTOMER', 'PROVIDER'] } }
+      ? { role: mongoose.trusted({ $in: ['CUSTOMER', 'PROVIDER'] }) }
       : { role: params.audience === 'CUSTOMERS' ? 'CUSTOMER' : 'PROVIDER' };
 
   const recipients = await User.find({ ...roleFilter, status: 'ACTIVE' })
