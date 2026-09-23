@@ -101,7 +101,8 @@ export function useLogout() {
     onSettled: () => {
       // نمسح الـcache بالكامل حتى لا تبقى بيانات المستخدم السابق ظاهرة
       queryClient.clear();
-      router.replace('/role-select');
+      // شاشة الدخول لا اختيار نوع الحساب — الخارج على الأغلب له حساب فعلًا
+      router.replace('/login');
     },
   });
 }

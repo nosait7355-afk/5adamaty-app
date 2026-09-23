@@ -35,12 +35,64 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
 }
 
 /**
+ * مسارات لا تُعاد محاولتها بعد تحديث الجلسة — إما لأنها *هي* آلية
+ * التحديث نفسها (لتفادي حلقة لا نهائية)، أو لأن 401 منها معناه فعلًا
+ * «لست مسجّلًا دخولك» لا «جلستك انتهت».
+ */
+const NO_REFRESH_RETRY_PATHS = new Set([
+  '/auth/refresh',
+  '/auth/login',
+  '/auth/register',
+  '/auth/register-provider',
+  '/auth/google',
+  '/auth/logout',
+]);
+
+/** يمنع إطلاق أكثر من طلب تحديث جلسة واحد في آنٍ واحد. */
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function refreshSession(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = rawFetch('/auth/refresh', { method: 'POST' })
+      .then(() => true)
+      .catch(() => false)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+/**
  * عميل الـAPI.
  *
  * `credentials: 'same-origin'` ضروري لإرسال كوكيز الجلسة httpOnly.
  * لا يُخزَّن أي توكن في localStorage إطلاقًا (ARCHITECTURE §7).
+ *
+ * توكن الوصول عمره 15 دقيقة فقط (`ACCESS_TOKEN_TTL_SECONDS`). بلا هذا،
+ * أي طلب بعد 15 دقيقة من آخر تفاعل كان يعيد 401 ويُطرد المستخدم لشاشة
+ * الدخول رغم أن توكن التحديث (30 يومًا) ما زال صالحًا. عند 401 نحاول
+ * تحديث الجلسة مرة واحدة صامتًا ثم نعيد الطلب الأصلي.
  */
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
+  try {
+    return await rawFetch<T>(path, options);
+  } catch (error) {
+    const canRetryAfterRefresh =
+      error instanceof ApiClientError &&
+      error.httpStatus === 401 &&
+      !NO_REFRESH_RETRY_PATHS.has(path);
+
+    if (!canRetryAfterRefresh) throw error;
+
+    const refreshed = await refreshSession();
+    if (!refreshed) throw error;
+
+    return rawFetch<T>(path, options);
+  }
+}
+
+async function rawFetch<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
   const { body, query, headers, ...rest } = options;
 
   const url = new URL(`${BASE_URL}${path}`, getOrigin());

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { BrandIcon } from '@/components/layout/brand-icon';
 import { CitySkyline } from './city-skyline';
@@ -22,8 +22,9 @@ export interface AuthShellProps {
 /**
  * الهيكل المشترك لشاشات المصادقة — الصور 03 و05.
  *
- * التخطيط من التصميم: زر رجوع في **اليسار** · اللوجو والاسم والشعار وسطًا ·
- * العنوان والوصف · المحتوى · الفوتر · رسم معالم الفيوم أسفل الصفحة.
+ * التخطيط من التصميم: زر رجوع في **اليمين** (بقرار لاحق يطابق عُرف RTL —
+ * كان في اليسار مطابقةً حرفية للصور المرجعية) · اللوجو والاسم والشعار
+ * وسطًا · العنوان والوصف · المحتوى · الفوتر · رسم معالم الفيوم أسفل الصفحة.
  */
 export function AuthShell({
   title,
@@ -38,15 +39,15 @@ export function AuthShell({
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-bg">
-      {/* زر الرجوع — يسار الشاشة كما في كل الصور المرجعية */}
+      {/* زر الرجوع — يمين الشاشة */}
       {!hideBack && (
         <button
           type="button"
           onClick={() => (onBack ? onBack() : router.back())}
           aria-label="رجوع"
-          className="absolute end-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex size-11 items-center justify-center rounded-field text-brand-600 transition-colors hover:bg-brand-50"
+          className="absolute start-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex size-11 items-center justify-center rounded-field text-brand-600 transition-colors hover:bg-brand-50"
         >
-          <ArrowLeft size={24} />
+          <ArrowRight size={24} />
         </button>
       )}
 

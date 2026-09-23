@@ -42,7 +42,7 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues, unknown, LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { identifier: '', password: '', remember: false },
+    defaultValues: { identifier: '', password: '', remember: true },
   });
 
   const onSubmit = handleSubmit(async (values) => {
