@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { isRootPath, useSafeBack } from '@/lib/navigation-history';
 
 /**
  * جسر Capacitor — لا يفعل شيئًا في المتصفح العادي.
@@ -10,8 +10,8 @@ import { useRouter } from 'next/navigation';
  * PWA/ويب أولًا (PROJECT_PLAN — Phase 10)، فهذا المكوّن تحسين شرطي لا مسار
  * تشغيل أساسي.
  *
- * زر الرجوع: يتنقّل ضمن سجل Next.js أولًا، ولا يُنهي التطبيق إلا حين لا
- * يبقى سجل تصفح — سلوك أندرويد المعتاد.
+ * زر الرجوع: نفس منطق زر الرجوع في الواجهة (`useSafeBack`)، ولا يُنهي
+ * التطبيق إلا من شاشة جذرية كالرئيسية — سلوك أندرويد المعتاد.
  *
  * إشعارات Push **معطّلة عمدًا**: `PushNotifications.register()` يتطلب Firebase
  * (`android/app/google-services.json`)، وهو غير مُعدّ. استدعاؤه بدونه يُسقط
@@ -19,7 +19,12 @@ import { useRouter } from 'next/navigation';
  * (`/notifications`)؛ تفعيل Push يبدأ بإضافة ملف Firebase ثم إعادة الاستدعاء.
  */
 export function NativeBridge() {
-  const router = useRouter();
+  const safeBack = useSafeBack();
+  const safeBackRef = useRef(safeBack);
+
+  useEffect(() => {
+    safeBackRef.current = safeBack;
+  }, [safeBack]);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -36,9 +41,11 @@ export function NativeBridge() {
       await StatusBar.setStyle({ style: Style.Dark }).catch(() => undefined);
       await StatusBar.setBackgroundColor({ color: '#1156e0' }).catch(() => undefined);
 
-      const backListener = await App.addListener('backButton', ({ canGoBack }) => {
-        if (canGoBack) router.back();
-        else App.exitApp();
+      // الشاشات الجذرية (الرئيسية وأخواتها) تُغلق التطبيق؛ غيرها يرجع للسابقة
+      // أو — إن لم يوجد سجل — للرئيسية، بدل إغلاق التطبيق من صفحة داخلية.
+      const backListener = await App.addListener('backButton', () => {
+        if (isRootPath(window.location.pathname)) void App.exitApp();
+        else safeBackRef.current();
       });
 
       cleanup = () => {
@@ -47,7 +54,7 @@ export function NativeBridge() {
     })();
 
     return () => cleanup?.();
-  }, [router]);
+  }, []);
 
   return null;
 }

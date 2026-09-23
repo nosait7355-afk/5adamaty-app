@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { useSafeBack } from '@/lib/navigation-history';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { BrandIcon } from '@/components/layout/brand-icon';
@@ -35,7 +35,8 @@ export function AuthShell({
   footer,
   className,
 }: AuthShellProps) {
-  const router = useRouter();
+  // شاشات المصادقة للزوّار — الرجوع الافتراضي لاختيار نوع الحساب
+  const safeBack = useSafeBack('/role-select');
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-bg">
@@ -43,7 +44,7 @@ export function AuthShell({
       {!hideBack && (
         <button
           type="button"
-          onClick={() => (onBack ? onBack() : router.back())}
+          onClick={() => (onBack ? onBack() : safeBack())}
           aria-label="رجوع"
           className="absolute start-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex size-11 items-center justify-center rounded-field text-brand-600 transition-colors hover:bg-brand-50"
         >

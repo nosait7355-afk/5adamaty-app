@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { api, ApiClientError } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
@@ -14,22 +14,24 @@ import type {
 } from '@/shared/schemas/auth.schema';
 
 /** المستخدم الحالي. `null` يعني لا توجد جلسة — ليس خطأ. */
+export const meQueryOptions = queryOptions({
+  queryKey: queryKeys.account.me,
+  queryFn: async (): Promise<AuthUserDto | null> => {
+    try {
+      const { data } = await api.get<{ user: AuthUserDto }>('/auth/me');
+      return data.user;
+    } catch (error) {
+      // 401 حالة طبيعية لزائر غير مسجّل
+      if (error instanceof ApiClientError && error.httpStatus === 401) return null;
+      throw error;
+    }
+  },
+  retry: false,
+  staleTime: 5 * 60_000,
+});
+
 export function useMe() {
-  return useQuery({
-    queryKey: queryKeys.account.me,
-    queryFn: async () => {
-      try {
-        const { data } = await api.get<{ user: AuthUserDto }>('/auth/me');
-        return data.user;
-      } catch (error) {
-        // 401 حالة طبيعية لزائر غير مسجّل
-        if (error instanceof ApiClientError && error.httpStatus === 401) return null;
-        throw error;
-      }
-    },
-    retry: false,
-    staleTime: 5 * 60_000,
-  });
+  return useQuery(meQueryOptions);
 }
 
 /**

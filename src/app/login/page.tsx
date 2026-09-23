@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LogIn, Lock, Mail, UserPlus } from 'lucide-react';
 import { AuthShell } from '@/components/features/auth/auth-shell';
 import { GoogleSignInButton } from '@/components/features/auth/google-sign-in-button';
-import { Button } from '@/components/ui/button';
+import { Button, LinkButton } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,8 @@ import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
 /**
  * تسجيل الدخول — الصورة 03 مع تعديل لاحق بقرار صاحب المنتج: لا تبويب هاتف
  * (كان في الصورة 04) — البريد هو الحقل الوحيد الظاهر، وزر «الدخول عبر
- * جوجل» أسفل النموذج مباشرة، الاثنان ظاهران معًا دائمًا.
+ * جوجل» ثم «إنشاء حساب جديد» تحت زر الدخول مباشرة — ثلاثة أزرار متتالية
+ * بمسافة صغيرة وبلا فاصل «أو».
  *
  * `identifier` في `loginSchema` لا يزال يقبل هاتفًا أيضًا (خلفيًا فقط —
  * لأي حساب قديم سُجّل برقم هاتف)، لكن لا واجهة له بعد الآن.
@@ -59,15 +60,6 @@ export default function LoginPage() {
       title="تسجيل الدخول"
       subtitle="مرحباً بك! يرجى تسجيل الدخول للمتابعة"
       onBack={() => router.push('/role-select')}
-      footer={
-        <div className="flex items-center justify-center gap-2 rounded-card bg-brand-50/70 px-4 py-4">
-          <UserPlus size={20} className="text-brand-600" aria-hidden="true" />
-          <span className="text-label text-ink-600">ليس لديك حساب؟</span>
-          <Link href="/register" className="text-label font-bold text-brand-600">
-            إنشاء حساب جديد
-          </Link>
-        </div>
-      }
     >
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
         <Field label="البريد الإلكتروني" htmlFor="identifier" error={errors.identifier?.message}>
@@ -109,25 +101,34 @@ export default function LoginPage() {
           <InfoAlert tone="danger">{extractErrorMessage(loginMutation.error)}</InfoAlert>
         )}
 
-        <Button
-          type="submit"
-          fullWidth
-          loading={isSubmitting || loginMutation.isPending}
-          iconStart={<LogIn size={20} />}
-        >
-          تسجيل الدخول
-        </Button>
-      </form>
+        {/* الأزرار الثلاثة متتالية بمسافة صغيرة: دخول · جوجل · حساب جديد */}
+        <div className="flex flex-col gap-2">
+          <Button
+            type="submit"
+            fullWidth
+            loading={isSubmitting || loginMutation.isPending}
+            iconStart={<LogIn size={20} />}
+          >
+            تسجيل الدخول
+          </Button>
 
-      {GOOGLE_SIGN_IN_ENABLED && (
-        <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
-          <p className="text-center text-badge text-ink-400">أو</p>
-          <GoogleSignInButton
-            intent="login"
-            onSuccess={(user) => router.replace(resolveHomeRoute(user))}
-          />
+          {GOOGLE_SIGN_IN_ENABLED && (
+            <GoogleSignInButton
+              intent="login"
+              onSuccess={(user) => router.replace(resolveHomeRoute(user))}
+            />
+          )}
+
+          <LinkButton
+            href="/register"
+            variant="secondary"
+            fullWidth
+            iconStart={<UserPlus size={20} />}
+          >
+            إنشاء حساب جديد
+          </LinkButton>
         </div>
-      )}
+      </form>
     </AuthShell>
   );
 }

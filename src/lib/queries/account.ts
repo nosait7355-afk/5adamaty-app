@@ -69,7 +69,7 @@ export function useReadAllNotifications() {
 
 export function useAccountSummary() {
   return useQuery({
-    queryKey: queryKeys.account.me,
+    queryKey: queryKeys.account.summary,
     queryFn: async () => (await api.get<AccountSummaryDto>('/me/account')).data,
     retry: false,
   });

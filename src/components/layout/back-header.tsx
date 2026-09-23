@@ -1,10 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { BrandMark } from './brand-mark';
 import { cn } from '@/lib/cn';
+import { isRootPath, useSafeBack } from '@/lib/navigation-history';
 import { GOVERNORATE } from '@/shared/constants/fayoum-areas';
 import { MapPin } from 'lucide-react';
 
@@ -29,13 +30,6 @@ export function BackHeader({
   start,
   className,
 }: BackHeaderProps) {
-  const router = useRouter();
-
-  const handleBack = () => {
-    if (onBack) onBack();
-    else router.back();
-  };
-
   return (
     <header
       className={cn(
@@ -45,17 +39,7 @@ export function BackHeader({
       )}
     >
       <div className="flex flex-1 items-center">
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label="رجوع"
-          className={cn(
-            'flex size-11 items-center justify-center rounded-field border border-border',
-            'bg-surface text-brand-600 transition-colors hover:bg-brand-50'
-          )}
-        >
-          <ArrowRight size={22} />
-        </button>
+        <BackButton {...(onBack ? { onBack } : {})} />
       </div>
 
       <BrandMark />
@@ -69,5 +53,35 @@ export function BackHeader({
         )}
       </div>
     </header>
+  );
+}
+
+/** زر الرجوع في `AppHeader` — يختفي في الشاشات الجذرية كالرئيسية. */
+export function AutoBackButton() {
+  const pathname = usePathname();
+  if (!pathname || isRootPath(pathname)) return null;
+  return <BackButton />;
+}
+
+/**
+ * زر الرجوع الموحّد — في `BackHeader` و`AppHeader`.
+ * بلا `onBack` يستخدم `useSafeBack`: يعمل حتى حين لا توجد صفحة سابقة.
+ */
+export function BackButton({ onBack, className }: { onBack?: () => void; className?: string }) {
+  const safeBack = useSafeBack();
+
+  return (
+    <button
+      type="button"
+      onClick={() => (onBack ? onBack() : safeBack())}
+      aria-label="رجوع"
+      className={cn(
+        'flex size-11 shrink-0 items-center justify-center rounded-field border border-border',
+        'bg-surface text-brand-600 transition-colors hover:bg-brand-50',
+        className
+      )}
+    >
+      <ArrowRight size={22} />
+    </button>
   );
 }

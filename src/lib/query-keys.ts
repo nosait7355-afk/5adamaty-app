@@ -39,6 +39,8 @@ export const queryKeys = {
 
   account: {
     me: ['account', 'me'] as const,
+    /** ملخص صفحة «حسابي» `{ user, stats }` — مفتاح منفصل عن `me` لأن شكلها مختلف. */
+    summary: ['account', 'summary'] as const,
     addresses: ['account', 'addresses'] as const,
     favorites: ['account', 'favorites'] as const,
   },

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ServiceWorkerRegister } from '@/components/common/sw-register';
 import { NativeBridge } from '@/components/common/native-bridge';
+import { NavigationTracker } from '@/lib/navigation-history';
 
 /**
  * مزوّدو الحالة على مستوى التطبيق.
@@ -30,6 +31,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ServiceWorkerRegister />
       <NativeBridge />
+      <NavigationTracker />
       {children}
     </QueryClientProvider>
   );

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Bell, MapPin } from 'lucide-react';
+import { AutoBackButton } from './back-header';
 import { BrandMark } from './brand-mark';
 import { NotificationDot } from '@/components/ui/badge';
 import { cn } from '@/lib/cn';
@@ -22,8 +23,9 @@ export interface AppHeaderProps {
 /**
  * ترويسة التطبيق — الصور 06، 07، 08، 15، 16، 24.
  *
- * التخطيط: [منتقي المنطقة النصي] — [العلامة] — [الجرس]
- * في RTL يظهر الأول يمينًا والأخير يسارًا.
+ * التخطيط: [رجوع + منتقي المنطقة النصي] — [العلامة] — [الجرس]
+ * في RTL يظهر الأول يمينًا والأخير يسارًا. زر الرجوع يختفي في الشاشات
+ * الجذرية كالرئيسية (`ROOT_PATHS`).
  */
 export function AppHeader({
   locationLabel = GOVERNORATE,
@@ -40,7 +42,8 @@ export function AppHeader({
         className
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <AutoBackButton />
         {start ?? (
           <span className="flex min-w-0 items-center gap-1 text-label font-semibold text-ink-900">
             <MapPin size={18} className="shrink-0 text-brand-600" aria-hidden="true" />
