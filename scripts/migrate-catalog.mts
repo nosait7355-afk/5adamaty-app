@@ -7,8 +7,8 @@
  * فهذه الهجرة هي ما ينقل التغييرات فعليًا.
  *
  * ما تفعله:
- *   1. تضيف تصنيف «عقارات» إن لم يكن موجودًا.
- *   2. تضيف مهنتَي «سائق» و«تسويق عقارات».
+ *   1. تضيف تصنيفَي «عقارات» و«توصيل» إن لم يكونا موجودين.
+ *   2. تضيف مهن «سائق» و«تسويق عقارات» و«دليفري».
  *   3. تعيد تسمية تصنيف `plumbing-electric` إلى «مهن حرفية».
  *   4. تنقل النقّاش والنجّار إليه ليجتمع الحرفيون الأربعة في تصنيف واحد،
  *      وتنقل معهم مقدّمي الخدمات المرتبطين بهاتين المهنتين — وإلا بقي
@@ -51,6 +51,13 @@ const NEW_CATEGORIES = [
     icon: 'building-2',
     order: 10,
   },
+  {
+    name: 'توصيل',
+    slug: 'delivery',
+    description: 'دليفري وتوصيل طلبات وطرود داخل الفيوم',
+    icon: 'package',
+    order: 11,
+  },
 ];
 
 const NEW_PROFESSIONS = [
@@ -69,6 +76,14 @@ const NEW_PROFESSIONS = [
     icon: 'building-2',
     professionKind: 'CRAFT' as const,
     order: 22,
+  },
+  {
+    categorySlug: 'delivery',
+    name: 'دليفري',
+    slug: 'delivery-courier',
+    icon: 'bike',
+    professionKind: 'CRAFT' as const,
+    order: 23,
   },
 ];
 

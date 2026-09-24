@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bike,
   AirVent,
   Briefcase,
   Bug,
@@ -13,6 +14,7 @@ import {
   Hammer,
   Home,
   Laptop,
+  Package,
   PaintRoller,
   PartyPopper,
   Pill,
@@ -37,6 +39,7 @@ import {
  */
 const ICONS: Record<string, LucideIcon> = {
   activity: Activity,
+  bike: Bike,
   'air-vent': AirVent,
   bug: Bug,
   'building-2': Building2,
@@ -49,6 +52,7 @@ const ICONS: Record<string, LucideIcon> = {
   hammer: Hammer,
   home: Home,
   laptop: Laptop,
+  package: Package,
   'paint-roller': PaintRoller,
   'party-popper': PartyPopper,
   pill: Pill,

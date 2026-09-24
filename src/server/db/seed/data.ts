@@ -91,6 +91,13 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     icon: 'building-2',
     order: 10,
   },
+  {
+    name: 'توصيل',
+    slug: 'delivery',
+    description: 'دليفري وتوصيل طلبات وطرود داخل الفيوم',
+    icon: 'package',
+    order: 11,
+  },
 ];
 
 export interface SeedProfession {
@@ -142,6 +149,7 @@ export const SEED_PROFESSIONS: SeedProfession[] = [
   /* ---- إضافات لاحقة ---- */
   { categorySlug: 'car-services', name: 'سائق', slug: 'driver', icon: 'car-taxi-front', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 21 },
   { categorySlug: 'real-estate', name: 'تسويق عقارات', slug: 'real-estate-marketing', icon: 'building-2', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 22 },
+  { categorySlug: 'delivery', name: 'دليفري', slug: 'delivery-courier', icon: 'bike', professionKind: 'CRAFT', requiresQualification: false, requiresLicense: false, order: 23 },
 ];
 
 /** يبني قائمة المستندات لمهنة من مفاتيح تحكّمها. */
