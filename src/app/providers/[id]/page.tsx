@@ -27,6 +27,7 @@ import { EmptyState, ErrorState } from '@/components/common/states';
 import { CatalogIcon } from '@/components/common/catalog-icon';
 import { MediaThumb } from '@/components/features/discovery/media-thumb';
 import { ProfileTabs } from '@/components/features/discovery/profile-tabs';
+import { ReportProvider } from '@/components/features/discovery/report-provider';
 import { Rating } from '@/components/features/discovery/rating-stars';
 import { ServiceCard } from '@/components/features/discovery/service-card';
 import { cloudinaryUrl } from '@/lib/cloudinary-url';
@@ -347,6 +348,8 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
               </ul>
             ))}
         </div>
+
+        {me.data && !isOwnProfile && <ReportProvider providerId={id} />}
       </PageContainer>
 
       {/* ---- فوتر التواصل الثابت ---- */}

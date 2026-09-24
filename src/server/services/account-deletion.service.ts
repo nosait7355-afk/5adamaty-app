@@ -10,6 +10,7 @@ import {
   Message,
   Notification,
   ProviderDocument,
+  Report,
   Review,
   Service,
   ServiceProvider,
@@ -30,7 +31,8 @@ import type { SessionUser } from '@/server/middleware/with-auth';
  * لحذف حساب صاحبه. حسابات جوجل بلا كلمة مرور تؤكّد بكتابة بريدها بدلًا منها.
  *
  * ما يُحذف: المستخدم وعناوينه ومفضّلته وإشعاراته وتقييماته، وإن كان مقدّم
- * خدمة: ملفه وخدماته ومستنداته وتقييماته وكل مفضّلة تشير إليه. الطلبات
+ * خدمة: ملفه وخدماته ومستنداته وتقييماته والبلاغات عنه وكل مفضّلة تشير إليه.
+ * البلاغات التي كتبها تُحذف كذلك. الطلبات
  * والمحادثات القديمة المرتبطة به تُحذف كذلك. الملفات على Cloudinary تُحذف
  * بأفضل جهد — فشل حذف ملف لا يُبقي الحساب.
  *
@@ -79,6 +81,7 @@ export async function deleteMyAccount(
       Review.deleteMany({ providerId }),
       Service.deleteMany({ providerId }),
       ProviderDocument.deleteMany({ providerId }),
+      Report.deleteMany({ providerId }),
       ServiceRequest.deleteMany({ providerId }),
     ]);
     await ServiceProvider.deleteOne({ _id: providerId });
@@ -97,6 +100,7 @@ export async function deleteMyAccount(
     Address.deleteMany({ userId }),
     Favorite.deleteMany({ userId }),
     Notification.deleteMany({ userId }),
+    Report.deleteMany({ reporterId: userId }),
     ServiceRequest.deleteMany({ customerId: userId }),
     Message.deleteMany({ threadId: mongoose.trusted({ $in: threadIds }) }),
     Thread.deleteMany({ _id: mongoose.trusted({ $in: threadIds }) }),

@@ -36,7 +36,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- تأتي من plugin تسجيل الدخول بجوجل (معطَّل) — تُحذف لتفادي أسئلة مراجعة Google Play. -->
+    <!-- تأتي من plugin تسجيل الدخول بجوجل ولا يحتاجها (Credential Manager يعمل بدونها) — تُحذف لتفادي أسئلة مراجعة Google Play. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" tools:node="remove" />

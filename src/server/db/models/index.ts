@@ -1,5 +1,5 @@
 /**
- * النماذج الـ15 لقاعدة بيانات «خدماتي الفيوم» (ARCHITECTURE §3).
+ * النماذج الـ16 لقاعدة بيانات «خدماتي الفيوم» (ARCHITECTURE §3).
  *
  * ملاحظة عدّ: `messages/threads` تُحسب Collection واحدة منطقيًا (وحدة المراسلة)
  * وإن كانت مجموعتين فعليًا في MongoDB.
@@ -21,6 +21,7 @@ export { Favorite, type FavoriteDocument } from './favorite.model';
 export { Address, type AddressDocument } from './address.model';
 export { Notification, type NotificationDocument } from './notification.model';
 export { Thread, Message, type ThreadDocument, type MessageDocument } from './message.model';
+export { Report, type ReportDocument } from './report.model';
 export {
   Setting,
   AuditLog,
@@ -42,7 +43,7 @@ export {
   type TextAddress,
 } from './shared';
 
-/** أسماء المجموعات الـ15 — تُستخدم في اختبارات التحقق وسكربت الفهارس. */
+/** أسماء المجموعات الـ16 — تُستخدم في اختبارات التحقق وسكربت الفهارس. */
 export const COLLECTION_NAMES = [
   'users',
   'serviceproviders',
@@ -59,4 +60,5 @@ export const COLLECTION_NAMES = [
   'settings',
   'auditlogs',
   'faqs',
+  'reports', // بلاغات المستخدمين عن مقدمي الخدمات — سياسة Google Play
 ] as const;

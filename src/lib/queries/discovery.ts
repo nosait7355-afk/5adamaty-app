@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import type { CreateReportInput } from '@/shared/schemas/report.schema';
 import { api } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import type {
@@ -112,6 +113,14 @@ export function useProviderReviews(id: string | undefined, enabled = true) {
     queryKey: queryKeys.providers.reviews(id ?? ''),
     queryFn: async () => api.get<ProviderReviewsResponse>(`/providers/${id}/reviews`),
     enabled: Boolean(id) && enabled,
+  });
+}
+
+/** «إبلاغ عن مقدم الخدمة» — سياسة Google Play للمحتوى الذي ينشئه المستخدمون. */
+export function useReportProvider(providerId: string | undefined) {
+  return useMutation({
+    mutationFn: async (input: CreateReportInput) =>
+      (await api.post<{ reported: true }>(`/providers/${providerId}/report`, input)).data,
   });
 }
 

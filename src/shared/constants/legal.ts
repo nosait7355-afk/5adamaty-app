@@ -6,4 +6,4 @@
  */
 export const APP_NAME_AR = 'خدماتي الفيوم';
 export const SUPPORT_EMAIL = 'support@khadamaty-elfayoum.com';
-export const LEGAL_LAST_UPDATED = '17 سبتمبر 2026';
+export const LEGAL_LAST_UPDATED = '24 سبتمبر 2026';

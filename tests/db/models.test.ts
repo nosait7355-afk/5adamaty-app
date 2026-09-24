@@ -73,7 +73,7 @@ async function makeProfession(categoryId: Types.ObjectId, kind: 'CRAFT' | 'REGUL
 
 /* ================================================================== */
 
-describe('المجموعات الـ15', () => {
+describe('المجموعات الـ16', () => {
   it('كل النماذج مسجّلة', () => {
     const registered = Object.keys(mongoose.models);
     expect(registered).toEqual(
@@ -94,12 +94,13 @@ describe('المجموعات الـ15', () => {
         'Setting',
         'AuditLog',
         'Faq',
+        'Report',
       ])
     );
   });
 
-  it('قائمة أسماء المجموعات تعدّ 15', () => {
-    expect(COLLECTION_NAMES).toHaveLength(15);
+  it('قائمة أسماء المجموعات تعدّ 16', () => {
+    expect(COLLECTION_NAMES).toHaveLength(16);
   });
 });
 

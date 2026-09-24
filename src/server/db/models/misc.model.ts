@@ -51,6 +51,8 @@ export const AUDIT_ACTIONS = [
   'NOTIFICATION_BROADCAST',
   // حذف الحساب بطلب صاحبه — مطلب Google Play
   'ACCOUNT_DELETED',
+  // بلاغات المستخدمين — سياسة Google Play للمحتوى
+  'REPORT_RESOLVED',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

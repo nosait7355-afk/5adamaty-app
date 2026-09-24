@@ -68,5 +68,6 @@ export const queryKeys = {
     reviews: (filters: Record<string, unknown>) => ['admin', 'reviews', filters] as const,
     settings: ['admin', 'settings'] as const,
     auditLogs: (filters: Record<string, unknown>) => ['admin', 'audit-logs', filters] as const,
+    reports: (filters: Record<string, unknown>) => ['admin', 'reports', filters] as const,
   },
 } as const;

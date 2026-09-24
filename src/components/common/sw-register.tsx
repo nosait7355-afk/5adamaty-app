@@ -7,6 +7,16 @@ export function ServiceWorkerRegister() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
+    // في التطوير حزم `/_next/static/` بلا بصمة محتوى، فالـSW (كاش أولًا)
+    // يقدّم كودًا قديمًا بعد كل تعديل. نلغي أي تسجيل سابق ولا نسجّل.
+    if (process.env.NODE_ENV !== 'production') {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => Promise.all(registrations.map((r) => r.unregister())))
+        .catch(() => undefined);
+      return;
+    }
+
     const register = () => {
       navigator.serviceWorker.register('/sw.js').catch(() => {
         // فشل تسجيل الـSW لا يكسر التطبيق — PWA تحسين إضافي لا شرط تشغيل.

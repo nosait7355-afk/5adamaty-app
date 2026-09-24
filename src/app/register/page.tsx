@@ -176,13 +176,25 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      {GOOGLE_SIGN_IN_ENABLED && (
+      {/* بلا Client ID يخفي الزر نفسه — فنُخفي الكتلة كلها مع نص الموافقة */}
+      {GOOGLE_SIGN_IN_ENABLED && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
         <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
           <p className="text-center text-badge text-ink-400">أو</p>
           <GoogleSignInButton
             intent="register"
             onSuccess={(user) => router.replace(resolveHomeRoute(user))}
           />
+          {/* زر جوجل ينشئ الحساب مباشرة بلا خانة الموافقة أعلاه — الموافقة هنا ضمنية وظاهرة */}
+          <p className="text-center text-badge leading-5 text-ink-400">
+            بالمتابعة عبر جوجل أنت توافق على{' '}
+            <Link href="/terms" className="font-semibold text-brand-600">
+              الشروط والأحكام
+            </Link>{' '}
+            و
+            <Link href="/privacy" className="font-semibold text-brand-600">
+              سياسة الخصوصية
+            </Link>
+          </p>
         </div>
       )}
     </AuthShell>

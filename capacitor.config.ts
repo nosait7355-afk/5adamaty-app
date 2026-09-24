@@ -39,7 +39,8 @@ const config: CapacitorConfig = {
     },
     /*
      * تسجيل الدخول بجوجل (ويب + أندرويد) — خلف GOOGLE_SIGN_IN_ENABLED
-     * (`src/shared/constants/feature-flags.ts`)، معطَّل حاليًا.
+     * (`src/shared/constants/feature-flags.ts`)، مفعَّل. نسخة المتجر تحتاج
+     * بصمة SHA-1 لمفتاح Play App Signing مسجّلة في عميل OAuth على Google Cloud.
      * جوجل فقط مفعَّل هنا لتقليل حجم الـAPK — Facebook/Apple/Twitter
      * ممنوعون أصلًا (PROJECT_PLAN — المصادقة).
      */

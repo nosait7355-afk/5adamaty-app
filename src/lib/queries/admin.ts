@@ -20,6 +20,8 @@ import type {
   UpdateProfessionInput,
   UpsertSettingInput,
 } from '@/shared/schemas/admin.schema';
+import type { AdminReportDto } from '@/server/services/report.service';
+import type { ResolveReportInput } from '@/shared/schemas/report.schema';
 
 /**
  * خطافات لوحة الإدارة — Phase 10.
@@ -319,5 +321,38 @@ export function useAdminAuditLogs(filter: AuditLogsFilter) {
   return useQuery({
     queryKey: queryKeys.admin.auditLogs(filter),
     queryFn: async () => api.get<AdminAuditLogDto[]>('/admin/audit-logs', { query: filter }),
+  });
+}
+
+/* ================================================================== */
+/* البلاغات — سياسة Google Play للمحتوى الذي ينشئه المستخدمون          */
+/* ================================================================== */
+
+export interface ReportsFilter {
+  [key: string]: string | number | boolean | undefined;
+  status?: string;
+  page: number;
+  limit: number;
+}
+
+export function useAdminReports(filter: ReportsFilter) {
+  return useQuery({
+    queryKey: queryKeys.admin.reports(filter),
+    queryFn: async () => api.get<AdminReportDto[]>('/admin/reports', { query: filter }),
+  });
+}
+
+export function useResolveReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { reportId: string } & ResolveReportInput) => {
+      const { reportId, ...body } = input;
+      return (
+        await api.patch<{ id: string; status: string }>(`/admin/reports/${reportId}`, body)
+      ).data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
+    },
   });
 }
