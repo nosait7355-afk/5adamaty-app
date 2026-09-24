@@ -76,22 +76,26 @@ function CategoryRow({ category }: { category: AdminCategoryDto }) {
   }
 
   return (
-    <Card className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-          <CatalogIcon name={category.icon} size={20} />
-        </span>
-        <div className="min-w-0">
-          <h3 className="line-clamp-1 text-card-title font-bold text-ink-900">{category.name}</h3>
-          <p className="line-clamp-1 text-badge text-ink-400">{category.description}</p>
-          <p className="num text-badge text-ink-400">{formatServicesCount(category.servicesCount)}</p>
+    // الأزرار في سطر مستقل تحت البيانات — بجوارها على الموبايل كانت تأخذ العرض
+    // كله فيختفي اسم التصنيف ووصفه (نفس ترتيب بطاقة المهن)
+    <Card className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+            <CatalogIcon name={category.icon} size={20} />
+          </span>
+          <div className="min-w-0">
+            <h3 className="line-clamp-1 text-card-title font-bold text-ink-900">{category.name}</h3>
+            <p className="line-clamp-2 text-badge text-ink-400">{category.description}</p>
+            <p className="num text-badge text-ink-400">{formatServicesCount(category.servicesCount)}</p>
+          </div>
         </div>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2">
-        <Badge tone={category.isActive ? 'success' : 'danger'}>
+        <Badge tone={category.isActive ? 'success' : 'danger'} className="shrink-0">
           {category.isActive ? 'مفعّل' : 'معطّل'}
         </Badge>
+      </div>
+
+      <div className="flex gap-2">
         <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
           تعديل
         </Button>

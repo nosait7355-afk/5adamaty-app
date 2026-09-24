@@ -77,31 +77,34 @@ export default function AdminServicesPage() {
         <ul className="flex flex-col gap-3">
           {items.map((service) => (
             <li key={service.id}>
-              <Card className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="line-clamp-1 text-card-title font-bold text-ink-900">
-                    {service.title}
-                  </h3>
-                  <p className="num text-badge text-ink-400">
-                    ⭐ {formatRating(service.ratingAvg)} ({service.ratingCount}) ·{' '}
-                    {formatDateShort(service.createdAt)}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Badge tone={service.isActive ? 'success' : 'danger'}>
+              {/* الزر في سطر مستقل — بجوار العنوان على الموبايل كان يخفيه */}
+              <Card className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="line-clamp-2 text-card-title font-bold text-ink-900">
+                      {service.title}
+                    </h3>
+                    <p className="num text-badge text-ink-400">
+                      ⭐ {formatRating(service.ratingAvg)} ({service.ratingCount}) ·{' '}
+                      {formatDateShort(service.createdAt)}
+                    </p>
+                  </div>
+                  <Badge tone={service.isActive ? 'success' : 'danger'} className="shrink-0">
                     {service.isActive ? 'ظاهرة' : 'مخفية'}
                   </Badge>
-                  <Button
-                    size="sm"
-                    variant={service.isActive ? 'danger' : 'success'}
-                    loading={setActive.isPending}
-                    onClick={() =>
-                      setActive.mutate({ serviceId: service.id, isActive: !service.isActive })
-                    }
-                  >
-                    {service.isActive ? 'إخفاء' : 'إظهار'}
-                  </Button>
                 </div>
+                <Button
+                  size="sm"
+                  variant={service.isActive ? 'danger' : 'success'}
+                  className="w-fit"
+                  loading={setActive.isPending && setActive.variables?.serviceId === service.id}
+                  disabled={setActive.isPending}
+                  onClick={() =>
+                    setActive.mutate({ serviceId: service.id, isActive: !service.isActive })
+                  }
+                >
+                  {service.isActive ? 'إخفاء' : 'إظهار'}
+                </Button>
               </Card>
             </li>
           ))}
