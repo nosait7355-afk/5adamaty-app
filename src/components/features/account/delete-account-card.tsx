@@ -41,7 +41,7 @@ export function DeleteAccountCard({ isProvider = false }: { isProvider?: boolean
       });
       // الجلسة انتهت على الخادم — نمسح أي بيانات مخبّأة للحساب المحذوف
       queryClient.clear();
-      router.replace('/role-select');
+      router.replace('/login');
     } catch (caught) {
       const message =
         caught instanceof ApiClientError ? caught.message : 'تعذّر حذف الحساب. حاول مرة أخرى.';

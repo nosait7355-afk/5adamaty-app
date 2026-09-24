@@ -35,8 +35,8 @@ export function AuthShell({
   footer,
   className,
 }: AuthShellProps) {
-  // شاشات المصادقة للزوّار — الرجوع الافتراضي لاختيار نوع الحساب
-  const safeBack = useSafeBack('/role-select');
+  // شاشات المصادقة للزوّار — الرجوع الافتراضي لتسجيل الدخول (أول شاشة للزائر)
+  const safeBack = useSafeBack('/login');
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-bg">

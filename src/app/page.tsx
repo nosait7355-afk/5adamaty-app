@@ -17,7 +17,7 @@ import { resolveHomeRoute, useMe } from '@/lib/queries/auth';
  *   مسجّل عميل   → /home
  *   مزوّد معتمد   → /home (نفس صفحة العميل — تبويبه «الرئيسية»)
  *   مزوّد قيد المراجعة → /provider/pending-review
- *   غير مسجّل     → /role-select
+ *   غير مسجّل     → /login (ومنها «إنشاء حساب جديد» ← اختيار نوع الحساب)
  */
 export default function SplashPage() {
   const router = useRouter();
@@ -25,8 +25,8 @@ export default function SplashPage() {
 
   useEffect(() => {
     if (isPending) return;
-    // فشل الشبكة يوجّه لاختيار نوع الحساب بدل تعليق المستخدم على الشاشة
-    router.replace(isError ? '/role-select' : resolveHomeRoute(user ?? null));
+    // فشل الشبكة يوجّه لتسجيل الدخول بدل تعليق المستخدم على الشاشة
+    router.replace(isError ? '/login' : resolveHomeRoute(user ?? null));
   }, [isPending, isError, user, router]);
 
   return (

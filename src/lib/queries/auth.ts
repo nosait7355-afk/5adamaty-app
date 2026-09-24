@@ -132,7 +132,7 @@ export function useResetPassword() {
  * تُستخدم في Splash وبعد الدخول والتسجيل.
  */
 export function resolveHomeRoute(user: AuthUserDto | null): string {
-  if (!user) return '/role-select';
+  if (!user) return '/login';
 
   switch (user.role) {
     case 'ADMIN':

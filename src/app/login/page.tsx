@@ -28,7 +28,10 @@ import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
  * تسجيل الدخول — الصورة 03 مع تعديل لاحق بقرار صاحب المنتج: لا تبويب هاتف
  * (كان في الصورة 04) — البريد هو الحقل الوحيد الظاهر، وزر «الدخول عبر
  * جوجل» ثم «إنشاء حساب جديد» تحت زر الدخول مباشرة — ثلاثة أزرار متتالية
- * بمسافة صغيرة وبلا فاصل «أو».
+ * بمسافة صغيرة وبلا فاصل «أو». «إنشاء حساب جديد» يفتح اختيار نوع الحساب
+ * (عميل أو مقدم خدمة).
+ *
+ * أول شاشة يراها الزائر عند فتح التطبيق — شاشة جذرية بلا زر رجوع.
  *
  * `identifier` في `loginSchema` لا يزال يقبل هاتفًا أيضًا (خلفيًا فقط —
  * لأي حساب قديم سُجّل برقم هاتف)، لكن لا واجهة له بعد الآن.
@@ -59,7 +62,7 @@ export default function LoginPage() {
     <AuthShell
       title="تسجيل الدخول"
       subtitle="مرحباً بك! يرجى تسجيل الدخول للمتابعة"
-      onBack={() => router.push('/role-select')}
+      hideBack
     >
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
         <Field label="البريد الإلكتروني" htmlFor="identifier" error={errors.identifier?.message}>
@@ -120,7 +123,7 @@ export default function LoginPage() {
           )}
 
           <LinkButton
-            href="/register"
+            href="/role-select"
             variant="secondary"
             fullWidth
             iconStart={<UserPlus size={20} />}

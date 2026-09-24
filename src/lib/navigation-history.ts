@@ -18,7 +18,7 @@ const STORAGE_KEY = 'kf_nav_stack';
 const MAX_DEPTH = 50;
 
 /** الشاشات الجذرية — لا زر رجوع فيها، ورجوع أندرويد منها يُغلق التطبيق. */
-export const ROOT_PATHS = ['/', '/home', '/role-select', '/provider/pending-review', '/admin/dashboard'];
+export const ROOT_PATHS = ['/', '/home', '/login', '/provider/pending-review', '/admin/dashboard'];
 
 export function isRootPath(pathname: string): boolean {
   return ROOT_PATHS.includes(pathname);

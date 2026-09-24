@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Briefcase, Check, ShieldCheck, User } from 'lucide-react';
+import { ArrowRight, Briefcase, Check, ShieldCheck, User } from 'lucide-react';
 import { BrandIcon } from '@/components/layout/brand-icon';
 import { Button } from '@/components/ui/button';
 import { BrandWave, CitySkyline } from '@/components/features/auth/city-skyline';
 import { cn } from '@/lib/cn';
+import { useSafeBack } from '@/lib/navigation-history';
 
 type AccountKind = 'CUSTOMER' | 'PROVIDER';
 
@@ -16,10 +17,13 @@ type AccountKind = 'CUSTOMER' | 'PROVIDER';
  * موجة زرقاء علوية · اللوجو فوق رسم المعالم · العنوان والوصف ·
  * بطاقتان متجاورتان (المنتقاة: حد أزرق + زاوية سفلية زرقاء مائلة + ✓) ·
  * بطاقة الثقة «آمن وموثوق» · موجة سفلية.
+ *
+ * تُفتح من زر «إنشاء حساب جديد» في شاشة الدخول، فزر الرجوع يعود إليها.
  */
 export default function RoleSelectPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<AccountKind>('CUSTOMER');
+  const safeBack = useSafeBack('/login');
 
   const handleContinue = () => {
     router.push(selected === 'CUSTOMER' ? '/register' : '/register/provider');
@@ -28,6 +32,16 @@ export default function RoleSelectPage() {
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-bg">
       <BrandWave position="top" className="absolute inset-x-0 top-0 h-20" />
+
+      {/* زر الرجوع — يمين الشاشة، بخلفية بيضاء ليظهر فوق الموجة الزرقاء */}
+      <button
+        type="button"
+        onClick={safeBack}
+        aria-label="رجوع"
+        className="absolute start-4 top-[max(1rem,env(safe-area-inset-top))] z-20 flex size-11 items-center justify-center rounded-full bg-surface/90 text-brand-600 shadow-card transition-colors hover:bg-brand-50"
+      >
+        <ArrowRight size={24} />
+      </button>
 
       <div className="relative z-10 mx-auto flex w-full max-w-[520px] flex-1 flex-col px-page pb-8 pt-safe">
         {/* العلامة فوق رسم المعالم */}
