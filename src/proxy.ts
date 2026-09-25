@@ -166,6 +166,14 @@ export async function proxy(request: NextRequest) {
     if (matchesPrefix(pathname, '/provider') && claims.role === 'CUSTOMER') {
       return withCsp(NextResponse.redirect(new URL('/home', request.url)));
     }
+    /*
+     * `/account/become-provider` تحويل العميل إلى مقدم خدمة — مساحة عميل
+     * لا مساحة مزوّد، فلا يحتاج استثناءً من الحارس أعلاه. لكن من أتمّ
+     * التحويل لم يعد له ما يفعله هنا.
+     */
+    if (matchesPrefix(pathname, '/account/become-provider') && claims.role !== 'CUSTOMER') {
+      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
+    }
     // معالج تسجيل المزوّد مفتوح للزائر ولمقدم الخدمة فقط — لا لعميل مسجّل
     if (matchesPrefix(pathname, '/register/provider') && claims.role !== 'PROVIDER') {
       return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));

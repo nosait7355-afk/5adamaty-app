@@ -1,7 +1,8 @@
 import { withErrorHandler } from '@/server/middleware/with-error-handler';
 import { validateBody } from '@/server/middleware/with-validation';
 import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-limit';
-import { requireAuth } from '@/server/middleware/with-auth';
+import { requireAuth, type SessionUser } from '@/server/middleware/with-auth';
+import { findProviderByUserId } from '@/server/repositories/provider.repository';
 import { assertSameOrigin } from '@/server/lib/csrf';
 import { ok } from '@/server/lib/api-response';
 import { uploadSignatureSchema } from '@/shared/schemas/upload.schema';
@@ -25,5 +26,24 @@ export const POST = withErrorHandler(async (request) => {
   const user = await requireAuth(request);
   const input = await validateBody(request, uploadSignatureSchema);
 
-  return ok(issueUploadSignature(user, input));
+  return ok(issueUploadSignature(await effectiveUploader(user), input));
 });
+
+/**
+ * الدور الفعّال لأغراض الرفع.
+ *
+ * عميل يحوّل حسابه إلى مقدم خدمة يظل `CUSTOMER` حتى يرسل طلبه، لكنه يحتاج
+ * قبل ذلك رفع هويته — وهي `PROVIDER_DOCUMENT` المقصورة على المزوّدين. فبدل
+ * توسيع القاعدة لكل عميل (وهو ما يفتح رفع المستندات للجميع)، نرقّي دوره
+ * هنا فقط **إن كان يملك ملف مزوّد فعلًا**، وهو نفس شرط
+ * `requireProviderWorkspace`.
+ *
+ * المجلد يبقى مبنيًا على `user.id` داخل `issueUploadSignature`، فلا يمسّ
+ * هذا الترقية شيئًا من عزل الملفات.
+ */
+async function effectiveUploader(user: SessionUser): Promise<SessionUser> {
+  if (user.role !== 'CUSTOMER') return user;
+
+  const provider = await findProviderByUserId(user.id);
+  return provider ? { ...user, role: 'PROVIDER' } : user;
+}

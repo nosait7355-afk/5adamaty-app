@@ -56,6 +56,30 @@ export async function requireRole(
 }
 
 /**
+ * حارس مساحة عمل مقدم الخدمة — يقبل الدور `PROVIDER` أو عميلًا يملك ملف
+ * مزوّد قيد الإنشاء.
+ *
+ * السبب: عند تحويل عميل إلى مقدم خدمة لا يتغيّر دوره إلا بعد إرسال الطلب
+ * (انظر `convertCustomerToProvider`)، كي لا يخسر حسابه كعميل إن توقّف في
+ * منتصف التسجيل. لكنه يحتاج في تلك الأثناء رفع مستنداته وقراءة ملفه —
+ * ولا يجوز أن يفتح ذلك المساحة لأي عميل: الشرط هو **وجود ملف مزوّد باسمه
+ * فعلًا** في قاعدة البيانات، لا مجرد ادّعاء.
+ */
+export async function requireProviderWorkspace(
+  request: Request,
+  ...extraRoles: readonly UserRole[]
+): Promise<SessionUser> {
+  const user = await requireAuth(request);
+  if (user.role === 'PROVIDER' || extraRoles.includes(user.role)) return user;
+
+  const { findProviderByUserId } = await import('@/server/repositories/provider.repository');
+  const provider = await findProviderByUserId(user.id);
+  if (!provider) throw forbidden();
+
+  return user;
+}
+
+/**
  * حارس الملكية — الدرع الأساسي ضد IDOR.
  *
  * يعيد **404** لا 403 عند عدم الملكية، حتى لا نكشف وجود المورد أصلًا

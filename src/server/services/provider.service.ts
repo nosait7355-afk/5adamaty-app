@@ -7,6 +7,7 @@ import {
   countProviderDocuments,
   createNotification,
   createProviderAccount,
+  createProviderForUser,
   findProviderById,
   findProviderByUserId,
   findUserById,
@@ -27,6 +28,7 @@ import type { SessionUser } from '@/server/middleware/with-auth';
 import type { MediaRef } from '@/server/db/models';
 import type {
   AddPortfolioItemInput,
+  ConvertToProviderInput,
   RegisterProviderInput,
   UpdateProviderProfileInput,
   VerificationDecisionInput,
@@ -272,6 +274,110 @@ export async function registerProvider(
   });
 
   return { user: toAuthUserDto(user), providerId: String(provider._id), tokens };
+}
+
+/* ================================================================== */
+/* تحويل عميل قائم إلى مقدم خدمة                                       */
+/* ================================================================== */
+
+/**
+ * ينشئ ملف مزوّد لعميل مسجَّل، ويكمل بياناته الناقصة.
+ *
+ * ⚠️ **لا يغيّر `role`.** المستخدم يظل `CUSTOMER` حتى يرسل طلبه فعلًا من
+ * `submitVerification`. السبب قرار منتج صريح: تحويل الدور هنا يعني أن من
+ * يبدأ التسجيل ثم يتوقف قبل رفع هويته يُقذف إلى مساحة مقدّم الخدمة
+ * (`homeFor` في `proxy.ts`) ويفقد حسابه كعميل — مفضّلته وعناوينه وطلباته —
+ * مقابل ملف مزوّد ناقص لا ينفعه. فالتحويل يحدث عند نقطة واحدة: نجاح
+ * الإرسال.
+ *
+ * في تلك الأثناء يصل المستخدم إلى مستنداته وملفه عبر
+ * `requireProviderWorkspace` الذي يتحقق من وجود الملف لا من الدور.
+ */
+export async function convertCustomerToProvider(
+  userId: string,
+  input: ConvertToProviderInput
+): Promise<ProviderProfileDto> {
+  const user = await findUserById(userId);
+  if (!user) throw notFound('الحساب غير موجود.');
+
+  if (user.role === 'ADMIN') {
+    throw forbidden('لا يمكن تحويل حساب إداري إلى مقدم خدمة.');
+  }
+
+  // ملف قائم = المستخدم بدأ التحويل من قبل؛ نكمل عليه بدل إنشاء ثانٍ
+  const existing = await findProviderByUserId(userId);
+  if (existing) {
+    return updateMyProviderProfile(userId, {
+      fullName: input.fullName,
+      whatsapp: input.whatsapp,
+      accountType: input.accountType,
+      city: input.city,
+      addressLine: input.addressLine,
+      categoryId: input.categoryId,
+      professionId: input.professionId,
+      yearsOfExperience: input.yearsOfExperience,
+      bio: input.bio,
+      coverageAreas: input.coverageAreas,
+      ...(input.gender ? { gender: input.gender } : {}),
+      ...(input.birthDate ? { birthDate: input.birthDate } : {}),
+    } as UpdateProviderProfileInput);
+  }
+
+  const profession = await findProfessionById(input.professionId);
+  if (!profession) throw notFound('التخصص المطلوب غير موجود.');
+  if (String(profession.categoryId) !== input.categoryId) {
+    throw unprocessable('التخصص المختار لا ينتمي للتصنيف المحدد.');
+  }
+
+  /*
+   * الهاتف اختياري عند تسجيل العميل وإلزامي لمقدم الخدمة، فقد يكون هذا
+   * أول إدخال له — ولا بد من التأكد أنه ليس رقم حساب آخر.
+   */
+  if (user.phone !== input.phone) {
+    const taken = await existsByPhoneOrEmail({ phone: input.phone });
+    if (taken.phone) {
+      throw conflict('رقم الهاتف مسجّل بحساب آخر.');
+    }
+  }
+
+  const requestNumber = await nextRequestNumber();
+
+  await updateUser(userId, {
+    fullName: input.fullName,
+    phone: input.phone,
+    governorate: input.governorate || GOVERNORATE,
+    city: input.city,
+    addressLine: input.addressLine,
+    ...(input.gender ? { gender: input.gender } : {}),
+    ...(input.birthDate ? { birthDate: new Date(input.birthDate) } : {}),
+  });
+
+  const provider = await createProviderForUser({
+    userId,
+    accountType: input.accountType,
+    displayName: input.fullName,
+    whatsapp: input.whatsapp,
+    categoryId: profession.categoryId,
+    professionId: profession._id,
+    yearsOfExperience: input.yearsOfExperience,
+    bio: input.bio,
+    coverageAreas: input.coverageAreas,
+    isActive: false,
+    isVerifiedBadge: false,
+    profileCompletion: 0,
+    verification: {
+      status: 'DRAFT',
+      requestNumber,
+      submittedAt: new Date(),
+    },
+  });
+
+  logger.info('بدأ عميل التحويل إلى مقدم خدمة', {
+    userId,
+    providerId: String(provider._id),
+  });
+
+  return getMyProviderProfile(userId);
 }
 
 /* ================================================================== */
@@ -546,8 +652,10 @@ export async function removePortfolioItem(
 export async function submitVerification(
   userId: string,
   meta: { ip?: string; userAgent?: string }
-): Promise<ProviderProfileDto> {
+): Promise<{ profile: ProviderProfileDto; tokens: SessionTokens | null }> {
   const provider = await requireOwnProvider(userId);
+  const user = await findUserById(userId);
+  if (!user) throw notFound('الحساب غير موجود.');
 
   const submittable: VerificationStatus[] = ['DRAFT', 'RESUBMISSION_REQUIRED'];
   if (!submittable.includes(provider.verification.status)) {
@@ -590,7 +698,27 @@ export async function submitVerification(
     isVerifiedBadge: true,
   });
 
-  await updateUser(userId, { status: 'ACTIVE' });
+  /*
+   * نقطة تحويل الدور الوحيدة.
+   *
+   * العميل الذي بدأ التحويل ظل `CUSTOMER` طوال التسجيل (انظر
+   * `convertCustomerToProvider`) كي لا يفقد حسابه إن توقّف في المنتصف.
+   * الآن وقد اكتمل طلبه وفُعّل، يصير `PROVIDER` فعلًا.
+   *
+   * ⚠️ الدور محفور داخل توكن الوصول (`signAccessToken`)، فتغييره في قاعدة
+   * البيانات وحده لا يكفي: التوكن القائم سيظل يقول `CUSTOMER` حتى انتهاء
+   * صلاحيته. لذلك يعيد المسار إصدار الجلسة فور عودة هذه الدالة — انظر
+   * `POST /provider/verification/submit`.
+   */
+  const roleChanged = user.role !== 'PROVIDER';
+  await updateUser(userId, { status: 'ACTIVE', ...(roleChanged ? { role: 'PROVIDER' } : {}) });
+
+  if (roleChanged) {
+    logger.info('تحوّل حساب عميل إلى مقدم خدمة', {
+      userId,
+      providerId: String(provider._id),
+    });
+  }
 
   await writeAuditLog({
     actorId: userId,
@@ -618,7 +746,21 @@ export async function submitVerification(
     requestNumber: provider.verification.requestNumber,
   });
 
-  return getMyProviderProfile(userId);
+  /*
+   * جلسة جديدة عند تغيّر الدور — وإلا ظل توكن الوصول القائم يقول
+   * `CUSTOMER` حتى انتهاء صلاحيته (15 دقيقة)، فيبقى المستخدم محجوبًا عن
+   * مساحته الجديدة رغم أن حسابه تحوّل فعلًا. نصدرها هنا لا في المسار كي
+   * لا ينسى أي مستدعٍ لاحق هذه الخطوة.
+   */
+  const refreshed = roleChanged ? await findUserById(userId) : null;
+  const tokens = refreshed
+    ? await issueSession(refreshed, {
+        ...(meta.userAgent ? { userAgent: meta.userAgent } : {}),
+        remember: true,
+      })
+    : null;
+
+  return { profile: await getMyProviderProfile(userId), tokens };
 }
 
 /* ================================================================== */

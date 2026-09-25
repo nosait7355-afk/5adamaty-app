@@ -9,6 +9,7 @@ import type {
 } from '@/server/services/provider.service';
 import type { ProviderDashboardDto } from '@/server/services/provider-dashboard.service';
 import type {
+  ConvertToProviderValues,
   ProviderStep1Values,
   ProviderStep2Values,
   VerificationDecisionInput,
@@ -92,6 +93,23 @@ export function useUpdateProviderProfile() {
   return useMutation({
     mutationFn: async (patch: Record<string, unknown>) =>
       (await api.patch<ProviderProfileDto>('/provider/profile', patch)).data,
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.provider.profile, profile);
+    },
+  });
+}
+
+/**
+ * تحويل حساب عميل إلى مقدم خدمة — ينشئ ملف مزوّد بحالة مسودة.
+ *
+ * لا يغيّر الدور: ذلك يحدث عند إرسال الطلب (`useSubmitVerification`).
+ */
+export function useBecomeProvider() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: ConvertToProviderValues) =>
+      (await api.post<ProviderProfileDto>('/me/become-provider', input)).data,
     onSuccess: (profile) => {
       queryClient.setQueryData(queryKeys.provider.profile, profile);
     },

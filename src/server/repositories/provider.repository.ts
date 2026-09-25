@@ -62,6 +62,28 @@ export interface CreateProviderAccountInput {
 }
 
 /**
+ * ينشئ ملف مزوّد لمستخدم قائم — مسار تحويل العميل إلى مقدم خدمة.
+ *
+ * منفصل عن `createProviderAccount` لأن ذاك ينشئ المستخدم أيضًا ويحذفه عند
+ * الفشل؛ هنا المستخدم قائم وله بياناته وطلباته، فحذفه عند فشل إنشاء الملف
+ * كارثة لا تعويض.
+ */
+export async function createProviderForUser(
+  input: Omit<Partial<ServiceProviderDocument>, 'userId'> & { userId: string }
+): Promise<ProviderLean> {
+  await connectToDatabase();
+
+  const created = await ServiceProvider.create({
+    ...input,
+    userId: new Types.ObjectId(input.userId),
+  });
+
+  const provider = await ServiceProvider.findById(created._id).lean<ProviderLean>();
+  if (!provider) throw new Error('تعذّر قراءة ملف المزوّد بعد إنشائه.');
+  return provider;
+}
+
+/**
  * ينشئ حساب المستخدم وملف المزوّد معًا.
  *
  * لا نعتمد على معاملة (transaction): النشر المستهدف قد يكون نسخة واحدة لا

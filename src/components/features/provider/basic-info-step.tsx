@@ -48,8 +48,14 @@ export interface BasicInfoStepProps {
   values: BasicInfoValues;
   errors: Partial<Record<keyof BasicInfoValues, string>>;
   onChange: (patch: Partial<BasicInfoValues>) => void;
-  /** في وضع التعديل بعد إنشاء الحساب لا تُعرض حقول كلمة المرور والهاتف. */
-  mode?: 'create' | 'edit';
+  /**
+   * `create`  = تسجيل جديد: كل الحقول.
+   * `edit`    = تعديل ملف قائم: بلا كلمة مرور ولا هاتف.
+   * `convert` = تحويل عميل إلى مقدم خدمة: بلا كلمة مرور ولا بريد (كلاهما
+   *             موجود في حسابه ويُعدَّل من مكان آخر)، لكن **مع الهاتف**
+   *             لأنه اختياري عند تسجيل العميل وإلزامي لمقدم الخدمة.
+   */
+  mode?: 'create' | 'edit' | 'convert';
 }
 
 /**
@@ -86,7 +92,7 @@ export function BasicInfoStep({ values, errors, onChange, mode = 'create' }: Bas
         />
       </Field>
 
-      {mode === 'create' && (
+      {mode !== 'edit' && (
         <Field htmlFor={ids.phone} label="رقم الهاتف" required error={errors.phone}>
           <Input
             id={ids.phone}
@@ -122,7 +128,7 @@ export function BasicInfoStep({ values, errors, onChange, mode = 'create' }: Bas
             onChange({ whatsapp: event.target.value.replace(/\D/g, '').slice(0, 11) })
           }
         />
-        {mode === 'create' && values.phone && values.whatsapp !== values.phone.replace(/\D/g, '') && (
+        {mode !== 'edit' && values.phone && values.whatsapp !== values.phone.replace(/\D/g, '') && (
           <button
             type="button"
             onClick={() => onChange({ whatsapp: values.phone.replace(/\D/g, '').slice(0, 11) })}
@@ -133,24 +139,27 @@ export function BasicInfoStep({ values, errors, onChange, mode = 'create' }: Bas
         )}
       </Field>
 
-      <Field
-        htmlFor={ids.email}
-        label="البريد الإلكتروني"
-        required
-        hint="نُخطرك بقرار التوثيق عليه"
-        error={errors.email}
-      >
-        <Input
-          id={ids.email}
-          type="email"
-          dir="ltr"
-          icon={<Mail size={20} />}
-          placeholder="name@example.com"
-          value={values.email}
-          invalid={Boolean(errors.email)}
-          onChange={(event) => onChange({ email: event.target.value })}
-        />
-      </Field>
+      {/* البريد مسجَّل بالفعل في وضع التحويل — تعديله شأن شاشة الملف الشخصي */}
+      {mode !== 'convert' && (
+        <Field
+          htmlFor={ids.email}
+          label="البريد الإلكتروني"
+          required
+          hint="نُخطرك بقرار التوثيق عليه"
+          error={errors.email}
+        >
+          <Input
+            id={ids.email}
+            type="email"
+            dir="ltr"
+            icon={<Mail size={20} />}
+            placeholder="name@example.com"
+            value={values.email}
+            invalid={Boolean(errors.email)}
+            onChange={(event) => onChange({ email: event.target.value })}
+          />
+        </Field>
+      )}
 
       {mode === 'create' && (
         <>

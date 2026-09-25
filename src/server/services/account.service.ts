@@ -1,5 +1,6 @@
 import { notFound, unprocessable } from '@/server/lib/errors';
 import { logger } from '@/server/lib/logger';
+import { findProviderByUserId } from '@/server/repositories/provider.repository';
 import {
   countAddresses,
   countFavorites,
@@ -296,6 +297,14 @@ export async function toggleFavoriteEntry(user: SessionUser, input: CreateFavori
 
 export interface AccountSummaryDto {
   user: AuthUserDto;
+  /**
+   * للعميل الذي بدأ التحويل إلى مقدم خدمة ولم يُتمّه بعد — تستخدمها شاشة
+   * «حسابي» لتحويل الزر من «التسجيل كمقدم خدمة» إلى «أكمل تسجيلك».
+   *
+   * تُحسب هنا لا باستعلام منفصل لملف المزوّد: ذاك يرتد بـ403 لكل عميل لم
+   * يبدأ التحويل، فيملأ السجلات برفضٍ هو الحالة الطبيعية لا خطأً.
+   */
+  hasProviderDraft: boolean;
   stats: {
     favorites: number;
     addresses: number;
@@ -309,14 +318,17 @@ export async function getAccountSummary(user: SessionUser): Promise<AccountSumma
   const account = await findUserById(user.id);
   if (!account) throw notFound('الحساب غير موجود.');
 
-  const [favorites, addresses, notifications] = await Promise.all([
+  const [favorites, addresses, notifications, providerDraft] = await Promise.all([
     countFavorites(user.id),
     countAddresses(user.id),
     countNotifications(user.id),
+    // العميل وحده من يمكن أن يكون في منتصف التحويل
+    user.role === 'CUSTOMER' ? findProviderByUserId(user.id) : Promise.resolve(null),
   ]);
 
   return {
     user: toAuthUserDto(account as never),
+    hasProviderDraft: Boolean(providerDraft),
     stats: {
       favorites,
       addresses,

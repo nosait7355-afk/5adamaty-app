@@ -1,7 +1,7 @@
 import { withErrorHandler } from '@/server/middleware/with-error-handler';
 import { validateBody } from '@/server/middleware/with-validation';
 import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-limit';
-import { requireRole } from '@/server/middleware/with-auth';
+import { requireProviderWorkspace } from '@/server/middleware/with-auth';
 import { assertSameOrigin } from '@/server/lib/csrf';
 import { ok } from '@/server/lib/api-response';
 import { updateProviderProfileSchema } from '@/shared/schemas/provider.schema';
@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
  * يغذّي شاشة المراجعة (22) وشاشة «قيد المراجعة» (23) ولوحة التحكم (24).
  */
 export const GET = withErrorHandler(async (request) => {
-  const user = await requireRole(request, 'PROVIDER', 'ADMIN');
+  const user = await requireProviderWorkspace(request, 'ADMIN');
   enforceRateLimit(request, RATE_LIMITS.READ, 'provider-profile');
 
   return ok(await getMyProviderProfile(user.id));
@@ -34,7 +34,7 @@ export const GET = withErrorHandler(async (request) => {
  */
 export const PATCH = withErrorHandler(async (request) => {
   assertSameOrigin(request);
-  const user = await requireRole(request, 'PROVIDER');
+  const user = await requireProviderWorkspace(request);
   enforceRateLimit(request, RATE_LIMITS.WRITE, 'provider-profile-update');
 
   const patch = await validateBody(request, updateProviderProfileSchema);

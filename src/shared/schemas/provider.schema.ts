@@ -101,6 +101,7 @@ export const providerStep1Schema = z
 
 export type ProviderStep1Values = z.input<typeof providerStep1Schema>;
 
+
 /* ================================================================== */
 /* الخطوة 2/3 — المهنة والخدمة (الصورة 20)                             */
 /* ================================================================== */
@@ -147,6 +148,50 @@ export const providerStep2Schema = z
   .strict();
 
 export type ProviderStep2Values = z.input<typeof providerStep2Schema>;
+
+/* ================================================================== */
+/* تحويل عميل قائم إلى مقدم خدمة                                       */
+/* ================================================================== */
+
+/**
+ * البيانات الناقصة التي يكملها عميل مسجَّل ليصير مقدم خدمة.
+ *
+ * يختلف عن `providerStep1Schema` في ثلاثة مواضع، وكلها لأن الحساب **موجود
+ * بالفعل**:
+ *   - لا `password` ولا `confirmPassword`: تغيير كلمة المرور شأن منفصل،
+ *     وإدراجها هنا يعني إعادة إدخالها بلا سبب.
+ *   - لا `email`: تغيير البريد يمسّ تسجيل الدخول نفسه، ويُترك لشاشة
+ *     تعديل الملف.
+ *   - `phone` مطلوب هنا رغم أنه اختياري عند تسجيل العميل — مقدم الخدمة
+ *     بلا رقم لا يمكن الاتصال به، وهو جوهر المنصة.
+ */
+export const convertToProviderSchema = z
+  .object({
+    fullName: fullNameSchema,
+    phone: egyptPhoneSchema,
+    whatsapp: whatsappSchema,
+
+    governorate: z.string().trim().max(60).default(GOVERNORATE),
+    city: z.enum(FAYOUM_CITIES, { message: 'المدينة/المركز غير صالح.' }),
+    addressLine: safeString(100).refine((value) => value.length >= 5, {
+      message: 'العنوان التفصيلي قصير جدًا.',
+    }),
+
+    accountType: z.enum(ACCOUNT_TYPES).default('INDIVIDUAL'),
+    gender: z.enum(GENDERS).optional(),
+    birthDate: birthDateSchema.optional(),
+
+    // بيانات المهنة تُرسل مع نفس الطلب — الملف لا معنى له بلا مهنة
+    categoryId: objectIdSchema,
+    professionId: objectIdSchema,
+    yearsOfExperience: yearsOfExperienceSchema,
+    bio: safeString(300),
+    coverageAreas: coverageAreasSchema,
+  })
+  .strict();
+
+export type ConvertToProviderValues = z.input<typeof convertToProviderSchema>;
+export type ConvertToProviderInput = z.output<typeof convertToProviderSchema>;
 
 /* ================================================================== */
 /* إنشاء الحساب (الخطوتان 1 و2 معًا)                                   */
