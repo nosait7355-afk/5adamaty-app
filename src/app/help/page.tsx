@@ -31,6 +31,7 @@ import { ApiClientError } from '@/lib/api-client';
 import { useDebouncedValue } from '@/lib/queries/discovery';
 import { useContactSupport, useFaqFeedback, useFaqs } from '@/lib/queries/account';
 import { cn } from '@/lib/cn';
+import { SUPPORT_EMAIL } from '@/shared/constants/legal';
 
 /**
  * مركز المساعدة — الصورة 18.
@@ -42,7 +43,6 @@ import { cn } from '@/lib/cn';
  */
 
 const SUPPORT_PHONE = '+201012345678';
-const SUPPORT_EMAIL = 'support@khadamaty-elfayoum.com';
 
 const TOPICS = [
   { icon: <Wrench size={22} />, label: 'الطلبات والخدمات' },

@@ -261,7 +261,8 @@ export const SEED_FAQS = [
 /** الإعدادات العامة. */
 export const SEED_SETTINGS = [
   { key: 'support_phone', value: '+201012345678', description: 'رقم الدعم الظاهر في مركز المساعدة' },
-  { key: 'support_email', value: 'support@khadamaty-elfayoum.com', description: 'بريد الدعم' },
+  // يجب أن يطابق `SUPPORT_EMAIL` في shared/constants/legal.ts
+  { key: 'support_email', value: 'nosait7355@gmail.com', description: 'بريد الدعم' },
   { key: 'review_sla_hours', value: 48, description: 'المدة المتوقعة لمراجعة طلبات مقدمي الخدمة' },
   { key: 'max_order_attachments', value: 5, description: 'أقصى عدد صور مرفقة بالطلب' },
   {
