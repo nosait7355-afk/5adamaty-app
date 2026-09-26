@@ -31,7 +31,7 @@ import { ApiClientError } from '@/lib/api-client';
 import { useDebouncedValue } from '@/lib/queries/discovery';
 import { useContactSupport, useFaqFeedback, useFaqs } from '@/lib/queries/account';
 import { cn } from '@/lib/cn';
-import { SUPPORT_EMAIL } from '@/shared/constants/legal';
+import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/shared/constants/legal';
 
 /**
  * مركز المساعدة — الصورة 18.
@@ -42,7 +42,6 @@ import { SUPPORT_EMAIL } from '@/shared/constants/legal';
  * قنوات التواصل روابط نظام (`tel:` / `mailto:` / `wa.me`) لا تكاملات.
  */
 
-const SUPPORT_PHONE = '+201012345678';
 
 const TOPICS = [
   { icon: <Wrench size={22} />, label: 'الطلبات والخدمات' },

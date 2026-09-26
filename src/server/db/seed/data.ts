@@ -260,7 +260,8 @@ export const SEED_FAQS = [
 
 /** الإعدادات العامة. */
 export const SEED_SETTINGS = [
-  { key: 'support_phone', value: '+201012345678', description: 'رقم الدعم الظاهر في مركز المساعدة' },
+  // يجب أن يطابق `SUPPORT_PHONE` في shared/constants/legal.ts
+  { key: 'support_phone', value: '+201001191006', description: 'رقم الدعم الظاهر في مركز المساعدة' },
   // يجب أن يطابق `SUPPORT_EMAIL` في shared/constants/legal.ts
   { key: 'support_email', value: 'nosait7355@gmail.com', description: 'بريد الدعم' },
   { key: 'review_sla_hours', value: 48, description: 'المدة المتوقعة لمراجعة طلبات مقدمي الخدمة' },
