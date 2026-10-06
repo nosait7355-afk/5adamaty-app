@@ -6,6 +6,7 @@ import { BrandIcon } from '@/components/layout/brand-icon';
 import { Spinner } from '@/components/ui/spinner';
 import { BrandWave, CitySkyline } from '@/components/features/auth/city-skyline';
 import { resolveHomeRoute, useMe } from '@/lib/queries/auth';
+import { isAdminPreviewStored } from '@/lib/admin-preview';
 
 /**
  * شاشة البداية — الصورة 01.
@@ -26,7 +27,11 @@ export default function SplashPage() {
   useEffect(() => {
     if (isPending) return;
     // فشل الشبكة يوجّه لتسجيل الدخول بدل تعليق المستخدم على الشاشة
-    router.replace(isError ? '/login' : resolveHomeRoute(user ?? null));
+    router.replace(
+      isError
+        ? '/login'
+        : resolveHomeRoute(user ?? null, { adminPreview: isAdminPreviewStored() })
+    );
   }, [isPending, isError, user, router]);
 
   return (

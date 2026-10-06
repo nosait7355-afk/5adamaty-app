@@ -4,6 +4,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { useRouter } from 'next/navigation';
 import { api, ApiClientError } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
+import { exitAdminPreview } from '@/lib/admin-preview';
 import type { AuthUserDto } from '@/server/services/auth.service';
 import type {
   ForgotPasswordInput,
@@ -103,6 +104,8 @@ export function useLogout() {
     onSettled: () => {
       // نمسح الـcache بالكامل حتى لا تبقى بيانات المستخدم السابق ظاهرة
       queryClient.clear();
+      // ومعها وضع معاينة العميل، وإلا ظهر زر الرجوع لمن يدخل بعده على نفس الجهاز
+      exitAdminPreview();
       // شاشة الدخول لا اختيار نوع الحساب — الخارج على الأغلب له حساب فعلًا
       router.replace('/login');
     },
@@ -127,16 +130,29 @@ export function useResetPassword() {
   });
 }
 
+export interface ResolveHomeRouteOptions {
+  /**
+   * أثناء وضع معاينة العميل لا تخطف شاشة البداية حساب الإدارة من `/home`
+   * إلى لوحة التحكم — يهمّ تحديدًا عند إعادة فتح تطبيق أندرويد أو تحديث
+   * الصفحة وهو يتصفّح واجهة العميل. تسجيل الدخول نفسه لا يمرّرها:
+   * الوجهة الطبيعية بعد دخول الأدمن هي لوحة التحكم.
+   */
+  adminPreview?: boolean;
+}
+
 /**
  * الوجهة بعد تسجيل الدخول حسب الدور والحالة.
  * تُستخدم في Splash وبعد الدخول والتسجيل.
  */
-export function resolveHomeRoute(user: AuthUserDto | null): string {
+export function resolveHomeRoute(
+  user: AuthUserDto | null,
+  options?: ResolveHomeRouteOptions
+): string {
   if (!user) return '/login';
 
   switch (user.role) {
     case 'ADMIN':
-      return '/admin/dashboard';
+      return options?.adminPreview ? '/home' : '/admin/dashboard';
     case 'PROVIDER':
       // المزوّد غير المعتمد يُوجَّه لشاشة «قيد المراجعة» (الصورة 23)
       // المزوّد المعتمد يهبط على نفس صفحة تصفّح الخدمات — تبويبه «الرئيسية»

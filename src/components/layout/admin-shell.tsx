@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
   BadgeCheck,
   Bell,
+  Eye,
   FileClock,
   Flag,
   Grid2x2,
@@ -21,6 +22,7 @@ import { AppHeader } from './app-header';
 import { PageContainer } from './page-container';
 import { cn } from '@/lib/cn';
 import { useLogout } from '@/lib/queries/auth';
+import { enterAdminPreview } from '@/lib/admin-preview';
 
 /**
  * الهيكل المشترك لكل شاشات الإدارة (Phase 10) — لا صورة مرجعية لها؛
@@ -53,7 +55,17 @@ export interface AdminShellProps {
 
 export function AdminShell({ children, banner }: AdminShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const logout = useLogout();
+
+  /**
+   * معاينة واجهة العميل بنفس حساب الإدارة — بلا تسجيل خروج ولا
+   * تغيير جلسة. زر الرجوع يظهر عائمًا فوق شاشات العميل (AdminPreviewBar).
+   */
+  const handlePreview = () => {
+    enterAdminPreview();
+    router.push('/home');
+  };
 
   return (
     <>
@@ -92,6 +104,18 @@ export function AdminShell({ children, banner }: AdminShellProps) {
               );
             })}
           </nav>
+
+          {/* معاينة واجهة العميل — خارج شريط التمرير ليبقى في متناول اليد دائمًا */}
+          <button
+            type="button"
+            onClick={handlePreview}
+            aria-label="عرض كعميل"
+            title="تصفّح التطبيق كما يراه العميل"
+            className="flex shrink-0 items-center gap-1.5 rounded-pill border border-border px-3 py-2 text-badge font-semibold text-ink-600 transition-colors hover:bg-brand-50"
+          >
+            <Eye size={14} aria-hidden="true" />
+            <span className="hidden sm:inline">عرض كعميل</span>
+          </button>
 
           {/* ثابت خارج شريط التبويبات القابل للتمرير — يبقى ظاهرًا دائمًا */}
           <button

@@ -95,24 +95,30 @@ export default function AccountPage() {
         </LinkButton>
 
         {/* ---- التحوّل لمقدم خدمة ---- */}
-        <Card className="flex items-center gap-3 bg-brand-50">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-brand-600">
-            <Briefcase size={24} aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-card-title font-bold text-ink-900">
-              {hasDraft ? 'أكمل تسجيلك كمقدم خدمة' : 'التسجيل كمقدم خدمة'}
-            </h3>
-            <p className="text-meta text-ink-600">
-              {hasDraft
-                ? 'بقي رفع مستنداتك وإرسال الطلب.'
-                : 'اعرض خدمتك على أهل الفيوم — أكمل بياناتك الناقصة فقط.'}
-            </p>
-          </div>
-          <LinkButton href="/account/become-provider" size="sm">
-            {hasDraft ? 'إكمال' : 'ابدأ'}
-          </LinkButton>
-        </Card>
+        {/*
+          لا تُعرَض لحساب الإدارة: الأدمن يفتح هذه الشاشة في وضع معاينة العميل،
+          ومسار التحوّل لمقدم خدمة مبنيّ على حساب عميل لا على حساب إدارة.
+        */}
+        {user.role !== 'ADMIN' && (
+          <Card className="flex items-center gap-3 bg-brand-50">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-brand-600">
+              <Briefcase size={24} aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-card-title font-bold text-ink-900">
+                {hasDraft ? 'أكمل تسجيلك كمقدم خدمة' : 'التسجيل كمقدم خدمة'}
+              </h3>
+              <p className="text-meta text-ink-600">
+                {hasDraft
+                  ? 'بقي رفع مستنداتك وإرسال الطلب.'
+                  : 'اعرض خدمتك على أهل الفيوم — أكمل بياناتك الناقصة فقط.'}
+              </p>
+            </div>
+            <LinkButton href="/account/become-provider" size="sm">
+              {hasDraft ? 'إكمال' : 'ابدأ'}
+            </LinkButton>
+          </Card>
+        )}
 
         {/* ---- صف الإحصاءات ---- */}
         <Card className="grid grid-cols-4 divide-x divide-x-reverse divide-border p-0">
