@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ensureGoogleInitialized, signInWithGoogle } from '@/lib/google-social-login';
+import { ApiClientError } from '@/lib/api-client';
 import { extractErrorMessage, useGoogleAuth } from '@/lib/queries/auth';
 import type { AuthUserDto } from '@/server/services/auth.service';
 
@@ -46,7 +47,16 @@ export function GoogleSignInButton({ onSuccess, intent }: GoogleSignInButtonProp
       const user = await googleAuth.mutateAsync({ idToken, intent });
       onSuccess(user);
     } catch (signInError) {
-      setError(extractErrorMessage(signInError));
+      /*
+       * خطأ الـAPI يمرّ على `extractErrorMessage` (رسالة موحّدة للمستخدم)، أما
+       * أخطاء طبقة جوجل الأصلية فهي رسائل جاهزة من `signInWithGoogle` — إظهارها
+       * ضروري لتشخيص فشل الدخول داخل تطبيق أندرويد.
+       */
+      setError(
+        signInError instanceof ApiClientError || !(signInError instanceof Error)
+          ? extractErrorMessage(signInError)
+          : signInError.message
+      );
     } finally {
       setPending(false);
     }

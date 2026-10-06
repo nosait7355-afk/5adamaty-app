@@ -28,10 +28,22 @@ export interface GoogleProfile {
 export async function signInWithGoogle(): Promise<GoogleProfile> {
   await ensureGoogleInitialized();
 
-  const { result } = await SocialLogin.login({
-    provider: 'google',
-    options: { scopes: ['email', 'profile'] },
-  });
+  let result;
+  try {
+    ({ result } = await SocialLogin.login({
+      provider: 'google',
+      options: { scopes: ['email', 'profile'] },
+    }));
+  } catch (nativeError) {
+    /*
+     * على أندرويد يأتي الفشل من Credential Manager قبل أي طلب للسيرفر،
+     * فرسالته الأصلية هي الدليل الوحيد على السبب (بصمة SHA-1 غير مسجّلة في
+     * عميل OAuth الأندرويد، لا حساب جوجل على الجهاز، إلغاء المستخدم…).
+     * نمرّرها كما هي بدل إخفائها خلف «حدث خطأ غير متوقع».
+     */
+    const detail = nativeError instanceof Error ? nativeError.message : String(nativeError);
+    throw new Error(`تعذّر تسجيل الدخول بجوجل: ${detail || 'لم يرجع جوجل أي تفصيل.'}`);
+  }
 
   if (!('idToken' in result) || !result.idToken) {
     throw new Error('لم يصل رمز تعريف من جوجل.');
