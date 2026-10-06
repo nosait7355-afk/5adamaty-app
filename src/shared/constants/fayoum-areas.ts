@@ -29,6 +29,7 @@ export const FAYOUM_AREAS: Record<string, readonly string[]> = {
     'حي السلام',
     'حي النصر',
     'حي الترعة',
+    'حي أكتوبر',
     'الحوامي',
     'شارع البحر',
     'المدينة المنورة',
