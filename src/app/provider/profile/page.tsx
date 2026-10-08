@@ -17,6 +17,16 @@ import {
   type ProfessionValues,
 } from '@/components/features/provider/profession-step';
 import { PortfolioSection } from '@/components/features/provider/portfolio-section';
+import {
+  CompleteProfileCard,
+  PROFILE_FIELD_IDS,
+  buildCompletionTasks,
+} from '@/components/features/provider/complete-profile-card';
+import {
+  EMPTY_PROVIDER_DETAILS,
+  ProviderDetailsSection,
+  type ProviderDetailsValues,
+} from '@/components/features/provider/provider-details-section';
 import { ApiClientError } from '@/lib/api-client';
 import { formatNumber, formatRating } from '@/lib/format';
 import {
@@ -24,10 +34,10 @@ import {
   useProviderDashboard,
   useUpdateProviderProfile,
 } from '@/lib/queries/provider';
-import { providerStep2Schema } from '@/shared/schemas/provider.schema';
+import { updateProviderProfileSchema } from '@/shared/schemas/provider.schema';
 import { cn } from '@/lib/cn';
 
-type Errors = Partial<Record<keyof ProfessionValues, string>>;
+type Errors = Partial<Record<keyof ProfessionValues | keyof ProviderDetailsValues, string>>;
 
 /**
  * ملفي — مقدم خدمة معتمد.
@@ -42,6 +52,7 @@ export default function ProviderProfilePage() {
   const updateMutation = useUpdateProviderProfile();
 
   const [values, setValues] = useState<ProfessionValues>(EMPTY_PROFESSION);
+  const [details, setDetails] = useState<ProviderDetailsValues>(EMPTY_PROVIDER_DETAILS);
   const [loadedId, setLoadedId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [saveError, setSaveError] = useState('');
@@ -58,24 +69,40 @@ export default function ProviderProfilePage() {
       bio: loaded.bio,
       coverageAreas: loaded.coverageAreas,
     });
+    setDetails({
+      city: loaded.user.city ?? '',
+      addressLine: loaded.user.addressLine ?? '',
+      accountType: loaded.accountType,
+      gender: loaded.personal.gender ?? '',
+      birthDate: loaded.personal.birthDate ?? '',
+    });
   }
+
+  /** المعتمد لا يغيّر مهنته من هنا — المستندات المطلوبة مبنية عليها. */
+  const lockProfession = profile.data?.verification.status === 'APPROVED';
 
   const save = async () => {
     setSaveError('');
     setSaved(false);
 
-    const result = providerStep2Schema.safeParse({
+    const result = updateProviderProfileSchema.safeParse({
       categoryId: values.categoryId,
       professionId: values.professionId,
       yearsOfExperience: values.yearsOfExperience,
       bio: values.bio,
       coverageAreas: values.coverageAreas,
+      ...(details.city ? { city: details.city } : {}),
+      addressLine: details.addressLine,
+      accountType: details.accountType,
+      // الاختياريان الفارغان لا يُرسلان — لا مسح لقيمة لم يلمسها
+      ...(details.gender ? { gender: details.gender } : {}),
+      ...(details.birthDate ? { birthDate: details.birthDate } : {}),
     });
 
     if (!result.success) {
       const next: Errors = {};
       for (const issue of result.error.issues) {
-        const key = issue.path[0] as keyof ProfessionValues | undefined;
+        const key = issue.path[0] as keyof Errors | undefined;
         if (key) next[key] ??= issue.message;
       }
       setErrors(next);
@@ -144,9 +171,20 @@ export default function ProviderProfilePage() {
               </InfoAlert>
             )}
 
+            <CompleteProfileCard
+              completion={profile.data.profileCompletion}
+              tasks={buildCompletionTasks(profile.data)}
+            />
+
             <ProfessionStep
               values={values}
               errors={errors}
+              lockProfession={lockProfession}
+              fieldIds={{
+                years: PROFILE_FIELD_IDS.years,
+                bio: PROFILE_FIELD_IDS.bio,
+                coverage: PROFILE_FIELD_IDS.coverage,
+              }}
               onChange={(patch) => {
                 setSaved(false);
                 setValues((current) => ({ ...current, ...patch }));
@@ -157,7 +195,19 @@ export default function ProviderProfilePage() {
               * فوق زر الحفظ لا تحته: الإضافة والحذف يحفظان فورًا بنداء
               * مستقل، فوضعه بعد زر «حفظ التعديلات» يوحي بأنه ينتظره.
               */}
-            <PortfolioSection items={profile.data.portfolio} />
+            <div id={PROFILE_FIELD_IDS.portfolio}>
+              <PortfolioSection items={profile.data.portfolio} />
+            </div>
+
+            <ProviderDetailsSection
+              values={details}
+              errors={errors}
+              addressId={PROFILE_FIELD_IDS.address}
+              onChange={(patch) => {
+                setSaved(false);
+                setDetails((current) => ({ ...current, ...patch }));
+              }}
+            />
 
             <Button
               fullWidth
@@ -192,7 +242,7 @@ function DashboardSummary({
   provider,
   kpis,
 }: {
-  provider: { isActive: boolean; profileCompletion: number };
+  provider: { isActive: boolean };
   kpis: { rating: number; ratingCount: number; servicesCount: number };
 }) {
   return (
@@ -228,17 +278,6 @@ function DashboardSummary({
         />
       </div>
 
-      <Card className="flex items-center gap-4">
-        <CompletionRing value={provider.profileCompletion} />
-        <div className="min-w-0 flex-1">
-          <h3 className="text-card-title font-bold text-ink-900">اكتمال الملف</h3>
-          <p className="text-meta text-ink-400">
-            {provider.profileCompletion >= 100
-              ? 'ملفك مكتمل — أحسنت.'
-              : 'أكمل البيانات أسفل هذه الصفحة لتظهر أعلى في نتائج البحث.'}
-          </p>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -271,26 +310,6 @@ function KpiCard({
       <span className="num text-[28px] font-extrabold leading-none text-ink-900">{value}</span>
       <span className="text-meta text-ink-400">{label}</span>
     </Card>
-  );
-}
-
-/** حلقة نسبة الاكتمال — الصورة 24. */
-function CompletionRing({ value }: { value: number }) {
-  const clamped = Math.max(0, Math.min(100, value));
-
-  return (
-    <div
-      className="relative flex size-16 shrink-0 items-center justify-center rounded-full"
-      style={{
-        background: `conic-gradient(var(--color-brand-600) ${clamped * 3.6}deg, var(--color-border) 0deg)`,
-      }}
-      role="img"
-      aria-label={`اكتمال الملف ${clamped}%`}
-    >
-      <span className="num flex size-12 items-center justify-center rounded-full bg-surface text-label font-extrabold text-brand-600">
-        {clamped}%
-      </span>
-    </div>
   );
 }
 

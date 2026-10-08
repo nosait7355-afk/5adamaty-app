@@ -454,23 +454,78 @@ describe('PATCH /api/v1/provider/profile', () => {
     }
   });
 
-  it('يمنع التعديل بعد إرسال الطلب', async () => {
-    const { token, providerId } = await createProvider();
-    await uploadRequiredDocuments(providerId);
+  /** مزوّد أرسل بطاقته فاعتُمد تلقائيًا. */
+  async function approvedProvider() {
+    const created = await createProvider();
+    await uploadRequiredDocuments(created.providerId);
     await submitRoute(
       req('/api/v1/provider/verification/submit', {
         method: 'POST',
-        token,
+        token: created.token,
         body: { acceptTerms: true },
       }),
       undefined
     );
+    return created;
+  }
+
+  it('المعتمد يكمل بيانات خدمته: الوصف والخبرة والعنوان', async () => {
+    const { token, providerId } = await approvedProvider();
 
     const response = await patchProfileRoute(
-      req('/api/v1/provider/profile', { method: 'PATCH', token, body: { yearsOfExperience: 3 } }),
+      req('/api/v1/provider/profile', {
+        method: 'PATCH',
+        token,
+        body: { yearsOfExperience: 3, bio: 'تركيب وصيانة', addressLine: 'شارع البحر' },
+      }),
       undefined
     );
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(200);
+
+    const provider = await ServiceProvider.findById(providerId);
+    expect(provider!.yearsOfExperience).toBe(3);
+    expect(provider!.bio).toBe('تركيب وصيانة');
+    expect(provider!.verification.status).toBe('APPROVED');
+  });
+
+  it('المعتمد يرسل مهنته الحالية مع الحفظ دون أن يُرفض', async () => {
+    const { token, providerId } = await approvedProvider();
+    const provider = await ServiceProvider.findById(providerId);
+
+    const response = await patchProfileRoute(
+      req('/api/v1/provider/profile', {
+        method: 'PATCH',
+        token,
+        body: {
+          categoryId: String(provider!.categoryId),
+          professionId: String(provider!.professionId),
+          bio: 'وصف جديد',
+        },
+      }),
+      undefined
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('🔒 المعتمد لا يغيّر مهنته ولا اسمه', async () => {
+    const { token } = await approvedProvider();
+    const other = await Profession.findOne({ slug: 'electrician' });
+
+    const profession = await patchProfileRoute(
+      req('/api/v1/provider/profile', {
+        method: 'PATCH',
+        token,
+        body: { categoryId: String(other!.categoryId), professionId: String(other!._id) },
+      }),
+      undefined
+    );
+    expect(profession.status).toBe(403);
+
+    const name = await patchProfileRoute(
+      req('/api/v1/provider/profile', { method: 'PATCH', token, body: { fullName: 'اسم آخر تماما' } }),
+      undefined
+    );
+    expect(name.status).toBe(403);
   });
 });
 

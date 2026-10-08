@@ -94,6 +94,8 @@ export interface ProviderProfileDto {
     isComplete: boolean;
   };
   user: AuthUserDto;
+  /** بيانات اختيارية يكملها المزوّد من «ملفي» — لا تظهر للعملاء. */
+  personal: { gender?: 'MALE' | 'FEMALE'; birthDate?: string };
 }
 
 export interface AdminProviderListItemDto {
@@ -459,14 +461,19 @@ export async function getMyProviderProfile(userId: string): Promise<ProviderProf
       isComplete: documents.isComplete,
     },
     user: toAuthUserDto(user as never),
+    personal: {
+      ...(user.gender ? { gender: user.gender } : {}),
+      ...(user.birthDate ? { birthDate: user.birthDate.toISOString().slice(0, 10) } : {}),
+    },
   };
 }
 
 /**
  * تعديل بيانات الملف من أزرار «تعديل» في شاشة المراجعة (الصورة 22).
  *
- * التعديل ممنوع بعد إرسال الطلب: الإدارة تراجع نسخة ثابتة. يُسمح به في
- * `DRAFT` و`RESUBMISSION_REQUIRED` فقط.
+ * يُسمح بالتعديل الكامل في `DRAFT` و`RESUBMISSION_REQUIRED`، وببيانات
+ * الخدمة فقط (لا الهوية ولا المهنة) بعد الاعتماد `APPROVED`. ممنوع في
+ * باقي الحالات.
  */
 export async function updateMyProviderProfile(
   userId: string,
@@ -475,8 +482,29 @@ export async function updateMyProviderProfile(
   const provider = await requireOwnProvider(userId);
 
   const editable: VerificationStatus[] = ['DRAFT', 'RESUBMISSION_REQUIRED'];
-  if (!editable.includes(provider.verification.status)) {
-    throw forbidden('لا يمكن تعديل البيانات أثناء المراجعة أو بعد اعتماد الحساب.');
+  if (provider.verification.status === 'APPROVED') {
+    /*
+     * التفعيل صار تلقائيًا عند رفع البطاقة، والتسجيل السريع يؤجّل الوصف
+     * والخبرة والعنوان إلى ما بعد الدخول — فالمعتمد يكمل بيانات خدمته.
+     * أما بيانات الهوية فتبقى مقفلة: الاسم والبريد يطابقان البطاقة
+     * المرفوعة، وتغيير المهنة يغيّر المستندات المطلوبة نفسها. إرسال قيمها
+     * الحالية دون تغيير مسموح (نموذج الملف يرسل المهنة مع كل حفظ).
+     */
+    const user = await findUserById(userId);
+    const changesIdentity =
+      (patch.fullName !== undefined && patch.fullName !== provider.displayName) ||
+      (patch.email !== undefined && patch.email !== user?.email) ||
+      (patch.professionId !== undefined && patch.professionId !== String(provider.professionId)) ||
+      (patch.categoryId !== undefined && patch.categoryId !== String(provider.categoryId));
+    if (changesIdentity) {
+      throw forbidden('لا يمكن تغيير الاسم أو البريد أو المهنة بعد اعتماد الحساب. تواصل مع الدعم.');
+    }
+    delete patch.fullName;
+    delete patch.email;
+    delete patch.professionId;
+    delete patch.categoryId;
+  } else if (!editable.includes(provider.verification.status)) {
+    throw forbidden('لا يمكن تعديل البيانات أثناء المراجعة.');
   }
 
   /* ---- حقول المستخدم ---- */
@@ -736,7 +764,7 @@ export async function submitVerification(
     userId,
     type: 'PROVIDER_REGISTRATION_SUBMITTED',
     title: 'تم تفعيل حسابك',
-    body: `اكتمل تسجيلك رقم ${provider.verification.requestNumber}. حسابك نشط الآن ويمكنك استقبال الطلبات.`,
+    body: `اكتمل تسجيلك رقم ${provider.verification.requestNumber}. حسابك نشط الآن ويمكنك استقبال الطلبات — أكمل ملفك بوصف خدماتك وصور أعمالك لتظهر أعلى في البحث.`,
     entityType: 'PROVIDER',
     entityId: String(provider._id),
     actionUrl: '/provider/profile',

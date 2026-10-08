@@ -39,6 +39,10 @@ export interface ProfessionStepProps {
    * والوصف اختياريان أصلًا، فيُكمَلان لاحقًا من الملف بدل إبطاء الدخول.
    */
   compact?: boolean;
+  /** بعد الاعتماد: المهنة تحدد المستندات المطلوبة، فتغييرها عبر الدعم فقط. */
+  lockProfession?: boolean;
+  /** معرّفات ثابتة للخبرة والوصف والمناطق — تقفز إليها قائمة «كمّل ملفك». */
+  fieldIds?: { years?: string; bio?: string; coverage?: string };
 }
 
 /**
@@ -53,12 +57,21 @@ export interface ProfessionStepProps {
  * لا سعر هنا: التسعير أُزيل من المنصة بالكامل ويُتفق عليه بين العميل
  * والمزوّد مباشرة خارج التطبيق.
  */
-export function ProfessionStep({ values, errors, onChange, compact = false }: ProfessionStepProps) {
+export function ProfessionStep({
+  values,
+  errors,
+  onChange,
+  compact = false,
+  lockProfession = false,
+  fieldIds,
+}: ProfessionStepProps) {
+  const generatedYears = useId();
+  const generatedBio = useId();
   const ids = {
     category: useId(),
     profession: useId(),
-    years: useId(),
-    bio: useId(),
+    years: fieldIds?.years ?? generatedYears,
+    bio: fieldIds?.bio ?? generatedBio,
   };
 
   const categories = useCategories();
@@ -86,6 +99,7 @@ export function ProfessionStep({ values, errors, onChange, compact = false }: Pr
             icon={<Briefcase size={20} />}
             placeholder="اختر التصنيف"
             value={values.categoryId}
+            disabled={lockProfession}
             invalid={Boolean(errors.categoryId)}
             onChange={(event) =>
               // تغيير التصنيف يُبطل التخصص السابق حتمًا
@@ -103,7 +117,13 @@ export function ProfessionStep({ values, errors, onChange, compact = false }: Pr
         htmlFor={ids.profession}
         label="التخصص الدقيق"
         required
-        hint={values.categoryId ? undefined : 'اختر التصنيف أولًا'}
+        hint={
+          lockProfession
+            ? 'لتغيير المهنة تواصل مع الدعم'
+            : values.categoryId
+              ? undefined
+              : 'اختر التصنيف أولًا'
+        }
         error={errors.professionId}
       >
         <Select
@@ -111,7 +131,7 @@ export function ProfessionStep({ values, errors, onChange, compact = false }: Pr
           icon={<CatalogIcon name={undefined} size={20} />}
           placeholder={values.categoryId ? 'اختر التخصص' : 'اختر التصنيف أولًا'}
           value={values.professionId}
-          disabled={!values.categoryId || professions.isPending}
+          disabled={lockProfession || !values.categoryId || professions.isPending}
           invalid={Boolean(errors.professionId)}
           onChange={(event) => onChange({ professionId: event.target.value })}
           options={(professions.data ?? []).map((profession) => ({
@@ -176,6 +196,7 @@ export function ProfessionStep({ values, errors, onChange, compact = false }: Pr
         error={errors.coverageAreas}
       >
         <div
+          id={fieldIds?.coverage}
           className={cn(
             'flex flex-wrap gap-2 rounded-card border p-3',
             errors.coverageAreas ? 'border-danger' : 'border-border'
