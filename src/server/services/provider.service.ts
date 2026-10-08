@@ -242,7 +242,8 @@ export async function registerProvider(
       status: 'PENDING_REVIEW',
       governorate: step1.governorate || GOVERNORATE,
       city: step1.city,
-      addressLine: step1.addressLine,
+      // العنوان اختياري في التسجيل — لا نخزّن نصًّا فارغًا
+      ...(step1.addressLine ? { addressLine: step1.addressLine } : {}),
       ...(step1.gender ? { gender: step1.gender } : {}),
       ...(step1.birthDate ? { birthDate: new Date(step1.birthDate) } : {}),
     },

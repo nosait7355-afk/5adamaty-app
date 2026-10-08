@@ -14,6 +14,7 @@ import {
   verificationDecisionSchema,
 } from '@/shared/schemas/provider.schema';
 import { VERIFICATION_STATUSES } from '@/shared/constants/roles';
+import { toWhatsappDigits } from '@/components/features/provider/quick-info-step';
 
 /**
  * اختبارات وحدة لتسجيل مقدم الخدمة — بلا قاعدة بيانات.
@@ -167,6 +168,12 @@ describe('الخطوة 1/3 — البيانات الأساسية', () => {
     ).toBe(false);
   });
 
+  it('العنوان التفصيلي اختياري — غيابه أو فراغه يصير نصًّا فارغًا', () => {
+    const { addressLine: _omit, ...withoutAddress } = VALID_STEP1;
+    expect(providerStep1Schema.parse(withoutAddress).addressLine).toBe('');
+    expect(providerStep1Schema.parse({ ...VALID_STEP1, addressLine: '' }).addressLine).toBe('');
+  });
+
   it('ترفض عمرًا أقل من 18 سنة', () => {
     const recent = new Date();
     recent.setFullYear(recent.getFullYear() - 10);
@@ -177,6 +184,19 @@ describe('الخطوة 1/3 — البيانات الأساسية', () => {
 
   it('ترفض أي مفتاح غير معرّف', () => {
     expect(providerStep1Schema.safeParse({ ...VALID_STEP1, role: 'ADMIN' }).success).toBe(false);
+  });
+});
+
+describe('toWhatsappDigits — الواتساب من رقم الهاتف', () => {
+  it('يعيد الصيغة الدولية المخزّنة على الخادم إلى المحلية', () => {
+    expect(toWhatsappDigits('+201155667788')).toBe('01155667788');
+    expect(toWhatsappDigits('201155667788')).toBe('01155667788');
+  });
+
+  it('يطبّع ما يكتبه المستخدم: يحذف المسافات ويقصّ عند 11 رقمًا', () => {
+    expect(toWhatsappDigits('010 1234 5678')).toBe('01012345678');
+    expect(toWhatsappDigits('0101234567899')).toBe('01012345678');
+    expect(toWhatsappDigits('010')).toBe('010');
   });
 });
 

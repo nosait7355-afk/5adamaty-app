@@ -10,11 +10,16 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Stepper } from '@/components/common/stepper';
 import { InfoAlert } from '@/components/common/info-alert';
+import { EMPTY_BASIC_INFO } from '@/components/features/provider/basic-info-step';
 import {
-  BasicInfoStep,
-  EMPTY_BASIC_INFO,
-  type BasicInfoValues,
-} from '@/components/features/provider/basic-info-step';
+  QuickInfoStep,
+  toWhatsappDigits,
+  type QuickInfoValues,
+} from '@/components/features/provider/quick-info-step';
+import {
+  CredentialsFields,
+  type CredentialsValues,
+} from '@/components/features/provider/credentials-fields';
 import {
   EMPTY_PROFESSION,
   ProfessionStep,
@@ -29,53 +34,89 @@ import {
   useMyProviderProfile,
   useRegisterProvider,
   useSubmitVerification,
+  useUpdateProviderProfile,
 } from '@/lib/queries/provider';
 import {
   providerStep1Schema,
   providerStep2Schema,
 } from '@/shared/schemas/provider.schema';
 import { GOOGLE_SIGN_IN_ENABLED } from '@/shared/constants/feature-flags';
+import { isValidCoverageArea } from '@/shared/constants/fayoum-areas';
 
 /**
- * معالج تسجيل مقدم الخدمة — الصور 19 إلى 21.
+ * تسجيل مقدم الخدمة بالهاتف وكلمة المرور — نفس شاشتي مسار جوجل
+ * (`/account/become-provider`) بالحقول نفسها، والفرق الوحيد البريد وكلمة
+ * المرور وتأكيدها في الشاشة الأولى:
+ *   1. بياناتك ومهنتك: الاسم، الهاتف، الواتساب، المركز، بيانات الدخول،
+ *      التصنيف والتخصص، ومناطق التغطية.
+ *   2. صورة البطاقة + الإقرار ← تفعيل تلقائي.
+ * العنوان التفصيلي والنوع وتاريخ الميلاد ونوع الحساب وسنوات الخبرة والوصف
+ * تُكمَل لاحقًا من «كمّل ملفك».
  *
- * المعالج يعبر حدّ المصادقة في منتصفه: الحساب يُنشأ عند الانتقال من 2 إلى 3
- * لأن رفع المستندات يتطلب جلسة وملف مزوّد. لذلك:
- *   - الخطوتان 1 و2 تُحفظان محليًا (مسودة) ويمكن العودة إليهما بحرية.
- *   - بعد إنشاء الحساب تصير الخطوتان 1 و2 للعرض والتعديل عبر الـAPI.
- *
- * خطوة «مراجعة الطلب» أُزيلت: الإرسال يتم من خطوة المستندات مباشرة،
- * والحساب يُفعَّل تلقائيًا بعده.
+ * المعالج يعبر حدّ المصادقة بين الشاشتين: الحساب يُنشأ عند مغادرة الأولى
+ * لأن رفع البطاقة يتطلب جلسة وملف مزوّد. لذلك الشاشة الأولى تُحفظ محليًا
+ * (مسودة)، وبعد إنشاء الحساب يصير الخادم مصدر الحقيقة وتُعدَّل عبر الـAPI.
  */
 
-const STEPS = [
-  { label: 'البيانات الأساسية' },
-  { label: 'المهنة والخدمة' },
-  { label: 'المستندات' },
-];
+const STEPS = [{ label: 'بياناتك ومهنتك' }, { label: 'صورة البطاقة' }];
 
 const DRAFT_KEY = 'khadamaty:provider-draft';
 
+const QUICK_INFO_KEYS = ['fullName', 'phone', 'whatsapp', 'city'] as const;
+const CREDENTIALS_KEYS = ['email', 'password', 'confirmPassword'] as const;
+
+/** كلمة المرور **لا تُحفظ** في المسودة — انظر الحفظ التلقائي أدناه. */
 interface Draft {
-  step: number;
-  basic: Omit<BasicInfoValues, 'password' | 'confirmPassword'>;
+  info: QuickInfoValues;
+  whatsappSame: boolean;
+  email: string;
   profession: ProfessionValues;
 }
 
 type Errors = Record<string, string>;
 
+const EMPTY_QUICK_INFO: QuickInfoValues = {
+  fullName: EMPTY_BASIC_INFO.fullName,
+  phone: EMPTY_BASIC_INFO.phone,
+  whatsapp: EMPTY_BASIC_INFO.whatsapp,
+  city: EMPTY_BASIC_INFO.city,
+};
+
+const EMPTY_CREDENTIALS: CredentialsValues = { email: '', password: '', confirmPassword: '' };
+
+/** يحصر الأخطاء في مفاتيح مكوّن واحد — كل مكوّن يعرض حقوله فقط. */
+function pickErrors(errors: Errors, keys: readonly string[]): Errors {
+  return Object.fromEntries(Object.entries(errors).filter(([key]) => keys.includes(key)));
+}
+
+function collectIssues(issues: { path: PropertyKey[]; message: string }[]): Errors {
+  const next: Errors = {};
+  for (const issue of issues) {
+    const key = String(issue.path[0] ?? '_');
+    next[key] ??= issue.message;
+  }
+  return next;
+}
+
 export default function ProviderRegistrationPage() {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
-  const [basic, setBasic] = useState<BasicInfoValues>(EMPTY_BASIC_INFO);
-  const [profession, setProfession] = useState<ProfessionValues>(EMPTY_PROFESSION);
+  const [info, setInfo] = useState<QuickInfoValues>(EMPTY_QUICK_INFO);
+  const [whatsappSame, setWhatsappSame] = useState(true);
+  const [credentials, setCredentials] = useState<CredentialsValues>(EMPTY_CREDENTIALS);
+  const [profession, setProfession] = useState<ProfessionValues>(() => ({
+    ...EMPTY_PROFESSION,
+    // مركزه هو أول منطقة يغطيها غالبًا — يختار غيرها إن شاء
+    coverageAreas: isValidCoverageArea(EMPTY_QUICK_INFO.city) ? [EMPTY_QUICK_INFO.city] : [],
+  }));
   const [errors, setErrors] = useState<Errors>({});
   const [accepted, setAccepted] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
   const registerMutation = useRegisterProvider();
+  const updateMutation = useUpdateProviderProfile();
   const submitMutation = useSubmitVerification();
 
   /*
@@ -87,9 +128,8 @@ export default function ProviderRegistrationPage() {
 
   /**
    * التسجيل السريع عبر جوجل: ينشئ حساب عميل (أو يدخل لحساب قائم بنفس
-   * البريد) ثم يكمل في `/account/become-provider` — خطوتان قصيرتان بلا
-   * كلمة مرور: البيانات والمهنة، ثم البطاقة. الدور يتحوّل إلى PROVIDER عند
-   * إرسال البطاقة كما في التحويل العادي تمامًا.
+   * البريد) ثم يكمل في `/account/become-provider` — نفس الشاشتين بلا كلمة
+   * مرور. الدور يتحوّل إلى PROVIDER عند إرسال البطاقة كما في التحويل العادي.
    */
   const continueWithGoogle = (user: AuthUserDto) => {
     try {
@@ -126,10 +166,33 @@ export default function ProviderRegistrationPage() {
     }
 
     try {
-      const draft = JSON.parse(raw) as Draft;
-      setBasic((current) => ({ ...current, ...draft.basic }));
-      setProfession((current) => ({ ...current, ...draft.profession }));
-      if (draft.step >= 1 && draft.step <= 2) setStep(draft.step);
+      /*
+       * مسودات المعالج القديم (ثلاث خطوات) تحمل `basic` بدل `info` — نأخذ
+       * منها ما يخص الشاشة الجديدة كي لا يخسر من بدأ قبل التحديث ما كتبه.
+       */
+      const draft = JSON.parse(raw) as Partial<Draft> & {
+        basic?: Partial<QuickInfoValues> & { email?: string };
+      };
+      const saved = { ...draft.basic, ...draft.info };
+
+      const restored: QuickInfoValues = {
+        fullName: saved.fullName ?? EMPTY_QUICK_INFO.fullName,
+        phone: saved.phone ?? EMPTY_QUICK_INFO.phone,
+        whatsapp: saved.whatsapp ?? EMPTY_QUICK_INFO.whatsapp,
+        city: saved.city ?? EMPTY_QUICK_INFO.city,
+      };
+      setInfo(restored);
+      setWhatsappSame(
+        draft.whatsappSame ??
+          (!restored.whatsapp || restored.whatsapp === toWhatsappDigits(restored.phone))
+      );
+      setCredentials((current) => ({
+        ...current,
+        email: draft.email ?? draft.basic?.email ?? '',
+      }));
+      if (draft.profession) {
+        setProfession((current) => ({ ...current, ...draft.profession }));
+      }
     } catch {
       // مسودة تالفة — نتجاهلها بدل كسر الشاشة
       window.localStorage.removeItem(DRAFT_KEY);
@@ -147,15 +210,13 @@ export default function ProviderRegistrationPage() {
      * تقرأه أي شيفرة تعمل على الصفحة، وحفظ كلمة مرور نصية فيه يحوّل ثغرة
      * XSS عابرة إلى تسريب دائم لبيانات الدخول.
      */
-    const { password: _password, confirmPassword: _confirm, ...safeBasic } = basic;
-
-    const draft: Draft = { step, basic: safeBasic, profession };
+    const draft: Draft = { info, whatsappSame, email: credentials.email, profession };
     try {
       window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     } catch {
       // امتلاء التخزين لا يجب أن يعطّل المعالج
     }
-  }, [basic, profession, step, draftRestored, hasAccount]);
+  }, [info, whatsappSame, credentials.email, profession, draftRestored, hasAccount]);
 
   /* ---- مزامنة الملف بعد إنشاء الحساب ---- */
   /*
@@ -173,152 +234,180 @@ export default function ProviderRegistrationPage() {
      * استئناف من حالة الخادم عند العودة للمعالج (إعادة تحميل، أو رجوع بعد
      * أيام، أو طلب إعادة إرسال). المسودة المحلية تُمسح فور إنشاء الحساب،
      * فالخادم هو مصدر الحقيقة الوحيد بعدها: أي طلب لم يُرسل يستأنف من
-     * خطوة المستندات، وهي الخطوة الأخيرة التي يتم الإرسال منها.
+     * شاشة البطاقة، وهي التي يتم الإرسال منها.
      */
-    if (loaded.verification.status === 'DRAFT' || loaded.verification.status === 'RESUBMISSION_REQUIRED') {
-      setStep(3);
+    if (
+      loaded.verification.status === 'DRAFT' ||
+      loaded.verification.status === 'RESUBMISSION_REQUIRED'
+    ) {
+      setStep(2);
     }
 
-    setBasic((current) => ({
-      ...current,
-      fullName: loaded.user.fullName,
-      phone: loaded.user.phone ?? current.phone,
-      whatsapp: loaded.whatsapp ?? current.whatsapp,
-      email: loaded.user.email ?? current.email,
-      city: loaded.user.city ?? current.city,
-      addressLine: loaded.user.addressLine ?? current.addressLine,
-    }));
+    const phone = loaded.user.phone ?? info.phone;
+    const same = !loaded.whatsapp || loaded.whatsapp === toWhatsappDigits(phone);
 
-    setProfession((current) => ({
-      ...current,
+    setWhatsappSame(same);
+    setInfo({
+      fullName: loaded.user.fullName,
+      phone,
+      whatsapp: same ? toWhatsappDigits(phone) : (loaded.whatsapp ?? ''),
+      city: loaded.user.city ?? info.city,
+    });
+    setCredentials({ ...EMPTY_CREDENTIALS, email: loaded.user.email ?? credentials.email });
+    setProfession({
       categoryId: loaded.categoryId,
       professionId: loaded.professionId,
-      yearsOfExperience:
-        loaded.yearsOfExperience != null ? String(loaded.yearsOfExperience) : '',
+      yearsOfExperience: loaded.yearsOfExperience != null ? String(loaded.yearsOfExperience) : '',
       bio: loaded.bio,
       coverageAreas: loaded.coverageAreas,
-    }));
+    });
   }
 
-  /* ---- التحقق لكل خطوة ---- */
+  /** تغيير المركز يقترحه منطقة تغطية ما دام لم يختر مناطق بنفسه. */
+  const updateInfo = (patch: Partial<QuickInfoValues>) => {
+    setInfo((current) => ({ ...current, ...patch }));
 
+    const city = patch.city;
+    if (city && isValidCoverageArea(city)) {
+      setProfession((current) =>
+        current.coverageAreas.length <= 1 ? { ...current, coverageAreas: [city] } : current
+      );
+    }
+  };
+
+  /* ---- التحقق ---- */
+
+  const whatsapp = whatsappSame ? toWhatsappDigits(info.phone) : info.whatsapp;
+
+  /** يتحقق من الشاشة الأولى كلها دفعة واحدة — بالمخططين اللذين يطبّقهما الخادم. */
   const validateStep1 = useCallback((): boolean => {
-    const result = providerStep1Schema.safeParse({
-      fullName: basic.fullName,
-      phone: basic.phone,
-      whatsapp: basic.whatsapp,
-      email: basic.email,
-      password: basic.password,
-      confirmPassword: basic.confirmPassword,
-      city: basic.city,
-      addressLine: basic.addressLine,
-      accountType: basic.accountType,
-      ...(basic.gender ? { gender: basic.gender } : {}),
-      ...(basic.birthDate ? { birthDate: basic.birthDate } : {}),
+    const basic = providerStep1Schema.safeParse({
+      fullName: info.fullName,
+      phone: info.phone,
+      whatsapp,
+      email: credentials.email,
+      password: credentials.password,
+      confirmPassword: credentials.confirmPassword,
+      city: info.city,
     });
-
-    if (result.success) {
-      setErrors({});
-      return true;
-    }
-
-    const next: Errors = {};
-    for (const issue of result.error.issues) {
-      const key = String(issue.path[0] ?? '_');
-      next[key] ??= issue.message;
-    }
-    setErrors(next);
-    return false;
-  }, [basic]);
-
-  const validateStep2 = useCallback((): boolean => {
-    const result = providerStep2Schema.safeParse({
+    const job = providerStep2Schema.safeParse({
       categoryId: profession.categoryId,
       professionId: profession.professionId,
-      yearsOfExperience: profession.yearsOfExperience,
-      bio: profession.bio,
       coverageAreas: profession.coverageAreas,
+      bio: profession.bio,
+      yearsOfExperience: profession.yearsOfExperience,
     });
 
-    if (result.success) {
-      setErrors({});
-      return true;
-    }
-
-    const next: Errors = {};
-    for (const issue of result.error.issues) {
-      const key = String(issue.path[0] ?? '_');
-      next[key] ??= issue.message;
-    }
-    setErrors(next);
-    return false;
-  }, [profession]);
-
-  /* ---- الانتقال ---- */
-
-  const goToStep3 = useCallback(async () => {
-    if (!validateStep2()) return;
-
-    // الحساب موجود بالفعل (عودة للمعالج أو إعادة إرسال) — لا نُنشئ حسابًا ثانيًا
+    const found: Errors = {
+      ...(basic.success ? {} : collectIssues(basic.error.issues)),
+      ...(job.success ? {} : collectIssues(job.error.issues)),
+    };
+    // بعد إنشاء الحساب لا كلمة مرور في النموذج — نتحقق من الباقي فقط
     if (hasAccount) {
-      setStep(3);
-      return;
+      delete found.password;
+      delete found.confirmPassword;
     }
+    // «المعرّف غير صالح» لحقل فارغ رسالة تقنية — المستخدم لم يختر بعد
+    if (!profession.categoryId && found.categoryId) found.categoryId = 'اختر التصنيف.';
+    if (!profession.professionId && found.professionId) found.professionId = 'اختر التخصص.';
 
+    setErrors(found);
+    return Object.keys(found).length === 0;
+  }, [info, whatsapp, credentials, profession, hasAccount]);
+
+  /* ---- الإجراءات ---- */
+
+  /** ينشئ الحساب (أو يحفظ تعديلات حساب قائم) ثم ينتقل لرفع البطاقة. */
+  const goToStep2 = useCallback(async () => {
     setSubmitError('');
+    if (!validateStep1()) return;
+
+    const status = profile.data?.verification.status;
+
     try {
+      if (hasAccount) {
+        // عودة للمعالج بعد إنشاء الحساب — التعديل يُحفظ ولا يُنشأ حساب ثانٍ
+        if (status === 'DRAFT' || status === 'RESUBMISSION_REQUIRED') {
+          await updateMutation.mutateAsync({
+            fullName: info.fullName,
+            email: credentials.email,
+            whatsapp,
+            city: info.city,
+            categoryId: profession.categoryId,
+            professionId: profession.professionId,
+            coverageAreas: profession.coverageAreas,
+          });
+        }
+        setStep(2);
+        return;
+      }
+
       await registerMutation.mutateAsync({
         step1: {
-          fullName: basic.fullName,
-          phone: basic.phone,
-          whatsapp: basic.whatsapp,
-          email: basic.email,
-          password: basic.password,
-          confirmPassword: basic.confirmPassword,
-          city: basic.city as never,
-          addressLine: basic.addressLine,
-          accountType: basic.accountType as never,
-          ...(basic.gender ? { gender: basic.gender as never } : {}),
-          ...(basic.birthDate ? { birthDate: basic.birthDate } : {}),
+          fullName: info.fullName,
+          phone: info.phone,
+          whatsapp,
+          email: credentials.email,
+          password: credentials.password,
+          confirmPassword: credentials.confirmPassword,
+          city: info.city as never,
         },
         step2: {
           categoryId: profession.categoryId,
           professionId: profession.professionId,
-          ...(profession.yearsOfExperience.trim()
-            ? { yearsOfExperience: Number(profession.yearsOfExperience) }
-            : {}),
-          bio: profession.bio,
+          bio: '',
           coverageAreas: profession.coverageAreas,
         },
       });
 
       // الحساب أُنشئ — المسودة المحلية لم تعد مصدر الحقيقة
-      window.localStorage.removeItem(DRAFT_KEY);
+      try {
+        window.localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // تخزين معطّل — لا مسودة لمسحها
+      }
       await profile.refetch();
-      setStep(3);
+      setStep(2);
     } catch (error) {
       if (error instanceof ApiClientError) {
         setSubmitError(error.message);
         if (error.fields) {
+          // الخادم يعيد مسارات مثل `step1.email` — الشاشة واحدة فيكفي اسم الحقل
           const next: Errors = {};
           for (const [path, message] of Object.entries(error.fields)) {
             next[path.replace(/^step[12]\./, '')] = message;
           }
           setErrors(next);
-          // الخطأ في بيانات الخطوة الأولى؟ نعيده إليها ليصلحها
-          if (Object.keys(error.fields).some((key) => key.startsWith('step1.'))) setStep(1);
         }
       } else {
-        setSubmitError('تعذّر إنشاء الحساب. حاول مرة أخرى.');
+        setSubmitError(
+          hasAccount ? 'تعذّر حفظ بياناتك. حاول مرة أخرى.' : 'تعذّر إنشاء الحساب. حاول مرة أخرى.'
+        );
       }
     }
-  }, [basic, profession, hasAccount, registerMutation, profile, validateStep2]);
+  }, [
+    validateStep1,
+    hasAccount,
+    profile,
+    updateMutation,
+    registerMutation,
+    info,
+    whatsapp,
+    credentials,
+    profession,
+  ]);
 
+  /** الإرسال — يفعّل الحساب تلقائيًا، ثم الملف حيث «كمّل ملفك». */
   const submitRequest = useCallback(async () => {
     setSubmitError('');
     try {
       await submitMutation.mutateAsync();
-      router.push('/provider/pending-review');
+      /*
+       * `refresh` قبل التنقّل: الحالة تغيّرت والخادم أصدر كوكيز جلسة جديدة،
+       * فلا بد أن يعيد الـRouter قراءة الصفحات من الخادم بالحالة الجديدة.
+       */
+      router.refresh();
+      router.push('/provider/profile');
     } catch (error) {
       setSubmitError(
         error instanceof ApiClientError ? error.message : 'تعذّر إرسال الطلب. حاول مرة أخرى.'
@@ -335,7 +424,7 @@ export default function ProviderRegistrationPage() {
     isComplete: false,
   };
 
-  const busy = registerMutation.isPending || submitMutation.isPending;
+  const busy = registerMutation.isPending || updateMutation.isPending || submitMutation.isPending;
 
   return (
     <>
@@ -344,7 +433,7 @@ export default function ProviderRegistrationPage() {
       <PageContainer withBottomNav={false}>
         <PageTitle
           title="تسجيل مقدم خدمة"
-          subtitle={`الخطوة ${step} من 3 — ${STEPS[step - 1]?.label ?? ''}`}
+          subtitle={`الخطوة ${step} من 2 — ${STEPS[step - 1]?.label ?? ''}`}
         />
 
         <Stepper steps={STEPS} current={step} className="mb-6" />
@@ -381,24 +470,43 @@ export default function ProviderRegistrationPage() {
               </div>
             )}
 
-            <BasicInfoStep
-              values={basic}
+            {!hasAccount && (
+              <InfoAlert tone="info" className="mb-4">
+                خطوتان فقط وتبدأ استقبال الطلبات. العنوان التفصيلي ووصف خدمتك وسنوات خبرتك تكملها
+                لاحقًا من ملفك.
+              </InfoAlert>
+            )}
+
+            <QuickInfoStep
+              values={info}
+              errors={pickErrors(errors, QUICK_INFO_KEYS)}
+              onChange={updateInfo}
+              whatsappSame={whatsappSame}
+              onWhatsappSameChange={setWhatsappSame}
+              lockPhone={hasAccount}
+            />
+
+            <div className="mt-4">
+              <CredentialsFields
+                values={credentials}
+                errors={pickErrors(errors, CREDENTIALS_KEYS)}
+                onChange={(patch) => setCredentials((current) => ({ ...current, ...patch }))}
+                withPassword={!hasAccount}
+              />
+            </div>
+
+            <h2 className="mb-4 mt-6 text-label font-bold text-ink-900">مهنتك</h2>
+
+            <ProfessionStep
+              compact
+              values={profession}
               errors={errors}
-              mode={hasAccount ? 'edit' : 'create'}
-              onChange={(patch) => setBasic((current) => ({ ...current, ...patch }))}
+              onChange={(patch) => setProfession((current) => ({ ...current, ...patch }))}
             />
           </>
         )}
 
-        {step === 2 && (
-          <ProfessionStep
-            values={profession}
-            errors={errors}
-            onChange={(patch) => setProfession((current) => ({ ...current, ...patch }))}
-          />
-        )}
-
-        {step === 3 &&
+        {step === 2 &&
           (profession.professionId ? (
             <DocumentsStep
               professionId={profession.professionId}
@@ -417,13 +525,13 @@ export default function ProviderRegistrationPage() {
           </InfoAlert>
         )}
 
-        {step === 3 && hasAccount && !documents.isComplete && documents.missingRequired.length > 0 && (
+        {step === 2 && hasAccount && !documents.isComplete && documents.missingRequired.length > 0 && (
           <p className="mt-6 text-meta font-semibold text-danger" role="status">
             لا يمكن الإرسال قبل رفع: {documents.missingRequired.join('، ')}
           </p>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <Checkbox
             id="provider-pledge"
             className="mt-6"
@@ -447,7 +555,7 @@ export default function ProviderRegistrationPage() {
 
         {/* ---- أزرار التنقّل ---- */}
         <div className="mt-4 flex gap-3 pb-8">
-          {step > 1 && (
+          {step === 2 && (
             <Button
               variant="secondary"
               className="flex-1"
@@ -455,7 +563,7 @@ export default function ProviderRegistrationPage() {
               onClick={() => {
                 setErrors({});
                 setSubmitError('');
-                setStep((current) => current - 1);
+                setStep(1);
               }}
               iconStart={<ArrowRight size={20} />}
             >
@@ -466,10 +574,9 @@ export default function ProviderRegistrationPage() {
           {step === 1 && (
             <Button
               fullWidth
+              loading={registerMutation.isPending || updateMutation.isPending}
               disabled={busy}
-              onClick={() => {
-                if (hasAccount || validateStep1()) setStep(2);
-              }}
+              onClick={() => void goToStep2()}
               iconEnd={<ArrowLeft size={20} />}
             >
               التالي
@@ -479,23 +586,12 @@ export default function ProviderRegistrationPage() {
           {step === 2 && (
             <Button
               className="flex-[2]"
-              loading={registerMutation.isPending}
-              onClick={() => void goToStep3()}
-              iconEnd={<ArrowLeft size={20} />}
-            >
-              التالي
-            </Button>
-          )}
-
-          {step === 3 && (
-            <Button
-              className="flex-[2]"
               loading={submitMutation.isPending}
               disabled={!documents.isComplete || !accepted || busy}
               onClick={() => void submitRequest()}
               iconEnd={<Send size={20} />}
             >
-              إرسال طلب التسجيل
+              ابدأ استقبال الطلبات
             </Button>
           )}
         </div>

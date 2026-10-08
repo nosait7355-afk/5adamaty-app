@@ -18,11 +18,17 @@ export interface QuickInfoStepProps {
   /** الواتساب = رقم الهاتف — الحالة الغالبة، فتُعلَّم افتراضيًا ويُخفى حقله. */
   whatsappSame: boolean;
   onWhatsappSameChange: (same: boolean) => void;
+  /** الهاتف رقم دخول الحساب — لا يُغيَّر من هنا بعد إنشائه. */
+  lockPhone?: boolean;
 }
 
-/** أرقام الهاتف فقط بحد 11 — نفس تطبيع حقل الواتساب. */
+/**
+ * أرقام الهاتف فقط بحد 11 — نفس تطبيع حقل الواتساب. الخادم يخزّن الهاتف
+ * بالصيغة الدولية (`+201…`)، فنعيده للمحلية (`01…`) وإلا قُصّ إلى رقم خاطئ.
+ */
 export function toWhatsappDigits(phone: string): string {
-  return phone.replace(/\D/g, '').slice(0, 11);
+  const digits = phone.replace(/\D/g, '');
+  return (/^201\d{9}$/.test(digits) ? `0${digits.slice(2)}` : digits).slice(0, 11);
 }
 
 /**
@@ -36,6 +42,7 @@ export function QuickInfoStep({
   onChange,
   whatsappSame,
   onWhatsappSameChange,
+  lockPhone = false,
 }: QuickInfoStepProps) {
   const ids = {
     fullName: useId(),
@@ -58,7 +65,13 @@ export function QuickInfoStep({
         />
       </Field>
 
-      <Field htmlFor={ids.phone} label="رقم الهاتف" required error={errors.phone}>
+      <Field
+        htmlFor={ids.phone}
+        label="رقم الهاتف"
+        required
+        hint={lockPhone ? 'رقم دخولك — لا يُغيَّر بعد إنشاء الحساب' : undefined}
+        error={errors.phone}
+      >
         <Input
           id={ids.phone}
           type="tel"
@@ -66,6 +79,7 @@ export function QuickInfoStep({
           icon={<Phone size={20} />}
           placeholder="010 1234 5678"
           value={values.phone}
+          disabled={lockPhone}
           invalid={Boolean(errors.phone)}
           onChange={(event) =>
             onChange({

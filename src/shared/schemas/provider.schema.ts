@@ -85,9 +85,13 @@ export const providerStep1Schema = z
 
     governorate: z.string().trim().max(60).default(GOVERNORATE),
     city: z.enum(FAYOUM_CITIES, { message: 'المدينة/المركز غير صالح.' }),
-    addressLine: safeString(100).refine((value) => value.length >= 5, {
-      message: 'العنوان التفصيلي قصير جدًا.',
-    }),
+    // اختياري كما في `convertToProviderSchema`: التسجيل يكتفي بالمركز، والعنوان
+    // التفصيلي يُكمَل لاحقًا من «كمّل ملفك»
+    addressLine: safeString(100)
+      .refine((value) => value.length === 0 || value.length >= 5, {
+        message: 'العنوان التفصيلي قصير جدًا.',
+      })
+      .default(''),
 
     accountType: z.enum(ACCOUNT_TYPES).default('INDIVIDUAL'),
     gender: z.enum(GENDERS).optional(),

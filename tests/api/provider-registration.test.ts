@@ -260,6 +260,59 @@ describe('POST /api/v1/auth/register-provider', () => {
     expect(user?.status).toBe('PENDING_REVIEW');
   });
 
+  it('يقبل الحد الأدنى للشاشة الأولى: بلا عنوان ولا نوع حساب ولا خبرة ولا وصف', async () => {
+    const values = step1();
+    delete (values as { addressLine?: string }).addressLine;
+    delete (values as { accountType?: string }).accountType;
+
+    const response = await registerProviderRoute(
+      req('/api/v1/auth/register-provider', {
+        method: 'POST',
+        body: {
+          step1: values,
+          step2: {
+            categoryId: plumberCategoryId,
+            professionId: plumberProfessionId,
+            bio: '',
+            coverageAreas: ['الفيوم'],
+          },
+        },
+      }),
+      undefined
+    );
+    expect(response.status).toBe(201);
+
+    const data = (await json(response)).data as unknown as { user: { id: string }; providerId: string };
+    const [user, provider] = await Promise.all([
+      User.findById(data.user.id).lean(),
+      ServiceProvider.findById(data.providerId).lean(),
+    ]);
+    expect(user?.email).toBe(values.email);
+    // العنوان الفارغ لا يُكتب أصلًا — «كمّل ملفك» يعرضه ناقصًا
+    expect(user).not.toHaveProperty('addressLine');
+    expect(provider?.accountType).toBe('INDIVIDUAL');
+    expect(provider?.yearsOfExperience).toBeUndefined();
+    expect(provider?.verification.status).toBe('DRAFT');
+  });
+
+  it('يقبل عنوانًا فارغًا ولا يخزّنه', async () => {
+    const { userId } = await createProvider({ step1: { addressLine: '' } });
+    const user = await User.findById(userId).lean();
+    expect(user).not.toHaveProperty('addressLine');
+  });
+
+  it('يرفض عنوانًا مكتوبًا لكنه أقصر من 5 أحرف', async () => {
+    const response = await registerProviderRoute(
+      req('/api/v1/auth/register-provider', {
+        method: 'POST',
+        body: { step1: step1({ addressLine: 'شارع' }), step2: step2() },
+      }),
+      undefined
+    );
+    expect(response.status).toBe(400);
+    expect((await json(response)).error?.fields?.['step1.addressLine']).toBeTruthy();
+  });
+
   it('يرفض بريدًا مكرّرًا', async () => {
     const first = await createProvider();
     const email = (first.payload.step1 as { email: string }).email;
