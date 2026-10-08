@@ -99,7 +99,7 @@ export function ProviderDetailsSection({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-col gap-4">
         <Field htmlFor={ids.gender} label="النوع" error={errors.gender}>
           <Select
             id={ids.gender}
