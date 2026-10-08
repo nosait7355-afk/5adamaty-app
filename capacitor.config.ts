@@ -33,9 +33,10 @@ const config: CapacitorConfig = {
       androidSplashResourceName: 'splash',
       showSpinner: false,
     },
+    // يسري مع نسخة المتجر القادمة؛ حتى ذلك الحين يضبطه `NativeBridge` عند الفتح
     StatusBar: {
-      style: 'DARK',
-      backgroundColor: '#1156e0',
+      style: 'LIGHT',
+      backgroundColor: '#ffffff',
     },
     /*
      * تسجيل الدخول بجوجل (ويب + أندرويد) — خلف GOOGLE_SIGN_IN_ENABLED

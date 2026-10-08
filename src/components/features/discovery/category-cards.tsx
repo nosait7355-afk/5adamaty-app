@@ -27,7 +27,7 @@ export function CategoryTile({ href, label, icon, className }: CategoryTileProps
       href={href}
       className={cn(
         'flex aspect-square flex-col items-center justify-center gap-1 rounded-field',
-        'border border-border bg-surface p-1 text-center transition-colors hover:bg-brand-50',
+        'pressable border border-border bg-surface p-1 text-center hover:bg-brand-50',
         className
       )}
     >
@@ -53,7 +53,7 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
       href={`/categories/${category.slug}`}
       className={cn(
         'flex flex-col items-center gap-1.5 rounded-card border border-border bg-surface',
-        'p-3 text-center shadow-card transition-shadow hover:shadow-card-hover',
+        'pressable p-3 text-center shadow-card hover:shadow-card-hover',
         className
       )}
     >

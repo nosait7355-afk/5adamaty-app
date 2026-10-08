@@ -51,8 +51,12 @@ export interface ErrorStateProps {
 }
 
 /**
- * حالة الخطأ — غير موجودة في الصور، مشتقّة من نفس شكل `InfoAlert`
- * بلون الخطر كما نصّ UI_ANALYSIS §1.6.
+ * حالة الخطأ — غير موجودة في الصور.
+ *
+ * كانت صندوقًا أحمر بلون الخطر (UI_ANALYSIS §1.6)، ثم صارت محايدة بقرار
+ * صريح: أغلب أسبابها انقطاع اتصال عابر لا خطأ من المستخدم، والأحمر الكبير
+ * وسط الصفحة يوحي بعطل جسيم. التطبيقات الكبيرة تعرضها بهدوء مع «إعادة
+ * المحاولة» واضحة.
  */
 export function ErrorState({
   message = 'تعذّر تحميل البيانات',
@@ -63,18 +67,21 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-3 rounded-card border border-danger/25 bg-danger-bg px-4 py-8 text-center',
+        'flex flex-col items-center gap-3 rounded-card border border-border bg-surface px-4 py-8 text-center',
         className
       )}
       role="alert"
     >
-      <span className="text-danger" aria-hidden="true">
-        <WifiOff size={40} strokeWidth={1.5} />
+      <span
+        className="flex size-14 items-center justify-center rounded-full bg-bg text-ink-400"
+        aria-hidden="true"
+      >
+        <WifiOff size={28} strokeWidth={1.75} />
       </span>
       <p className="text-card-title font-bold text-ink-900">{message}</p>
       <p className="max-w-xs text-meta text-ink-600">{description}</p>
       {onRetry && (
-        <Button variant="danger" size="sm" onClick={onRetry} iconStart={<RefreshCw size={16} />}>
+        <Button variant="secondary" size="sm" onClick={onRetry} iconStart={<RefreshCw size={16} />}>
           إعادة المحاولة
         </Button>
       )}

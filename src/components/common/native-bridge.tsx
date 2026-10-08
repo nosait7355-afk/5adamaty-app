@@ -38,8 +38,15 @@ export function NativeBridge() {
         import('@capacitor/status-bar'),
       ]);
 
-      await StatusBar.setStyle({ style: Style.Dark }).catch(() => undefined);
-      await StatusBar.setBackgroundColor({ color: '#1156e0' }).catch(() => undefined);
+      /*
+       * شريط الحالة بلون الهيدر الأبيض وأيقونات داكنة — كالتطبيقات الأصلية،
+       * بدل شريط أزرق منفصل فوق هيدر أبيض. `Style.Light` تعني «نص داكن
+       * لخلفية فاتحة». على أندرويد 15+ (targetSdk 36) الشريط يطفو فوق الصفحة
+       * إجباريًا ولا يُلوَّن، فالمهم هناك لون الأيقونات وحده؛ لونه يظهر
+       * على الإصدارات الأقدم فقط.
+       */
+      await StatusBar.setStyle({ style: Style.Light }).catch(() => undefined);
+      await StatusBar.setBackgroundColor({ color: '#ffffff' }).catch(() => undefined);
 
       // الشاشات الجذرية (الرئيسية وأخواتها) تُغلق التطبيق؛ غيرها يرجع للسابقة
       // أو — إن لم يوجد سجل — للرئيسية، بدل إغلاق التطبيق من صفحة داخلية.

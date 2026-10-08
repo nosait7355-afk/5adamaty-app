@@ -134,7 +134,7 @@ export default function HomePage() {
           />
 
           {featured.isPending ? (
-            <div className="scroll-x flex gap-3 pb-1">
+            <div className="scroll-x snap-row flex gap-3 pb-1">
               {Array.from({ length: 3 }, (_, index) => (
                 <ProviderMiniCardSkeleton key={index} />
               ))}
@@ -144,7 +144,7 @@ export default function HomePage() {
           ) : featuredProviders.length === 0 ? (
             <EmptyState message="لا يوجد مقدمو خدمات بعد" icon={<Grid2x2 size={40} />} />
           ) : (
-            <div className="scroll-x flex gap-3 pb-1">
+            <div className="scroll-x snap-row flex gap-3 pb-1">
               {featuredProviders.map((provider) => (
                 <ProviderMiniCard key={provider.id} provider={provider} />
               ))}

@@ -2,7 +2,7 @@
 
 import { Heart, MapPin, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { LinkButton } from '@/components/ui/button';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { MediaThumb } from './media-thumb';
 import { Rating } from './rating-stars';
@@ -22,8 +22,8 @@ export interface ServiceCardProps {
  * بطاقة الخدمة — الصورة 09.
  *
  * التخطيط: صورة 120×120 في بداية السطر · Chip التصنيف · العنوان · وصف
- * سطران · `⭐ 4.8 (128) · 🛡 +10 سنوات خبرة` · 📍 المنطقة · فوتر بالسعر
- * المبدئي وزر «عرض التفاصيل».
+ * سطران · `⭐ 4.8 (128) · 🛡 +10 سنوات خبرة` · 📍 المنطقة. البطاقة كلها
+ * تفتح ملف مقدم الخدمة — زر «عرض التفاصيل» في الصورة أُزيل لأنه صار مكرّرًا.
  *
  * السعر للعرض فقط — لا تحصيل داخل التطبيق (PROJECT_PLAN — قواعد الدفع).
  */
@@ -36,14 +36,24 @@ export function ServiceCard({
   const provider = service.provider;
 
   return (
-    <Card className={cn('relative', className)}>
+    <Card
+      className={cn(
+        /*
+         * الضغط مربوط بالرابط لا بالبطاقة: `:active` يصعد للآباء، فلو
+         * انكمشت البطاقة نفسها لانكمشت أيضًا مع لمس زر المفضلة.
+         */
+        'relative transition-[scale] duration-150 ease-out has-[a:active]:scale-[0.98]',
+        'has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand-600',
+        className
+      )}
+    >
       {onToggleFavorite && (
         <button
           type="button"
           onClick={() => onToggleFavorite(service.id)}
           aria-label={isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
           aria-pressed={isFavorite}
-          className="absolute end-3 top-3 rounded-full p-1.5 text-ink-400 transition-colors hover:bg-danger-bg hover:text-danger"
+          className="pressable absolute end-3 top-3 z-10 rounded-full p-1.5 text-ink-400 hover:bg-danger-bg hover:text-danger"
         >
           <Heart size={20} className={isFavorite ? 'fill-danger text-danger' : ''} />
         </button>
@@ -72,7 +82,17 @@ export function ServiceCard({
               onToggleFavorite && 'pe-7'
             )}
           >
-            {service.title}
+            {/*
+             * البطاقة كلها قابلة للضغط عبر «رابط ممدود»: طبقة `after:` تغطي
+             * البطاقة، فيبقى في الصفحة رابط واحد باسم الخدمة (لا رابطان
+             * متكرران لقارئ الشاشة) ويظل زر المفضلة فوقها بـ`z-10`.
+             */}
+            <Link
+              href={`/providers/${provider.id}?serviceId=${service.id}`}
+              className="outline-none after:absolute after:inset-0 after:rounded-card after:content-['']"
+            >
+              {service.title}
+            </Link>
           </h3>
 
           <p className="line-clamp-2 text-meta text-ink-600">{service.description}</p>
@@ -99,16 +119,6 @@ export function ServiceCard({
             </span>
           )}
         </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-end gap-3 border-t border-border pt-3">
-        <LinkButton
-          href={`/providers/${provider.id}?serviceId=${service.id}`}
-          size="sm"
-          variant="primary"
-        >
-          عرض التفاصيل
-        </LinkButton>
       </div>
     </Card>
   );

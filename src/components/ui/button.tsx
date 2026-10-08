@@ -7,7 +7,8 @@ import { Spinner } from './spinner';
 /**
  * الزر — مستخرج من الصور المرجعية.
  *
- * - `primary`   : تدرّج أزرق + ظل (زر «تسجيل الدخول» الصورة 03، «التالي» الصورة 19)
+ * - `primary`   : أزرق مسطّح بلا تدرّج ولا ظل — بقرار صريح بدل تدرّج الصور
+ *                 المرجعية، مطابقةً لأزرار تطبيقات iOS وأندرويد الحالية
  * - `secondary` : أبيض بحد أزرق (زر «تواصل واتساب» الصورة 10، «السابق» الصورة 21)
  * - `success`   : أخضر ممتلئ (زر «إكمال الطلب» الصور 28، 29)
  * - `danger`    : أبيض بحد أحمر ونص أحمر (زر «إلغاء الطلب» الصورة 14)
@@ -15,8 +16,7 @@ import { Spinner } from './spinner';
  * - `ghost`     : بلا خلفية ولا حد (روابط «عرض الكل»)
  */
 const VARIANTS = {
-  primary:
-    'bg-linear-to-l from-brand-500 to-brand-700 text-white shadow-brand hover:brightness-105 active:brightness-95',
+  primary: 'bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800',
   secondary:
     'bg-surface text-brand-600 border border-brand-600 hover:bg-brand-50 active:bg-brand-100',
   success: 'bg-success text-white hover:brightness-105 active:brightness-95',
@@ -49,8 +49,7 @@ export function buttonClassName({
   className?: string;
 } = {}): string {
   return cn(
-    'inline-flex items-center justify-center gap-2 rounded-field font-bold',
-    'transition-[filter,background-color,box-shadow] duration-150',
+    'pressable inline-flex items-center justify-center gap-2 rounded-field font-bold',
     'disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none',
     VARIANTS[variant],
     SIZES[size],

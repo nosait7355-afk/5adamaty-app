@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Bell, Grid2x2, Heart, Home, User, UserRound, Wrench } from 'lucide-react';
+import { Bell, Heart, Home, LayoutGrid, User, UserRound, Wrench } from 'lucide-react';
 
 export interface NavItem {
   key: string;
@@ -16,7 +16,7 @@ export interface NavItem {
  * الحاوية `dir="rtl"` تتكفّل بالعرض، فالعنصر الأول يظهر يمينًا.
  */
 export const CUSTOMER_NAV: readonly NavItem[] = [
-  { key: 'categories', label: 'التصنيفات', href: '/categories', icon: Grid2x2 },
+  { key: 'categories', label: 'التصنيفات', href: '/categories', icon: LayoutGrid },
   { key: 'notifications', label: 'الإشعارات', href: '/notifications', icon: Bell },
   { key: 'home', label: 'الرئيسية', href: '/home', icon: Home },
   { key: 'favorites', label: 'المفضلة', href: '/account/favorites', icon: Heart },
@@ -40,6 +40,3 @@ export const PROVIDER_NAV: readonly NavItem[] = [
   { key: 'profile', label: 'ملفي', href: '/provider/profile', icon: UserRound },
   { key: 'account', label: 'حسابي', href: '/provider/account', icon: User },
 ];
-
-/** فهرس العنصر الأوسط — يُعرض بأيقونة ممتلئة داخل دائرة زرقاء (الصورة 06). */
-export const NAV_CENTER_INDEX = 2;

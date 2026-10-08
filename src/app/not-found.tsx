@@ -12,7 +12,7 @@ export default function NotFound() {
         action={
           <Link
             href="/"
-            className="rounded-field bg-brand-600 px-6 py-3 text-label font-bold text-white shadow-brand"
+            className="rounded-field bg-brand-600 px-6 py-3 text-label font-bold text-white"
           >
             العودة إلى الرئيسية
           </Link>

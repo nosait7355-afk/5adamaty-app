@@ -199,6 +199,17 @@
     display: none;
   }
 
+  /*
+   * صفوف البطاقات الأفقية (carousels) تقف عند بداية كل بطاقة بدل أن تتوقف
+   * في منتصفها — سلوك التطبيقات الأصلية. لا يُطبَّق على صفوف الفلاتر.
+   */
+  .snap-row {
+    scroll-snap-type: x mandatory;
+  }
+  .snap-row > * {
+    scroll-snap-align: start;
+  }
+
   .line-clamp-1,
   .line-clamp-2,
   .line-clamp-3 {
@@ -214,6 +225,22 @@
   }
   .line-clamp-3 {
     -webkit-line-clamp: 3;
+  }
+}
+
+/*
+ * إحساس الضغط: العنصر ينكمش قليلًا لحظة اللمس فيعرف المستخدم أن لمسته
+ * وصلت — الفرق الأوضح بين «موقع» و«تطبيق». `@utility` كي يعمل مع
+ * المتغيّرات (`has-[...]:` إلخ)، والحركة تُلغى تلقائيًا مع
+ * `prefers-reduced-motion` من القاعدة العامة أعلاه.
+ */
+@utility pressable {
+  transition-property: scale, box-shadow, background-color, color, filter;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+
+  &:active:not(:disabled) {
+    scale: 0.97;
   }
 }
 

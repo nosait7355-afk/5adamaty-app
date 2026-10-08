@@ -22,7 +22,7 @@ export function ProviderMiniCard({ provider, className }: ProviderMiniCardProps)
       href={`/providers/${provider.id}`}
       className={cn(
         'flex w-[172px] shrink-0 flex-col items-center gap-2 rounded-card border border-border',
-        'bg-surface p-4 text-center shadow-card transition-shadow hover:shadow-card-hover',
+        'pressable bg-surface p-4 text-center shadow-card hover:shadow-card-hover',
         className
       )}
     >

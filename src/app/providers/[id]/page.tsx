@@ -125,23 +125,6 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
 
       {/* الحشو السفلي يعادل ارتفاع فوتر الإجراءات الثابت — بدونه يغطّي آخر المحتوى */}
       <PageContainer className="flex flex-col gap-4 pb-32 pt-3" withBottomNav={false}>
-        {/* ---- مسار التنقّل ---- */}
-        <nav aria-label="مسار التنقّل" className="flex items-center gap-1 text-meta text-ink-400">
-          <Link href="/categories" className="hover:text-brand-600">
-            التصنيفات
-          </Link>
-          <ChevronLeft size={14} aria-hidden="true" />
-          {data.categorySlug ? (
-            <Link href={`/categories/${data.categorySlug}`} className="hover:text-brand-600">
-              {data.categoryName}
-            </Link>
-          ) : (
-            <span>{data.categoryName}</span>
-          )}
-          <ChevronLeft size={14} aria-hidden="true" />
-          <span className="line-clamp-1 text-ink-600">{data.displayName}</span>
-        </nav>
-
         {/* ---- صورة كبيرة + عدّاد الصور + إجراءات ---- */}
         <div className="relative h-[200px] overflow-hidden rounded-card bg-brand-50">
           {heroImage ? (
@@ -194,12 +177,27 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             )}
           </div>
 
-          {data.professionName && (
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-50 px-3 py-1 text-badge font-semibold text-brand-600">
-              <CatalogIcon name={data.professionIcon} size={14} />
-              {data.professionName}
-            </span>
-          )}
+          {/*
+           * مسار التنقّل (التصنيفات › التصنيف › الاسم) نمط مواقع أُزيل من
+           * أعلى الصفحة؛ رابط التصنيف بقي هنا بجوار التخصص.
+           */}
+          <div className="flex flex-wrap items-center gap-2">
+            {data.professionName && (
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-50 px-3 py-1 text-badge font-semibold text-brand-600">
+                <CatalogIcon name={data.professionIcon} size={14} />
+                {data.professionName}
+              </span>
+            )}
+            {data.categoryName && data.categorySlug && (
+              <Link
+                href={`/categories/${data.categorySlug}`}
+                className="pressable inline-flex w-fit items-center gap-0.5 rounded-pill border border-border px-3 py-1 text-badge font-semibold text-ink-600"
+              >
+                {data.categoryName}
+                <ChevronLeft size={14} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
         </header>
 
         {/* ---- الإحصاءات ---- */}

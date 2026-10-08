@@ -98,7 +98,7 @@ function SearchScreen() {
                   }
                   className="mb-3"
                 />
-                <div className="scroll-x flex gap-3 pb-1">
+                <div className="scroll-x snap-row flex gap-3 pb-1">
                   {result.providers.map((provider) => (
                     <ProviderMiniCard key={provider.id} provider={provider} />
                   ))}

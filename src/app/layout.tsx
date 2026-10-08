@@ -25,7 +25,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#1156e0',
+  // بلون الهيدر الأبيض — شريط المتصفح/النظام يبدو امتدادًا للصفحة لا شريطًا منفصلًا
+  themeColor: '#ffffff',
   // ضروري لاحترام safe areas على iPhone
   viewportFit: 'cover',
 };

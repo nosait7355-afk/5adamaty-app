@@ -70,10 +70,12 @@ describe('ServiceCard (الصورة 09)', () => {
     expect(screen.getByText('+10 سنوات خبرة')).toBeInTheDocument();
   });
 
-  it('«عرض التفاصيل» رابط لا زر — يقود لملف مقدم الخدمة', () => {
+  it('البطاقة كلها رابط واحد باسم الخدمة — يقود لملف مقدم الخدمة', () => {
     render(<ServiceCard service={service} />);
-    const link = screen.getByRole('link', { name: 'عرض التفاصيل' });
-    expect(link).toHaveAttribute('href', '/providers/prov1?serviceId=svc1');
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAccessibleName('تنظيف شقق وفلل');
+    expect(links[0]).toHaveAttribute('href', '/providers/prov1?serviceId=svc1');
   });
 
   it('لا يعرض زر المفضلة ما لم يُمرَّر معالجه', () => {
