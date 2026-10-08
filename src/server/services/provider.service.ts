@@ -312,7 +312,7 @@ export async function convertCustomerToProvider(
       whatsapp: input.whatsapp,
       accountType: input.accountType,
       city: input.city,
-      addressLine: input.addressLine,
+      ...(input.addressLine ? { addressLine: input.addressLine } : {}),
       categoryId: input.categoryId,
       professionId: input.professionId,
       yearsOfExperience: input.yearsOfExperience,
@@ -347,7 +347,8 @@ export async function convertCustomerToProvider(
     phone: input.phone,
     governorate: input.governorate || GOVERNORATE,
     city: input.city,
-    addressLine: input.addressLine,
+    // العنوان اختياري في التسجيل السريع — فارغ لا يمسح عنوانًا محفوظًا
+    ...(input.addressLine ? { addressLine: input.addressLine } : {}),
     ...(input.gender ? { gender: input.gender } : {}),
     ...(input.birthDate ? { birthDate: new Date(input.birthDate) } : {}),
   });

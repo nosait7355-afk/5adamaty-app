@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Chrome, Send } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Send } from 'lucide-react';
 import { BackHeader } from '@/components/layout/back-header';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
 import Link from 'next/link';
@@ -22,13 +22,14 @@ import {
 } from '@/components/features/provider/profession-step';
 import { DocumentsStep } from '@/components/features/provider/documents-step';
 import { ApiClientError } from '@/lib/api-client';
-import { extractErrorMessage } from '@/lib/queries/auth';
+import { resolveHomeRoute } from '@/lib/queries/auth';
+import { GoogleSignInButton } from '@/components/features/auth/google-sign-in-button';
+import type { AuthUserDto } from '@/server/services/auth.service';
 import {
   useMyProviderProfile,
   useRegisterProvider,
   useSubmitVerification,
 } from '@/lib/queries/provider';
-import { signInWithGoogle } from '@/lib/google-social-login';
 import {
   providerStep1Schema,
   providerStep2Schema,
@@ -73,8 +74,6 @@ export default function ProviderRegistrationPage() {
   const [accepted, setAccepted] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [googleFillPending, setGoogleFillPending] = useState(false);
-  const [googleFillError, setGoogleFillError] = useState('');
 
   const registerMutation = useRegisterProvider();
   const submitMutation = useSubmitVerification();
@@ -87,25 +86,19 @@ export default function ProviderRegistrationPage() {
   const hasAccount = Boolean(profile.data);
 
   /**
-   * تعبئة تلقائية للاسم والبريد من جوجل — لا تُنشئ حسابًا ولا جلسة.
-   * الحساب الفعلي لمقدم الخدمة يُنشأ لاحقًا بالمسار المعتاد (هاتف + كلمة
-   * مرور) عند الانتقال من الخطوة 2 إلى 3، كما هو الحال بلا جوجل تمامًا.
+   * التسجيل السريع عبر جوجل: ينشئ حساب عميل (أو يدخل لحساب قائم بنفس
+   * البريد) ثم يكمل في `/account/become-provider` — خطوتان قصيرتان بلا
+   * كلمة مرور: البيانات والمهنة، ثم البطاقة. الدور يتحوّل إلى PROVIDER عند
+   * إرسال البطاقة كما في التحويل العادي تمامًا.
    */
-  const fillFromGoogle = async () => {
-    setGoogleFillError('');
-    setGoogleFillPending(true);
+  const continueWithGoogle = (user: AuthUserDto) => {
     try {
-      const { fullName, email } = await signInWithGoogle();
-      setBasic((current) => ({
-        ...current,
-        ...(fullName ? { fullName } : {}),
-        ...(email ? { email } : {}),
-      }));
-    } catch (fillError) {
-      setGoogleFillError(extractErrorMessage(fillError));
-    } finally {
-      setGoogleFillPending(false);
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      // تخزين معطّل — لا مسودة لمسحها
     }
+    router.refresh();
+    router.replace(user.role === 'CUSTOMER' ? '/account/become-provider' : resolveHomeRoute(user));
   };
 
   /* ---- استعادة المسودة ---- */
@@ -365,23 +358,26 @@ export default function ProviderRegistrationPage() {
 
         {step === 1 && (
           <>
-            {GOOGLE_SIGN_IN_ENABLED && !hasAccount && (
-              <div className="mb-4 flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  fullWidth
-                  loading={googleFillPending}
-                  onClick={() => void fillFromGoogle()}
-                  iconStart={<Chrome size={20} />}
-                >
-                  تعبئة الاسم والبريد من جوجل
-                </Button>
-                {googleFillError && (
-                  <p className="text-badge text-danger" role="alert">
-                    {googleFillError}
-                  </p>
-                )}
+            {/* بلا Client ID يخفي الزر نفسه — فنُخفي الكتلة كلها مع نصّها */}
+            {GOOGLE_SIGN_IN_ENABLED && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && !hasAccount && (
+              <div className="mb-4 flex flex-col gap-3">
+                <GoogleSignInButton
+                  intent="register"
+                  label="التسجيل السريع عبر جوجل"
+                  onSuccess={continueWithGoogle}
+                />
+                <p className="text-center text-badge leading-5 text-ink-400">
+                  بلا كلمة مرور — بعدها بياناتك ومهنتك وصورة البطاقة فقط. بالمتابعة أنت توافق على{' '}
+                  <Link href="/terms" className="font-semibold text-brand-600">
+                    الشروط والأحكام
+                  </Link>{' '}
+                  و
+                  <Link href="/privacy" className="font-semibold text-brand-600">
+                    سياسة الخصوصية
+                  </Link>
+                  .
+                </p>
+                <p className="text-center text-badge text-ink-400">أو سجّل بالهاتف وكلمة المرور</p>
               </div>
             )}
 

@@ -182,6 +182,29 @@ describe('POST /api/v1/me/become-provider — بدء التحويل', () => {
     expect(updated!.addressLine).toBe(body.addressLine);
   });
 
+  it('التسجيل السريع: يقبل التحويل بلا عنوان تفصيلي ولا وصف ولا خبرة', async () => {
+    const customer = await makeCustomer({ addressLine: 'عنوان محفوظ من قبل' });
+    const token = await signAccessToken({
+      userId: String(customer._id),
+      role: 'CUSTOMER',
+      status: 'ACTIVE',
+    });
+
+    const { addressLine: _address, yearsOfExperience: _years, accountType: _type, ...quick } =
+      conversionBody({ bio: '' });
+    const response = await becomeProviderRoute(
+      req('/api/v1/me/become-provider', { method: 'POST', body: quick, token }), undefined
+    );
+
+    expect(response.status).toBe(200);
+    const provider = await ServiceProvider.findOne({ userId: customer._id });
+    expect(provider!.verification.status).toBe('DRAFT');
+
+    // العنوان الفارغ لا يمسح عنوانًا محفوظًا
+    const updated = await User.findById(customer._id);
+    expect(updated!.addressLine).toBe('عنوان محفوظ من قبل');
+  });
+
   it('🔒 لا يغيّر الدور — يبقى عميلًا حتى يرسل الطلب', async () => {
     const customer = await makeCustomer();
     const token = await signAccessToken({

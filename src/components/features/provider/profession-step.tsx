@@ -34,6 +34,11 @@ export interface ProfessionStepProps {
   values: ProfessionValues;
   errors: Partial<Record<keyof ProfessionValues, string>>;
   onChange: (patch: Partial<ProfessionValues>) => void;
+  /**
+   * التسجيل السريع: التصنيف والتخصص ومناطق التغطية فقط. سنوات الخبرة
+   * والوصف اختياريان أصلًا، فيُكمَلان لاحقًا من الملف بدل إبطاء الدخول.
+   */
+  compact?: boolean;
 }
 
 /**
@@ -48,7 +53,7 @@ export interface ProfessionStepProps {
  * لا سعر هنا: التسعير أُزيل من المنصة بالكامل ويُتفق عليه بين العميل
  * والمزوّد مباشرة خارج التطبيق.
  */
-export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps) {
+export function ProfessionStep({ values, errors, onChange, compact = false }: ProfessionStepProps) {
   const ids = {
     category: useId(),
     profession: useId(),
@@ -116,48 +121,52 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
         />
       </Field>
 
-      <Field
-        htmlFor={ids.years}
-        label="سنوات الخبرة"
-        hint="اختياري"
-        error={errors.yearsOfExperience}
-      >
-        <Input
-          id={ids.years}
-          type="number"
-          min={0}
-          max={70}
-          inputMode="numeric"
-          placeholder="مثال: 8"
-          value={values.yearsOfExperience}
-          invalid={Boolean(errors.yearsOfExperience)}
-          onChange={(event) => onChange({ yearsOfExperience: event.target.value })}
-        />
-      </Field>
+      {!compact && (
+        <>
+          <Field
+            htmlFor={ids.years}
+            label="سنوات الخبرة"
+            hint="اختياري"
+            error={errors.yearsOfExperience}
+          >
+            <Input
+              id={ids.years}
+              type="number"
+              min={0}
+              max={70}
+              inputMode="numeric"
+              placeholder="مثال: 8"
+              value={values.yearsOfExperience}
+              invalid={Boolean(errors.yearsOfExperience)}
+              onChange={(event) => onChange({ yearsOfExperience: event.target.value })}
+            />
+          </Field>
 
-      {/* لا حدّ أدنى للطول — الحقل اختياري بالكامل */}
-      <Field
-        htmlFor={ids.bio}
-        label="وصف الخدمة"
-        hint="اختياري"
-        counter={{ current: values.bio.length, max: 300 }}
-        error={errors.bio}
-      >
-        <Textarea
-          id={ids.bio}
-          rows={4}
-          maxLength={300}
-          placeholder="اشرح للعميل ما تقدّمه بالضبط"
-          value={values.bio}
-          invalid={Boolean(errors.bio)}
-          onChange={(event) => onChange({ bio: event.target.value })}
-        />
-      </Field>
+          {/* لا حدّ أدنى للطول — الحقل اختياري بالكامل */}
+          <Field
+            htmlFor={ids.bio}
+            label="وصف الخدمة"
+            hint="اختياري"
+            counter={{ current: values.bio.length, max: 300 }}
+            error={errors.bio}
+          >
+            <Textarea
+              id={ids.bio}
+              rows={4}
+              maxLength={300}
+              placeholder="اشرح للعميل ما تقدّمه بالضبط"
+              value={values.bio}
+              invalid={Boolean(errors.bio)}
+              onChange={(event) => onChange({ bio: event.target.value })}
+            />
+          </Field>
 
-      {/* السعر لا يُحدَّد في التطبيق — يُتفق عليه مباشرة */}
-      <p className="rounded-field bg-brand-50 px-3 py-2 text-meta font-semibold text-brand-700">
-        السعر يتم الاتفاق عليه هاتفيًا بينك وبين العميل.
-      </p>
+          {/* السعر لا يُحدَّد في التطبيق — يُتفق عليه مباشرة */}
+          <p className="rounded-field bg-brand-50 px-3 py-2 text-meta font-semibold text-brand-700">
+            السعر يتم الاتفاق عليه هاتفيًا بينك وبين العميل.
+          </p>
+        </>
+      )}
 
       {/* ---- مناطق التغطية ---- */}
       <Field
@@ -184,7 +193,6 @@ export function ProfessionStep({ values, errors, onChange }: ProfessionStepProps
           ))}
         </div>
       </Field>
-
     </div>
   );
 }

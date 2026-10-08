@@ -164,6 +164,8 @@ export type ProviderStep2Values = z.input<typeof providerStep2Schema>;
  *     تعديل الملف.
  *   - `phone` مطلوب هنا رغم أنه اختياري عند تسجيل العميل — مقدم الخدمة
  *     بلا رقم لا يمكن الاتصال به، وهو جوهر المنصة.
+ *   - `addressLine` اختياري: التسجيل السريع (جوجل ← بيانات المهنة ← البطاقة)
+ *     يكتفي بالمركز، والعنوان التفصيلي يُكمَل لاحقًا من الملف.
  */
 export const convertToProviderSchema = z
   .object({
@@ -173,9 +175,11 @@ export const convertToProviderSchema = z
 
     governorate: z.string().trim().max(60).default(GOVERNORATE),
     city: z.enum(FAYOUM_CITIES, { message: 'المدينة/المركز غير صالح.' }),
-    addressLine: safeString(100).refine((value) => value.length >= 5, {
-      message: 'العنوان التفصيلي قصير جدًا.',
-    }),
+    addressLine: safeString(100)
+      .refine((value) => value.length === 0 || value.length >= 5, {
+        message: 'العنوان التفصيلي قصير جدًا.',
+      })
+      .default(''),
 
     accountType: z.enum(ACCOUNT_TYPES).default('INDIVIDUAL'),
     gender: z.enum(GENDERS).optional(),

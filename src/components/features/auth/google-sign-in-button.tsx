@@ -25,9 +25,11 @@ export interface GoogleSignInButtonProps {
    * زائر بلا حساب لعميل جديد بالخطأ من صفحة الدخول.
    */
   intent: 'login' | 'register';
+  /** نص الزر — الافتراضي حسب `intent`. */
+  label?: string;
 }
 
-export function GoogleSignInButton({ onSuccess, intent }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ onSuccess, intent, label }: GoogleSignInButtonProps) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -72,7 +74,7 @@ export function GoogleSignInButton({ onSuccess, intent }: GoogleSignInButtonProp
         onClick={() => void signIn()}
         iconStart={<Chrome size={20} />}
       >
-        {intent === 'register' ? 'إنشاء حساب عبر جوجل' : 'تسجيل الدخول عبر جوجل'}
+        {label ?? (intent === 'register' ? 'إنشاء حساب عبر جوجل' : 'تسجيل الدخول عبر جوجل')}
       </Button>
       {error && (
         <p className="text-badge text-danger" role="alert">
