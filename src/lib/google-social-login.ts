@@ -30,9 +30,14 @@ export async function signInWithGoogle(): Promise<GoogleProfile> {
 
   let result;
   try {
+    /*
+     * بلا `scopes`: الإضافة تطلب email + profile + openid افتراضيًا على
+     * المنصّتين، وتمرير أي `scopes` على أندرويد يُرفض ما لم تُعدَّل
+     * MainActivity («You CANNOT use scopes without modifying the main activity»).
+     */
     ({ result } = await SocialLogin.login({
       provider: 'google',
-      options: { scopes: ['email', 'profile'] },
+      options: {},
     }));
   } catch (nativeError) {
     /*
