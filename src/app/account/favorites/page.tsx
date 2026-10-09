@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { Rating } from '@/components/features/discovery/rating-stars';
 import { toast } from '@/lib/toast';
+import { haptic } from '@/lib/native';
 import {
   useFavorites,
   useToggleFavorite,
@@ -35,6 +36,7 @@ export default function FavoritesPage() {
   const remove = (input: ToggleFavoriteInput, undo: ToggleFavoriteInput) => {
     const onError = () => toast.error('تعذّر تحديث المفضلة. حاول مرة أخرى.');
     toggle.mutate(input, { onError });
+    void haptic('light');
     toast.success('أُزيل من المفضلة', {
       action: { label: 'تراجع', onClick: () => toggle.mutate(undo, { onError }) },
     });

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './button';
+import { haptic } from '@/lib/native';
 
 export interface ConfirmSheetProps {
   open: boolean;
@@ -60,7 +61,16 @@ export function ConfirmSheet({
         {description && <p className="max-w-xs text-body text-ink-600">{description}</p>}
 
         <div className="mt-4 flex w-full flex-col gap-2">
-          <Button variant="destructive" fullWidth loading={loading} onClick={onConfirm}>
+          <Button
+            variant="destructive"
+            fullWidth
+            loading={loading}
+            onClick={() => {
+              // اهتزاز «تحذير» مع الإجراء الذي لا رجعة فيه — كتنبيهات الحذف في iOS
+              void haptic('warning');
+              onConfirm();
+            }}
+          >
             {confirmLabel}
           </Button>
           <Button variant="neutral" fullWidth disabled={loading} onClick={onCancel}>

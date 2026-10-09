@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { haptic } from '@/lib/native';
 
 /** المسافة (بعد المقاومة) التي يُطلق عندها التحديث عند رفع الإصبع. */
 const TRIGGER = 72;
@@ -55,7 +56,10 @@ export function PullToRefresh() {
         }
         return;
       }
+      const previous = distance;
       distance = Math.min(dy * RESISTANCE, MAX_PULL);
+      // نبضة واحدة لحظة عبور حدّ الإطلاق — «أفلِت الآن» دون النظر للمؤشر
+      if (previous < TRIGGER && distance >= TRIGGER) void haptic('medium');
       setDragging(true);
       setPull(distance);
     };

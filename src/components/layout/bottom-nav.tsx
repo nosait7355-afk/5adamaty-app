@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NotificationDot } from '@/components/ui/badge';
 import { cn } from '@/lib/cn';
+import { haptic } from '@/lib/native';
 import { CUSTOMER_NAV, PROVIDER_NAV, type NavItem } from '@/shared/constants/navigation';
 
 export interface BottomNavProps {
@@ -58,6 +59,9 @@ function NavLink({ item, active, badge }: { item: NavItem; active: boolean; badg
       <Link
         href={item.href}
         aria-current={active ? 'page' : undefined}
+        onClick={() => {
+          if (!active) void haptic('light');
+        }}
         className="pressable flex h-full flex-col items-center justify-center gap-1 px-1"
       >
         <span

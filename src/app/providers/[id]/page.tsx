@@ -36,6 +36,7 @@ import { useProvider, useProviderReviews, useServices } from '@/lib/queries/disc
 import { useMe } from '@/lib/queries/auth';
 import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
 import { toast } from '@/lib/toast';
+import { haptic, shareLink } from '@/lib/native';
 import { useMyProviderProfile } from '@/lib/queries/provider';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProviderContactDto } from '@/server/services/discovery.service';
@@ -126,35 +127,20 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
       },
       { onError: () => toast.error('تعذّر تحديث المفضلة. حاول مرة أخرى.') }
     );
+    void haptic('light');
     toast.success(isFavorite ? 'أُزيل من المفضلة' : 'أُضيف إلى المفضلة');
   };
 
-  /**
-   * قائمة المشاركة الأصلية حيث يدعمها المتصفح (كروم أندرويد، سفاري)، وإلا
-   * نسخ الرابط. WebView أندرويد لا يدعم Web Share — مشاركة أصلية هناك
-   * تحتاج إضافة Capacitor (المرحلة 5).
-   */
+  /** قائمة مشاركة النظام (`shareLink`)، أو نسخ الرابط حيث لا توجد. */
   const onShare = async () => {
     const data = provider.data;
-    const url = `${window.location.origin}/providers/${id}`;
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({
-          title: data?.displayName,
-          text: data ? `${data.displayName} على خدماتي الفيوم` : undefined,
-          url,
-        });
-      } catch {
-        // إلغاء المستخدم للقائمة يصل هنا كخطأ — ليس فشلًا يستحق رسالة
-      }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('نُسخ رابط الملف');
-    } catch {
-      toast.error('تعذّر نسخ الرابط');
-    }
+    const result = await shareLink({
+      title: data?.displayName,
+      text: data ? `${data.displayName} على خدماتي الفيوم` : undefined,
+      url: `${window.location.origin}/providers/${id}`,
+    });
+    if (result === 'copied') toast.success('نُسخ رابط الملف');
+    else if (result === 'failed') toast.error('تعذّر نسخ الرابط');
   };
 
   const serviceItems = services.data?.pages.flatMap((page) => page.data) ?? [];
