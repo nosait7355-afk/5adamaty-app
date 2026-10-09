@@ -30,13 +30,14 @@ export function useNotifications(tab: NotificationTab = 'ALL') {
 }
 
 /** شارة الجرس وتبويب الرسائل — تُحدَّث بعد كل إجراء. */
-export function useUnreadCounts() {
+export function useUnreadCounts(enabled = true) {
   return useQuery({
     queryKey: queryKeys.notifications.unreadCount,
     queryFn: async () =>
       (await api.get<{ notifications: number }>('/notifications/unread-count'))
         .data,
     retry: false,
+    enabled,
   });
 }
 

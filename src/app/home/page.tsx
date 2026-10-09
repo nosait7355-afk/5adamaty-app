@@ -1,10 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Grid2x2 } from 'lucide-react';
-import { AppHeader } from '@/components/layout/app-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer } from '@/components/layout/page-container';
 import { SectionHeader } from '@/components/ui/card';
@@ -14,10 +11,11 @@ import {
   SkeletonList,
 } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
-import { CategoryTile } from '@/components/features/discovery/category-cards';
-import { SearchBox } from '@/components/features/discovery/search-box';
+import { CategoryRail, CategoryRailSkeleton } from '@/components/features/discovery/category-rail';
+import { HomeHeader } from '@/components/features/discovery/home-header';
 import { PromoBanner } from '@/components/features/discovery/promo-banner';
 import { ProviderMiniCard } from '@/components/features/discovery/provider-mini-card';
+import { SearchLauncher } from '@/components/features/discovery/search-launcher';
 import { ServiceCard } from '@/components/features/discovery/service-card';
 import { SupportCta } from '@/components/features/discovery/support-cta';
 import { useCategories } from '@/lib/queries/catalog';
@@ -25,10 +23,10 @@ import { useProviders, useServices } from '@/lib/queries/discovery';
 import { useDiscoveryNav } from '@/lib/queries/auth';
 
 /**
- * الرئيسية — الصورة 06.
+ * الرئيسية — الصورة 06، بإعادة تصميم المرحلة 4:
  *
- * الأقسام الخمسة بالترتيب المرسوم: البحث · البانر · شريط التصنيفات المصغّر
- * (6 مربعات آخرها «المزيد») · «مقدمو خدمات مميزون» (carousel) · «خدمات
+ * تحية باسم المستخدم · زر بحث يفتح شاشة البحث الكاملة · شريط تصنيفات
+ * دائري يتمرّر أفقيًا · البانر · «الأعلى تقييمًا» (carousel) · «خدمات
  * شائعة» · بطاقة الدعم.
  */
 
@@ -47,12 +45,7 @@ const PROMO_SLIDES = [
   },
 ];
 
-/** صف واحد من ستة مربعات كما في الصورة 06: خمسة تصنيفات + «المزيد». */
-const HOME_TILES = 5;
-
 export default function HomePage() {
-  const router = useRouter();
-  const [term, setTerm] = useState('');
   const nav = useDiscoveryNav();
 
   const categories = useCategories();
@@ -64,77 +57,34 @@ export default function HomePage() {
 
   return (
     <>
-      <AppHeader notificationsHref={nav.notificationsHref} />
+      <HomeHeader notificationsHref={nav.notificationsHref} />
 
-      <PageContainer className="flex flex-col gap-5 pt-4">
-        <SearchBox
-          value={term}
-          onValueChange={setTerm}
-          onSubmit={() => {
-            const trimmed = term.trim();
-            if (trimmed.length > 0) router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-          }}
-        />
+      <PageContainer className="flex flex-col gap-6 pt-4">
+        <SearchLauncher />
 
-        <PromoBanner slides={PROMO_SLIDES} />
-
-        {/* ---- شريط التصنيفات المصغّر ---- */}
+        {/* ---- التصنيفات ---- */}
         <section aria-label="التصنيفات">
-          <SectionHeader
-            title="التصنيفات"
-            action={
-              <Link
-                href="/categories"
-                className="inline-flex items-center gap-1 text-meta font-semibold text-brand-600"
-              >
-                عرض الكل
-                <ChevronLeft size={16} aria-hidden="true" />
-              </Link>
-            }
-            className="mb-3"
-          />
-
           {categories.isPending ? (
-            <div className="grid grid-cols-6 gap-1.5">
-              {Array.from({ length: 6 }, (_, index) => (
-                <div key={index} className="aspect-square animate-pulse rounded-field bg-border" />
-              ))}
-            </div>
+            <CategoryRailSkeleton />
           ) : categories.isError ? (
             <ErrorState onRetry={() => void categories.refetch()} />
           ) : (
-            <div className="grid grid-cols-6 gap-1.5">
-              {categories.data.slice(0, HOME_TILES).map((category) => (
-                <CategoryTile
-                  key={category.id}
-                  href={`/categories/${category.slug}`}
-                  label={category.name}
-                  icon={category.icon}
-                />
-              ))}
-              <CategoryTile href="/categories" label="المزيد" icon="grid" />
-            </div>
+            <CategoryRail categories={categories.data} />
           )}
         </section>
 
-        {/* ---- مقدمو خدمات مميزون ---- */}
-        <section aria-label="مقدمو خدمات مميزون">
+        <PromoBanner slides={PROMO_SLIDES} />
+
+        {/* ---- الأعلى تقييمًا ---- */}
+        <section aria-label="الأعلى تقييمًا في الفيوم">
           <SectionHeader
-            title="مقدمو خدمات مميزون"
-            action={
-              <Link
-                href="/search?type=providers"
-                className="inline-flex items-center gap-1 text-meta font-semibold text-brand-600"
-              >
-                عرض الكل
-                <ChevronLeft size={16} aria-hidden="true" />
-              </Link>
-            }
+            title="الأعلى تقييمًا في الفيوم"
+            action={<SeeAll href="/search?type=providers" />}
             className="mb-3"
           />
 
           {featured.isPending ? (
-            <div className="scroll-x snap-row flex gap-3 pb-1">
+            <div className="-mx-page flex gap-3 overflow-hidden px-page pb-1">
               {Array.from({ length: 3 }, (_, index) => (
                 <ProviderMiniCardSkeleton key={index} />
               ))}
@@ -144,7 +94,8 @@ export default function HomePage() {
           ) : featuredProviders.length === 0 ? (
             <EmptyState message="لا يوجد مقدمو خدمات بعد" icon={<Grid2x2 size={40} />} />
           ) : (
-            <div className="scroll-x snap-row flex gap-3 pb-1">
+            // يمتدّ إلى حافتي الشاشة، والبطاقة التالية نصف ظاهرة تدعو للتمرير
+            <div className="scroll-x snap-row -mx-page flex scroll-px-page gap-3 px-page pb-1">
               {featuredProviders.map((provider) => (
                 <ProviderMiniCard key={provider.id} provider={provider} />
               ))}
@@ -154,19 +105,7 @@ export default function HomePage() {
 
         {/* ---- خدمات شائعة ---- */}
         <section aria-label="خدمات شائعة">
-          <SectionHeader
-            title="خدمات شائعة"
-            action={
-              <Link
-                href="/services"
-                className="inline-flex items-center gap-1 text-meta font-semibold text-brand-600"
-              >
-                عرض الكل
-                <ChevronLeft size={16} aria-hidden="true" />
-              </Link>
-            }
-            className="mb-3"
-          />
+          <SectionHeader title="خدمات شائعة" action={<SeeAll href="/services" />} className="mb-3" />
 
           {popular.isPending ? (
             <SkeletonList count={2} Item={ServiceCardSkeleton} />
@@ -188,5 +127,17 @@ export default function HomePage() {
 
       <BottomNav variant={nav.variant} />
     </>
+  );
+}
+
+function SeeAll({ href }: { href: string }) {
+  return (
+    <Link
+      href={href}
+      className="pressable inline-flex items-center gap-0.5 text-meta font-bold text-brand-600"
+    >
+      الكل
+      <ChevronLeft size={16} aria-hidden="true" />
+    </Link>
   );
 }

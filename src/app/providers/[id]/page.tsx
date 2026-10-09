@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
-  CalendarDays,
+  BadgeCheck,
   ChevronLeft,
   Gavel,
   Heart,
@@ -14,10 +14,9 @@ import {
   MessageCircle,
   Phone,
   Share2,
-  ShieldCheck,
   Star,
-  Wrench,
 } from 'lucide-react';
+import { ProfileTopBar, TopBarButton } from '@/components/features/discovery/profile-top-bar';
 import { BackHeader } from '@/components/layout/back-header';
 import { PageContainer } from '@/components/layout/page-container';
 import { Chip } from '@/components/ui/badge';
@@ -32,13 +31,7 @@ import { ReportProvider } from '@/components/features/discovery/report-provider'
 import { Rating } from '@/components/features/discovery/rating-stars';
 import { ServiceCard } from '@/components/features/discovery/service-card';
 import { cloudinaryUrl } from '@/lib/cloudinary-url';
-import {
-  formatDateShort,
-  formatExperience,
-  formatNumber,
-  formatRating,
-  formatRelativeTime,
-} from '@/lib/format';
+import { formatNumber, formatRating, formatRelativeTime } from '@/lib/format';
 import { useProvider, useProviderReviews, useServices } from '@/lib/queries/discovery';
 import { useMe } from '@/lib/queries/auth';
 import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
@@ -105,7 +98,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
   const onFavorite = () => {
     if (me.isPending) return;
     if (!me.data) {
-      toast.info('سجّل دخولك علشان تحفظ في المفضلة', {
+      toast.info('سجّل الدخول لحفظ مقدم الخدمة في المفضلة', {
         action: {
           label: 'دخول',
           onClick: () => router.push(`/login?next=${encodeURIComponent(`/providers/${id}`)}`),
@@ -133,7 +126,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
       },
       { onError: () => toast.error('تعذّر تحديث المفضلة. حاول مرة أخرى.') }
     );
-    toast.success(isFavorite ? 'اتشال من المفضلة' : 'اتضاف للمفضلة');
+    toast.success(isFavorite ? 'أُزيل من المفضلة' : 'أُضيف إلى المفضلة');
   };
 
   /**
@@ -158,7 +151,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
     }
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('اتنسخ رابط الملف');
+      toast.success('نُسخ رابط الملف');
     } catch {
       toast.error('تعذّر نسخ الرابط');
     }
@@ -189,126 +182,143 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
   }
 
   const data = provider.data;
-  const heroImage = cloudinaryUrl(data.gallery[0], { width: 520, height: 240 });
+  // ضعف العرض المعروض تقريبًا — شاشات الهواتف كثيفة البكسل
+  const heroImage = cloudinaryUrl(data.gallery[0], { width: 800, height: 520 });
+  const reviewsCount = Math.max(reviewsTotal, data.ratingCount);
 
   return (
     <>
-      <BackHeader />
-
-      {/* الحشو السفلي يعادل ارتفاع فوتر الإجراءات الثابت — بدونه يغطّي آخر المحتوى */}
-      <PageContainer className="flex flex-col gap-4 pb-32 pt-3" withBottomNav={false}>
-        {/* ---- صورة كبيرة + عدّاد الصور + إجراءات ---- */}
-        <div className="relative h-[200px] overflow-hidden rounded-card bg-brand-50">
-          {heroImage ? (
-            <Image
-              src={heroImage}
-              alt={data.displayName}
-              fill
-              sizes="(max-width: 520px) 100vw, 520px"
-              priority
-              className="object-cover"
-            />
-          ) : (
-            <span className="flex size-full items-center justify-center text-brand-600">
-              <CatalogIcon name={data.professionIcon} size={72} strokeWidth={1.25} />
-            </span>
-          )}
-
-          <div className="absolute end-3 top-3 flex gap-2">
-            <ProfileIconButton
-              label="مشاركة الملف"
-              icon={<Share2 size={18} />}
-              onClick={() => void onShare()}
-            />
+      <ProfileTopBar
+        title={data.displayName}
+        actions={
+          <>
+            <TopBarButton label="مشاركة الملف" onClick={() => void onShare()}>
+              <Share2 size={18} />
+            </TopBarButton>
             {!isOwnProfile && (
-              <ProfileIconButton
+              <TopBarButton
                 label={isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
                 pressed={isFavorite}
-                icon={
-                  <Heart
-                    size={18}
-                    className={isFavorite ? 'fill-danger text-danger' : undefined}
-                  />
-                }
                 onClick={onFavorite}
-              />
-            )}
-          </div>
-
-          {data.gallery.length > 0 && (
-            <span className="absolute bottom-3 start-3 inline-flex items-center gap-1 rounded-pill bg-ink-900/70 px-3 py-1 text-badge font-semibold text-white">
-              <ImageIcon size={14} aria-hidden="true" />
-              <span className="num">{formatNumber(data.gallery.length)} صورة</span>
-            </span>
-          )}
-        </div>
-
-        {/* ---- الهوية ---- */}
-        <header className="flex flex-col gap-2">
-          <h1 className="flex flex-wrap items-center gap-2 text-section font-extrabold text-ink-900">
-            {data.displayName}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-600">
-            <Rating value={data.ratingAvg} count={data.ratingCount} />
-            {data.area && (
-              <span className="inline-flex items-center gap-1 text-ink-400">
-                <MapPin size={15} aria-hidden="true" />
-                {data.area}
-              </span>
-            )}
-            {data.yearsOfExperience != null && (
-              <span className="num inline-flex items-center gap-1 text-ink-400">
-                <ShieldCheck size={15} className="text-success" aria-hidden="true" />
-                {formatExperience(data.yearsOfExperience)}
-              </span>
-            )}
-          </div>
-
-          {/*
-           * مسار التنقّل (التصنيفات › التصنيف › الاسم) نمط مواقع أُزيل من
-           * أعلى الصفحة؛ رابط التصنيف بقي هنا بجوار التخصص.
-           */}
-          <div className="flex flex-wrap items-center gap-2">
-            {data.professionName && (
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-50 px-3 py-1 text-badge font-semibold text-brand-600">
-                <CatalogIcon name={data.professionIcon} size={14} />
-                {data.professionName}
-              </span>
-            )}
-            {data.categoryName && data.categorySlug && (
-              <Link
-                href={`/categories/${data.categorySlug}`}
-                className="pressable inline-flex w-fit items-center gap-0.5 rounded-pill border border-border px-3 py-1 text-badge font-semibold text-ink-600"
               >
-                {data.categoryName}
-                <ChevronLeft size={14} aria-hidden="true" />
-              </Link>
+                <Heart size={18} className={isFavorite ? 'fill-danger text-danger' : undefined} />
+              </TopBarButton>
             )}
+          </>
+        }
+      />
+
+      {/* ---- صورة الغلاف — بعرض الشاشة وتحت شريط الحالة ---- */}
+      <div className="relative mx-auto h-[calc(15rem+env(safe-area-inset-top,0px))] max-w-[520px] overflow-hidden bg-brand-600">
+        {heroImage ? (
+          <Image
+            src={heroImage}
+            alt={`من أعمال ${data.displayName}`}
+            fill
+            sizes="(max-width: 520px) 100vw, 520px"
+            priority
+            className="object-cover"
+          />
+        ) : (
+          // بلا صور أعمال: أيقونة المهنة على لون العلامة بدل مربع فارغ
+          <span className="flex size-full items-center justify-center bg-linear-to-b from-brand-500 to-brand-700 text-white/90">
+            <CatalogIcon name={data.professionIcon} size={88} strokeWidth={1.1} />
+          </span>
+        )}
+
+        {/* تدرّج فاتح أعلى الصورة: أيقونات شريط الحالة الداكنة تبقى مقروءة فوق أي صورة */}
+        <span
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-white/70 to-transparent"
+          aria-hidden="true"
+        />
+
+        {data.gallery.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setTab('gallery')}
+            className="pressable absolute bottom-9 start-3 inline-flex items-center gap-1 rounded-pill bg-ink-900/70 px-3 py-1 text-badge font-semibold text-white backdrop-blur-sm"
+          >
+            <ImageIcon size={14} aria-hidden="true" />
+            <span className="num">{formatNumber(data.gallery.length)} صورة</span>
+          </button>
+        )}
+      </div>
+
+      {/* ---- المحتوى: لوح أبيض يعلو الغلاف بحافة مستديرة ---- */}
+      <div className="relative mx-auto -mt-6 max-w-[520px] rounded-t-[1.5rem] bg-surface">
+      {/* الحشو السفلي يعادل ارتفاع فوتر الإجراءات الثابت — بدونه يغطّي آخر المحتوى */}
+      <PageContainer className="flex flex-col gap-4 pb-32" withBottomNav={false}>
+        {/* ---- الهوية ---- */}
+        <header className="flex flex-col gap-3">
+          <MediaThumb
+            url={data.avatar}
+            alt={data.displayName}
+            size={84}
+            iconName={data.professionIcon}
+            rounded="full"
+            className="-mt-11 ring-4 ring-surface"
+          />
+
+          <div className="flex flex-col gap-1">
+            <h1 className="flex flex-wrap items-center gap-1.5 text-[1.375rem] font-extrabold leading-tight text-ink-900">
+              {data.displayName}
+              {data.isVerifiedBadge && (
+                <BadgeCheck
+                  size={22}
+                  className="fill-brand-600 text-white"
+                  role="img"
+                  aria-label="موثّق"
+                />
+              )}
+            </h1>
+            <p className="flex flex-wrap items-center gap-x-1.5 text-body text-ink-600">
+              {data.professionName && <span>{data.professionName}</span>}
+              {data.professionName && data.area && <span aria-hidden="true">·</span>}
+              {data.area && (
+                <span className="inline-flex items-center gap-0.5">
+                  <MapPin size={15} className="text-ink-400" aria-hidden="true" />
+                  {data.area}
+                </span>
+              )}
+            </p>
           </div>
+
+          {/* ---- الأرقام التي يقرّر بها العميل — في سطر واحد ---- */}
+          <dl className="grid grid-cols-3 rounded-card border border-border py-3">
+            <StatCell
+              label="التقييم"
+              value={
+                data.ratingCount > 0 ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Star size={16} className="fill-star text-star" aria-hidden="true" />
+                    {formatRating(data.ratingAvg)}
+                  </span>
+                ) : (
+                  'جديد'
+                )
+              }
+            />
+            <StatCell label="مراجعة" value={formatNumber(reviewsCount)} />
+            {data.yearsOfExperience != null ? (
+              <StatCell label="سنة خبرة" value={formatNumber(data.yearsOfExperience)} />
+            ) : (
+              <StatCell label="خدمة" value={formatNumber(data.servicesCount)} />
+            )}
+          </dl>
+
+          {data.categoryName && data.categorySlug && (
+            <Link
+              href={`/categories/${data.categorySlug}`}
+              className="pressable inline-flex w-fit items-center gap-0.5 rounded-pill bg-bg px-3 py-1.5 text-badge font-semibold text-ink-600"
+            >
+              {data.categoryName}
+              <ChevronLeft size={14} aria-hidden="true" />
+            </Link>
+          )}
         </header>
 
-        {/* ---- الإحصاءات ---- */}
-        <Card className="grid grid-cols-3 divide-x divide-x-reverse divide-border p-0">
-          <StatCell
-            icon={<CalendarDays size={18} />}
-            label="عضو منذ"
-            value={data.memberSince ? formatDateShort(data.memberSince).split(' ').slice(-1)[0] ?? '—' : '—'}
-          />
-          <StatCell
-            icon={<Star size={18} />}
-            label="التقييم"
-            value={data.ratingCount > 0 ? formatRating(data.ratingAvg) : '—'}
-          />
-          <StatCell
-            icon={<Wrench size={18} />}
-            label="الخدمات"
-            value={formatNumber(data.servicesCount)}
-          />
-        </Card>
-
-        {/* ---- معلومات هامة — إخلاء مسؤولية المنصة ---- */}
-        <Card className="flex flex-col gap-2">
+        {/* ---- معلومات هامة — إخلاء مسؤولية المنصة (بلون محايد لا ينافس الهوية) ---- */}
+        <div className="flex flex-col gap-2 rounded-card bg-bg p-4">
           <h2 className="flex items-center gap-2 text-label font-bold text-ink-900">
             <Gavel size={18} className="text-brand-600" aria-hidden="true" />
             معلومات هامة
@@ -318,10 +328,11 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             <li>نحن غير مسؤولين عن جودة الخدمة. يتم الاتفاق مباشرة مع مقدم الخدمة.</li>
             <li>السعر والدفع يتم الاتفاق عليهما مباشرة بينك وبين مقدم الخدمة.</li>
           </ul>
-        </Card>
+        </div>
 
-        {/* ---- التبويبات ---- */}
+        {/* ---- التبويبات — تلتصق تحت الشريط العلوي أثناء التمرير ---- */}
         <ProfileTabs
+          className="sticky top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-20 -mx-page bg-surface px-page"
           tabs={[
             { key: 'about', label: 'نبذة' },
             { key: 'services', label: 'الخدمات', count: data.servicesCount },
@@ -437,6 +448,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
 
         {me.data && !isOwnProfile && <ReportProvider providerId={id} />}
       </PageContainer>
+      </div>
 
       {/* ---- فوتر التواصل الثابت ---- */}
       <div className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-sm">
@@ -490,65 +502,29 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
 
 /* ---- عناصر داخلية ---- */
 
-function ProfileIconButton({
-  label,
-  icon,
-  pressed,
-  onClick,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  /** زر تبديل (المفضلة) — يُعلن حالته لقارئ الشاشة. */
-  pressed?: boolean;
-  onClick: () => void;
-}) {
+/** خانة رقم في صف الإحصاءات — الرقم كبير والوصف تحته. */
+function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={pressed}
-      title={label}
-      onClick={onClick}
-      className="pressable flex size-9 items-center justify-center rounded-full bg-surface/90 text-ink-600 shadow-card hover:text-brand-600"
-    >
-      {icon}
-    </button>
-  );
-}
-
-function StatCell({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1 px-1 py-3 text-center">
-      <span className="text-brand-600" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="num text-label font-extrabold text-ink-900">{value}</span>
-      <span className="text-badge text-ink-400">{label}</span>
+    <div className="flex flex-col-reverse items-center gap-0.5 border-border px-1 text-center [&:not(:first-child)]:border-s">
+      <dt className="text-badge text-ink-400">{label}</dt>
+      <dd className="num text-section font-extrabold text-ink-900">{value}</dd>
     </div>
   );
 }
 
+/** بنفس هيكل الصفحة الحقيقية (غلاف · صورة دائرية · اسم · أرقام) كي لا يقفز شيء عند الوصول. */
 function ProfileSkeleton() {
   return (
     <>
       <BackHeader />
-      <PageContainer className="flex flex-col gap-4 pt-3">
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-[200px] w-full rounded-card" />
+      <Skeleton className="mx-auto h-[calc(15rem+env(safe-area-inset-top,0px))] max-w-[520px] rounded-none" />
+      <PageContainer className="flex flex-col gap-3" withBottomNav={false}>
+        <Skeleton className="-mt-11 size-[84px] rounded-full ring-4 ring-surface" />
         <Skeleton className="h-7 w-56" />
         <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-14 w-full rounded-card" />
-        <Skeleton className="h-20 w-full rounded-card" />
-        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-[4.5rem] w-full rounded-card" />
         <Skeleton className="h-24 w-full rounded-card" />
+        <Skeleton className="h-10 w-full" />
       </PageContainer>
     </>
   );

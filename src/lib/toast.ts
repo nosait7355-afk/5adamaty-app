@@ -39,7 +39,7 @@ function show(tone: ToastTone, message: string, options?: ToastOptions) {
 /**
  * يُستدعى من أي مكان (معالجات الأحداث، `onSuccess` في الـmutations):
  *
- *   toast.success('اتضافت للمفضلة', { action: { label: 'تراجع', onClick: undo } });
+ *   toast.success('أُضيف إلى المفضلة', { action: { label: 'تراجع', onClick: undo } });
  */
 export const toast = {
   success: (message: string, options?: ToastOptions) => show('success', message, options),

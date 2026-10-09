@@ -38,7 +38,7 @@ export function ReportProvider({ providerId }: { providerId: string }) {
       {
         onSuccess: () => {
           setOpen(false);
-          toast.success('وصل البلاغ، وفريق الإدارة هيراجعه');
+          toast.success('وصل البلاغ، وسيراجعه فريق الإدارة');
         },
       }
     );
@@ -85,7 +85,7 @@ export function ReportProvider({ providerId }: { providerId: string }) {
       >
         <div className="flex flex-col gap-4">
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-label text-ink-600">إيه المشكلة؟</legend>
+            <legend className="mb-2 text-label text-ink-600">ما المشكلة؟</legend>
             {REPORT_REASONS.map((value) => (
               <label
                 key={value}

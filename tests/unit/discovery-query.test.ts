@@ -13,6 +13,7 @@ import {
   searchQuerySchema,
   SORT_OPTIONS,
 } from '@/shared/schemas/catalog.schema';
+import { arabicSearchPattern } from '@/shared/arabic';
 
 /**
  * اختبارات وحدة لبناء الاستعلام — بلا قاعدة بيانات.
@@ -173,17 +174,18 @@ describe('البحث الجزئي (الخطة الثانية)', () => {
   it('الوضع الجزئي يبحث في حقلي البطاقة بلا فهرس نصي', () => {
     const match = buildServiceMatch({ q: 'كهرب', qMode: 'prefix' });
     expect(match.$text).toBeUndefined();
+    // النمط يتسامح مع التشكيل والهمزات — انظر tests/unit/arabic.test.ts
     expect(match.$or).toEqual([
-      { title: { $regex: 'كهرب', $options: 'i' } },
-      { description: { $regex: 'كهرب', $options: 'i' } },
+      { title: { $regex: arabicSearchPattern('كهرب'), $options: 'i' } },
+      { description: { $regex: arabicSearchPattern('كهرب'), $options: 'i' } },
     ]);
   });
 
   it('الوضع الجزئي للمزوّدين يبحث في الاسم والنبذة', () => {
     const match = buildProviderMatch({ q: 'كهرب', qMode: 'prefix' });
     expect(match.$or).toEqual([
-      { displayName: { $regex: 'كهرب', $options: 'i' } },
-      { bio: { $regex: 'كهرب', $options: 'i' } },
+      { displayName: { $regex: arabicSearchPattern('كهرب'), $options: 'i' } },
+      { bio: { $regex: arabicSearchPattern('كهرب'), $options: 'i' } },
     ]);
     // الحارس باقٍ حتى في الوضع الجزئي
     expect(match.isActive).toBe(true);

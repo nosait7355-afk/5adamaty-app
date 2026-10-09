@@ -7,41 +7,11 @@ import { NAV_FORWARD } from '@/lib/view-transitions';
 import type { CategoryDto, ProfessionDto } from '@/server/services/catalog.service';
 
 /**
- * ثلاث صيغ لعرض الكتالوج، كل واحدة مرسومة في صورة مختلفة:
+ * صيغتان لعرض الكتالوج (شريط الرئيسية الدائري في `category-rail.tsx`):
  *
- * - `CategoryTile`     — مربع 1:1 مصغّر، صف من 6 في الرئيسية (الصورة 06).
  * - `CategoryCard`     — بطاقة بدائرة 84px ووصف وشريط عدّاد (الصورة 08).
  * - `ProfessionCard`   — بطاقة مسطّحة بأيقونة ملوّنة وعدّاد (الصورة 07).
  */
-
-export interface CategoryTileProps {
-  href: string;
-  label: string;
-  icon?: string | undefined;
-  className?: string;
-}
-
-/** مربع التصنيف المصغّر — الصورة 06. */
-export function CategoryTile({ href, label, icon, className }: CategoryTileProps) {
-  return (
-    <Link
-      href={href}
-      transitionTypes={NAV_FORWARD}
-      className={cn(
-        'flex aspect-square flex-col items-center justify-center gap-1 rounded-field',
-        'pressable border border-border bg-surface p-1 text-center hover:bg-brand-50',
-        className
-      )}
-    >
-      <span className="text-brand-600">
-        <CatalogIcon name={icon} size={20} />
-      </span>
-      <span className="line-clamp-2 w-full px-0.5 text-[11px] font-semibold leading-tight text-ink-700">
-        {label}
-      </span>
-    </Link>
-  );
-}
 
 export interface CategoryCardProps {
   category: CategoryDto;

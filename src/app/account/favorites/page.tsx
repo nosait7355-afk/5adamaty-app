@@ -35,7 +35,7 @@ export default function FavoritesPage() {
   const remove = (input: ToggleFavoriteInput, undo: ToggleFavoriteInput) => {
     const onError = () => toast.error('تعذّر تحديث المفضلة. حاول مرة أخرى.');
     toggle.mutate(input, { onError });
-    toast.success('اتشالت من المفضلة', {
+    toast.success('أُزيل من المفضلة', {
       action: { label: 'تراجع', onClick: () => toggle.mutate(undo, { onError }) },
     });
   };

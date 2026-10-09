@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { BadgeCheck, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MediaThumb } from './media-thumb';
 import { Rating } from './rating-stars';
@@ -38,8 +38,16 @@ export function ProviderMiniCard({ provider, className }: ProviderMiniCardProps)
         />
       </span>
 
-      <span className="line-clamp-1 w-full text-label font-bold text-ink-900">
-        {provider.displayName}
+      <span className="flex w-full items-center justify-center gap-1 text-label font-bold text-ink-900">
+        <span className="line-clamp-1">{provider.displayName}</span>
+        {provider.isVerifiedBadge && (
+          <BadgeCheck
+            size={16}
+            className="shrink-0 fill-brand-600 text-white"
+            aria-label="موثّق"
+            role="img"
+          />
+        )}
       </span>
 
       {provider.professionName && (

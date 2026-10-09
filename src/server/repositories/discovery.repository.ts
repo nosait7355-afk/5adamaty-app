@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { connectToDatabase } from '@/server/db/mongoose';
 import { Category, Profession, Review, Service, ServiceProvider, User } from '@/server/db/models';
 import type { SortOption } from '@/shared/schemas/catalog.schema';
+import { arabicSearchPattern } from '@/shared/arabic';
 
 /**
  * طبقة الوصول لبيانات الاكتشاف (Phase 5).
@@ -111,7 +112,8 @@ function applySearch(
   if (!filters.q) return;
 
   if (filters.qMode === 'prefix') {
-    const pattern = escapeRegex(filters.q);
+    // «سباك» تطابق «سبّاك»: التشكيل والهمزات لا تمنع المطابقة (shared/arabic)
+    const pattern = arabicSearchPattern(filters.q);
     match.$or = fields.map((field) => ({ [field]: { $regex: pattern, $options: 'i' } }));
     return;
   }

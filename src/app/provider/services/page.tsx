@@ -109,10 +109,10 @@ export default function ProviderServicesPage() {
     try {
       if (editingId) {
         await updateMutation.mutateAsync({ id: editingId, patch: payload });
-        toast.success('اتحفظت التعديلات');
+        toast.success('حُفظت التعديلات');
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success('اتضافت الخدمة');
+        toast.success('أُضيفت الخدمة');
       }
       setMode('list');
     } catch (error) {
@@ -133,7 +133,7 @@ export default function ProviderServicesPage() {
     if (!pendingDelete) return;
     try {
       await deleteMutation.mutateAsync(pendingDelete.id);
-      toast.success('اتحذفت الخدمة');
+      toast.success('حُذفت الخدمة');
     } catch (error) {
       toast.error(
         error instanceof ApiClientError ? error.message : 'تعذّر حذف الخدمة. حاول مرة أخرى.'
@@ -299,7 +299,7 @@ export default function ProviderServicesPage() {
       <ConfirmSheet
         open={deleteOpen}
         title={`تحذف «${pendingDelete?.title ?? ''}»؟`}
-        description="الخدمة هتختفي من ملفك ومن نتائج البحث، ومش هتقدر ترجّعها."
+        description="ستختفي الخدمة من ملفك ومن نتائج البحث، ولا يمكن استرجاعها."
         confirmLabel="حذف الخدمة"
         icon={<Trash2 size={24} />}
         loading={deleteMutation.isPending}
