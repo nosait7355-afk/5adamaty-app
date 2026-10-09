@@ -34,8 +34,9 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     // يسري مع نسخة المتجر القادمة؛ حتى ذلك الحين يضبطه `NativeBridge` عند الفتح
+    // (ويتبع الوضع الليلي هناك — DEFAULT هنا يتبع إعداد الجهاز من أول إطار)
     StatusBar: {
-      style: 'LIGHT',
+      style: 'DEFAULT',
       backgroundColor: '#ffffff',
     },
     /*

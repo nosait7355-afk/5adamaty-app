@@ -40,14 +40,23 @@ export function NativeBridge() {
       ]);
 
       /*
-       * شريط الحالة بلون الهيدر الأبيض وأيقونات داكنة — كالتطبيقات الأصلية،
-       * بدل شريط أزرق منفصل فوق هيدر أبيض. `Style.Light` تعني «نص داكن
-       * لخلفية فاتحة». على أندرويد 15+ (targetSdk 36) الشريط يطفو فوق الصفحة
-       * إجباريًا ولا يُلوَّن، فالمهم هناك لون الأيقونات وحده؛ لونه يظهر
-       * على الإصدارات الأقدم فقط.
+       * شريط الحالة بلون الهيدر — كالتطبيقات الأصلية — ويتبع الوضع الليلي:
+       * `Style.Light` = أيقونات داكنة لخلفية فاتحة، و`Style.Dark` العكس. على
+       * أندرويد 15+ (targetSdk 36) الشريط يطفو فوق الصفحة إجباريًا ولا
+       * يُلوَّن، فالمهم هناك لون الأيقونات وحده؛ لونه يظهر على الأقدم فقط.
+       * الألوان = `--color-surface` في الوضعين (globals.css).
        */
-      await StatusBar.setStyle({ style: Style.Light }).catch(() => undefined);
-      await StatusBar.setBackgroundColor({ color: '#ffffff' }).catch(() => undefined);
+      const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const applyStatusBar = (dark: boolean) => {
+        void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => undefined);
+        void StatusBar.setBackgroundColor({ color: dark ? '#151b26' : '#ffffff' }).catch(
+          () => undefined
+        );
+      };
+      applyStatusBar(darkQuery.matches);
+      // تبديل الوضع من إعدادات الهاتف والتطبيق مفتوح
+      const onSchemeChange = (event: MediaQueryListEvent) => applyStatusBar(event.matches);
+      darkQuery.addEventListener('change', onSchemeChange);
 
       // الشاشات الجذرية (الرئيسية وأخواتها) تُغلق التطبيق؛ غيرها يرجع للسابقة
       // أو — إن لم يوجد سجل — للرئيسية، بدل إغلاق التطبيق من صفحة داخلية.
@@ -60,6 +69,7 @@ export function NativeBridge() {
 
       cleanup = () => {
         void backListener.remove();
+        darkQuery.removeEventListener('change', onSchemeChange);
       };
     })();
 

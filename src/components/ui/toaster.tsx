@@ -45,7 +45,7 @@ export function Toaster() {
         <div
           key={current.id}
           onClick={() => dismiss(current.id)}
-          className="toast pointer-events-auto flex items-center gap-2.5 rounded-card bg-ink-900 px-4 py-3 text-label font-semibold text-white shadow-card-hover"
+          className="toast pointer-events-auto flex items-center gap-2.5 rounded-card bg-inverse px-4 py-3 text-label font-semibold text-on-inverse shadow-card-hover"
         >
           <span
             className={cn(
@@ -65,7 +65,7 @@ export function Toaster() {
                 current.action?.onClick();
                 dismiss(current.id);
               }}
-              className="pressable shrink-0 rounded-field px-2 py-1 font-extrabold text-brand-200"
+              className="pressable shrink-0 rounded-field px-2 py-1 font-extrabold text-inverse-accent"
             >
               {current.action.label}
             </button>

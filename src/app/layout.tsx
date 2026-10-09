@@ -26,8 +26,17 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  // بلون الهيدر الأبيض — شريط المتصفح/النظام يبدو امتدادًا للصفحة لا شريطًا منفصلًا
-  themeColor: '#ffffff',
+  // بلون الهيدر — شريط المتصفح/النظام يبدو امتدادًا للصفحة لا شريطًا منفصلًا،
+  // في الوضعين (قيمة الداكن = `--color-surface` الليلي في globals.css)
+  /*
+   * يعلن أن الصفحة تدعم الوضعين بنفسها: WebView أندرويد لا يطبّق «التعتيم
+   * الآلي» فوق ألواننا، وعناصر النماذج الأصلية تأخذ لون الوضع الحالي.
+   */
+  colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#151b26' },
+  ],
   // ضروري لاحترام safe areas على iPhone
   viewportFit: 'cover',
 };

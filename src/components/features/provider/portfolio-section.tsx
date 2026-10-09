@@ -201,7 +201,7 @@ export function PortfolioSection({ items, readOnly = false, className }: Portfol
                   onClick={() => void handleRemove(item.publicId)}
                   disabled={removing !== null}
                   aria-label="حذف من سابقة الأعمال"
-                  className="absolute end-1.5 top-1.5 flex size-8 items-center justify-center rounded-full bg-ink-900/60 text-white transition-colors hover:bg-danger disabled:opacity-50"
+                  className="absolute end-1.5 top-1.5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-danger disabled:opacity-50"
                 >
                   {removing === item.publicId ? <Spinner size={14} /> : <Trash2 size={14} />}
                 </button>

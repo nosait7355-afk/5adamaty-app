@@ -195,7 +195,7 @@ function SearchScreen() {
                       href={professionHref(profession)}
                       transitionTypes={NAV_FORWARD}
                       onClick={() => remember(profession.name)}
-                      className="pressable inline-flex items-center gap-1.5 rounded-pill bg-brand-50 px-3.5 py-2 text-label font-semibold text-brand-700"
+                      className="pressable inline-flex items-center gap-1.5 rounded-pill bg-brand-50 px-3.5 py-2 text-label font-semibold text-brand-600"
                     >
                       <TrendingUp size={15} aria-hidden="true" />
                       {profession.name}

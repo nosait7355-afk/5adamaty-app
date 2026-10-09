@@ -226,9 +226,9 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           </span>
         )}
 
-        {/* تدرّج فاتح أعلى الصورة: أيقونات شريط الحالة الداكنة تبقى مقروءة فوق أي صورة */}
+        {/* تدرّج بلون السطح أعلى الصورة: أيقونات شريط الحالة تبقى مقروءة فوق أي صورة — داكنة على فاتح نهارًا، فاتحة على داكن ليلًا */}
         <span
-          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-white/70 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-surface/70 to-transparent"
           aria-hidden="true"
         />
 
@@ -236,7 +236,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           <button
             type="button"
             onClick={() => setTab('gallery')}
-            className="pressable absolute bottom-9 start-3 inline-flex items-center gap-1 rounded-pill bg-ink-900/70 px-3 py-1 text-badge font-semibold text-white backdrop-blur-sm"
+            className="pressable absolute bottom-9 start-3 inline-flex items-center gap-1 rounded-pill bg-black/60 px-3 py-1 text-badge font-semibold text-white backdrop-blur-sm"
           >
             <ImageIcon size={14} aria-hidden="true" />
             <span className="num">{formatNumber(data.gallery.length)} صورة</span>
@@ -392,7 +392,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
                         controls
                         preload="metadata"
                         playsInline
-                        className="w-full rounded-field bg-ink-900"
+                        className="w-full rounded-field bg-black"
                       />
                     ))}
                   </div>
