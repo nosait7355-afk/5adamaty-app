@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { CatalogIcon } from '@/components/common/catalog-icon';
 import { cn } from '@/lib/cn';
 import { formatServicesCount } from '@/lib/format';
+import { NAV_FORWARD } from '@/lib/view-transitions';
 import type { CategoryDto, ProfessionDto } from '@/server/services/catalog.service';
 
 /**
@@ -25,6 +26,7 @@ export function CategoryTile({ href, label, icon, className }: CategoryTileProps
   return (
     <Link
       href={href}
+      transitionTypes={NAV_FORWARD}
       className={cn(
         'flex aspect-square flex-col items-center justify-center gap-1 rounded-field',
         'pressable border border-border bg-surface p-1 text-center hover:bg-brand-50',
@@ -51,6 +53,7 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
   return (
     <Link
       href={`/categories/${category.slug}`}
+      transitionTypes={NAV_FORWARD}
       className={cn(
         'flex flex-col items-center gap-1.5 rounded-card border border-border bg-surface',
         'pressable p-3 text-center shadow-card hover:shadow-card-hover',
@@ -88,6 +91,7 @@ export function ProfessionCard({ profession, categorySlug, className }: Professi
   return (
     <Link
       href={`/services?categorySlug=${categorySlug}&professionSlug=${profession.slug}`}
+      transitionTypes={NAV_FORWARD}
       className={cn(
         'flex flex-col items-center gap-2 rounded-field border border-border bg-surface',
         'p-3 text-center transition-colors hover:bg-brand-50',

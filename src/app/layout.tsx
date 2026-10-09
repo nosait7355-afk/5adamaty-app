@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Cairo } from 'next/font/google';
-import { headers } from 'next/headers';
+import { connection } from 'next/server';
+import { Suspense } from 'react';
 import '@/styles/globals.css';
 import { AppProviders } from '@/app/providers';
 
@@ -31,18 +32,28 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  /*
-   * قراءة `headers()` هنا مقصودة لذاتها لا لقيمتها: تُدخل التخطيط في العرض
-   * الديناميكي لكل طلب، فيلتقط Next.js تلقائيًا الـnonce من ترويسة CSP
-   * الصادرة (`src/proxy.ts`) ويُلحقه بسكربتات الإقلاع والترطيب الداخلية —
-   * دون أي تعديل يدوي آخر (بند Phase 10: تشديد CSP إلى nonce).
-   */
-  await headers();
+/**
+ * يُدخل كل صفحة في العرض الديناميكي لكل طلب، فيلتقط Next.js تلقائيًا الـnonce
+ * من ترويسة CSP الصادرة (`src/proxy.ts`) ويُلحقه بسكربتات الإقلاع والترطيب
+ * (بند Phase 10: تشديد CSP إلى nonce). لا يرسم شيئًا.
+ *
+ * ⚠️ كان `await headers()` في جسم التخطيط نفسه، فكان **كل تنقّل ينتظر** حتى
+ * يرسم الخادم التخطيط، ولا يظهر `loading.tsx` أبدًا (توثيق layout.js —
+ * «Interaction with loading.js»). داخل `<Suspense>` يبقى الأثر نفسه — طلب
+ * ديناميكي بـnonce — دون أن يحجب التنقّل.
+ */
+async function RequestTimeRendering() {
+  await connection();
+  return null;
+}
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <body>
+        <Suspense fallback={null}>
+          <RequestTimeRendering />
+        </Suspense>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { MediaThumb } from './media-thumb';
 import { Rating } from './rating-stars';
 import { cn } from '@/lib/cn';
+import { NAV_FORWARD } from '@/lib/view-transitions';
 import type { ProviderCardDto } from '@/server/services/discovery.service';
 
 export interface ProviderMiniCardProps {
@@ -20,6 +21,7 @@ export function ProviderMiniCard({ provider, className }: ProviderMiniCardProps)
   return (
     <Link
       href={`/providers/${provider.id}`}
+      transitionTypes={NAV_FORWARD}
       className={cn(
         'flex w-[172px] shrink-0 flex-col items-center gap-2 rounded-card border border-border',
         'pressable bg-surface p-4 text-center shadow-card hover:shadow-card-hover',

@@ -7,6 +7,7 @@ import { NativeBridge } from '@/components/common/native-bridge';
 import { NavigationTracker } from '@/lib/navigation-history';
 import { AdminPreviewBar } from '@/components/layout/admin-preview-bar';
 import { Toaster } from '@/components/ui/toaster';
+import { PullToRefresh } from '@/components/common/pull-to-refresh';
 
 /**
  * مزوّدو الحالة على مستوى التطبيق.
@@ -36,6 +37,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <NavigationTracker />
       {children}
       <Toaster />
+      <PullToRefresh />
       {/* زر عائم يظهر لحساب الإدارة وحده أثناء تصفّح واجهة العميل */}
       <AdminPreviewBar />
     </QueryClientProvider>

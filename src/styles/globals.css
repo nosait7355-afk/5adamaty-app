@@ -92,6 +92,11 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    /*
+     * يعطّل «اسحب لتحديث» الأصلي في كروم (يعيد تحميل الصفحة كلها) وارتداد
+     * iOS عند الحافة العليا — `PullToRefresh` يحلّ محلهما ويحدّث البيانات فقط.
+     */
+    overscroll-behavior-y: none;
   }
 
   body {
@@ -359,5 +364,96 @@ html:has(.sheet[open]) {
   .toast {
     translate: 0 -120%;
     opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   الانتقال بين الشاشات — React <ViewTransition> (المرحلة 3)
+   الصفحات تتحرك داخل `PageContainer`؛ الترويسة وشريط التنقّل ثابتان.
+   ========================================================================== */
+
+/* اللمسات أثناء الحركة تصل للصفحة الحية بدل أن يبتلعها غطاء الانتقال */
+::view-transition {
+  pointer-events: none;
+}
+
+/*
+ * التعمّق (nav-forward) في واجهة عربية: الصفحة الجديدة تدخل من **اليسار**
+ * والقديمة تخرج يمينًا — عكس الأمثلة الإنجليزية، لأن «الأمام» عندنا يسار.
+ */
+::view-transition-old(.nav-forward) {
+  --slide-offset: 48px;
+  animation:
+    140ms ease-in both vt-fade reverse,
+    320ms cubic-bezier(0.2, 0.8, 0.2, 1) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: -48px;
+  animation:
+    200ms ease-out 100ms both vt-fade,
+    320ms cubic-bezier(0.2, 0.8, 0.2, 1) both vt-slide;
+}
+
+/* الرجوع وتبديل التبويبات: تلاشٍ سريع ثم ظهور بارتفاع طفيف — بلا اتجاه */
+::view-transition-old(.fade-through) {
+  animation: 90ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.fade-through) {
+  --rise: 8px;
+  animation:
+    210ms ease-out 90ms both vt-fade,
+    300ms cubic-bezier(0.2, 0.8, 0.2, 1) both vt-rise;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--slide-offset) 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes vt-rise {
+  from {
+    translate: 0 var(--rise);
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+/*
+ * المراسي: الترويسة وشريط التنقّل لا ينزلقان مع المحتوى — نقطة ثبات تُفهم
+ * المستخدم أن المحتوى هو الذي تحرّك. النسخة القديمة تُخفى كي لا تظهر
+ * ترويستان لحظيًا.
+ */
+::view-transition-group(app-header),
+::view-transition-group(bottom-nav) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(app-header),
+::view-transition-old(bottom-nav) {
+  display: none;
+}
+::view-transition-new(app-header),
+::view-transition-new(bottom-nav) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

@@ -6,35 +6,42 @@ import { ArrowRight } from 'lucide-react';
 import { BrandMark } from './brand-mark';
 import { cn } from '@/lib/cn';
 import { isRootPath, useSafeBack } from '@/lib/navigation-history';
-import { GOVERNORATE } from '@/shared/constants/fayoum-areas';
-import { MapPin } from 'lucide-react';
+import { usePageTitleStore } from '@/lib/page-title';
 
 export interface BackHeaderProps {
   onBack?: () => void;
-  locationLabel?: string;
-  /** يستبدل الجانب الأيمن (منتقي المنطقة). */
-  start?: ReactNode;
+  /** إجراء في نهاية الترويسة (يسار في RTL) — زر مشاركة مثلًا. */
+  end?: ReactNode;
   className?: string;
 }
 
 /**
- * ترويسة الصفحات الداخلية — الصور 09، 10، 11، 14، 19–23، 26–29.
+ * ترويسة الصفحات الداخلية — مضغوطة على طريقة تطبيقات iOS وأندرويد.
+ *
+ * [رجوع] — [عنوان الصفحة] — [إجراء اختياري]
+ *
+ * العنوان لا يُكرَّر: `PageTitle` يرسمه كبيرًا أعلى المحتوى، وحين يمرّ تحت
+ * الترويسة بالتمرير يظهر هنا صغيرًا (متجر `page-title`). صفحة بلا
+ * `PageTitle` تُظهر العلامة في الوسط كما كانت.
+ *
+ * منتقي المنطقة النصي أُزيل من هنا: المنطقة تخص التصفّح في الرئيسية
+ * (`AppHeader`)، وتكرارها في كل صفحة داخلية كان يزحم الترويسة بلا فائدة.
  *
  * قرار تصميمي معتمد: زر الرجوع في **يمين** الهيدر، مطابقًا لعُرف RTL على
- * أندرويد وiOS. كان في اليسار سابقًا مطابقةً حرفية للصور المرجعية، ثم
- * غُيِّر بقرار صريح لاحق.
+ * أندرويد وiOS.
  */
-export function BackHeader({
-  onBack,
-  locationLabel = GOVERNORATE,
-  start,
-  className,
-}: BackHeaderProps) {
+export function BackHeader({ onBack, end, className }: BackHeaderProps) {
+  const title = usePageTitleStore((state) => state.title);
+  const titleVisibleInPage = usePageTitleStore((state) => state.visible);
+
   return (
     <header
+      style={{ viewTransitionName: 'app-header' }}
       className={cn(
-        'sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border',
-        'bg-surface/95 px-page pt-safe pb-3 backdrop-blur-sm',
+        'sticky top-0 z-30 flex items-center justify-between gap-2 border-b bg-surface/90 px-2 pt-safe pb-1.5 backdrop-blur-md',
+        // الحد السفلي يظهر فقط حين يمرّ المحتوى تحته، كما في iOS
+        title && titleVisibleInPage ? 'border-transparent' : 'border-border',
+        'transition-[border-color] duration-200',
         className
       )}
     >
@@ -42,16 +49,21 @@ export function BackHeader({
         <BackButton {...(onBack ? { onBack } : {})} />
       </div>
 
-      <BrandMark />
+      {title ? (
+        <p
+          aria-hidden={titleVisibleInPage}
+          className={cn(
+            'line-clamp-1 max-w-[60%] text-center text-card-title font-bold text-ink-900 transition-[opacity,translate] duration-200',
+            titleVisibleInPage ? 'translate-y-1 opacity-0' : 'translate-y-0 opacity-100'
+          )}
+        >
+          {title}
+        </p>
+      ) : (
+        <BrandMark />
+      )}
 
-      <div className="flex min-w-0 flex-1 items-center justify-end">
-        {start ?? (
-          <span className="flex min-w-0 items-center gap-1 text-label font-semibold text-ink-900">
-            <MapPin size={18} className="shrink-0 text-brand-600" aria-hidden="true" />
-            <span className="truncate">{locationLabel}</span>
-          </span>
-        )}
-      </div>
+      <div className="flex min-w-0 flex-1 items-center justify-end">{end}</div>
     </header>
   );
 }
@@ -76,12 +88,11 @@ export function BackButton({ onBack, className }: { onBack?: () => void; classNa
       onClick={() => (onBack ? onBack() : safeBack())}
       aria-label="رجوع"
       className={cn(
-        'flex size-11 shrink-0 items-center justify-center rounded-field border border-border',
-        'bg-surface text-brand-600 transition-colors hover:bg-brand-50',
+        'pressable flex size-11 shrink-0 items-center justify-center rounded-full text-ink-900 hover:bg-bg',
         className
       )}
     >
-      <ArrowRight size={22} />
+      <ArrowRight size={24} />
     </button>
   );
 }

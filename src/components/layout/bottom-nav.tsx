@@ -29,6 +29,8 @@ export function BottomNav({ variant = 'customer', badges, className }: BottomNav
   return (
     <nav
       aria-label="التنقل الرئيسي"
+      // ثابت أثناء حركة الانتقال بين الشاشات — انظر globals.css
+      style={{ viewTransitionName: 'bottom-nav' }}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-safe backdrop-blur-md',
         className

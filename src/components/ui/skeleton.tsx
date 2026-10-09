@@ -25,10 +25,6 @@ export function ServiceCardSkeleton() {
           <Skeleton className="h-4 w-2/3" />
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between">
-        <Skeleton className="h-5 w-28" />
-        <Skeleton className="h-10 w-32" />
-      </div>
     </div>
   );
 }

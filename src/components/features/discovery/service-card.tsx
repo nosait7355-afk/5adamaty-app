@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { MediaThumb } from './media-thumb';
 import { Rating } from './rating-stars';
 import { cn } from '@/lib/cn';
+import { NAV_FORWARD } from '@/lib/view-transitions';
 import { formatExperience } from '@/lib/format';
 import type { ServiceCardDto } from '@/server/services/discovery.service';
 
@@ -89,6 +90,7 @@ export function ServiceCard({
              */}
             <Link
               href={`/providers/${provider.id}?serviceId=${service.id}`}
+              transitionTypes={NAV_FORWARD}
               className="outline-none after:absolute after:inset-0 after:rounded-card after:content-['']"
             >
               {service.title}

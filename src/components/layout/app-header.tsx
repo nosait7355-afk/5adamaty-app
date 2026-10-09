@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useHideOnScroll } from '@/lib/use-hide-on-scroll';
 import type { ReactNode } from 'react';
 import { Bell, MapPin } from 'lucide-react';
 import { AutoBackButton } from './back-header';
@@ -26,6 +29,8 @@ export interface AppHeaderProps {
  * التخطيط: [رجوع + منتقي المنطقة النصي] — [العلامة] — [الجرس]
  * في RTL يظهر الأول يمينًا والأخير يسارًا. زر الرجوع يختفي في الشاشات
  * الجذرية كالرئيسية (`ROOT_PATHS`).
+ *
+ * تختفي مع التمرير لأسفل وتعود فور التمرير لأعلى (`useHideOnScroll`).
  */
 export function AppHeader({
   locationLabel = GOVERNORATE,
@@ -34,11 +39,16 @@ export function AppHeader({
   start,
   className,
 }: AppHeaderProps) {
+  const hidden = useHideOnScroll();
+
   return (
     <header
+      style={{ viewTransitionName: 'app-header' }}
       className={cn(
         'sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border',
-        'bg-surface/95 px-page pt-safe pb-3 backdrop-blur-sm',
+        'bg-surface/90 px-page pt-safe pb-3 backdrop-blur-md',
+        'transition-[translate] duration-300 ease-out',
+        hidden && '-translate-y-full',
         className
       )}
     >
