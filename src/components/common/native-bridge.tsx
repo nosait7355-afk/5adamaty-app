@@ -34,10 +34,19 @@ export function NativeBridge() {
       const { Capacitor } = await import('@capacitor/core');
       if (!Capacitor.isNativePlatform()) return;
 
-      const [{ App }, { StatusBar, Style }] = await Promise.all([
+      const [{ App }, { StatusBar, Style }, { SplashScreen }] = await Promise.all([
         import('@capacitor/app'),
         import('@capacitor/status-bar'),
+        import('@capacitor/splash-screen'),
       ]);
+
+      /*
+       * الصفحة رُسمت وتفاعلية الآن (هذا المكوّن يُركَّب بعد الترطيب)، فتُخفى
+       * شاشة البداية الأصلية — انتقال مباشر منها إلى الصفحة بلا شاشة بيضاء.
+       * إعداد `launchShowDuration` في capacitor.config.ts يبقيها حتى هذه
+       * اللحظة (نسخة المتجر 1.4+)؛ في النسخ الأقدم تكون قد اختفت أصلًا ولا يضر.
+       */
+      void SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => undefined);
 
       /*
        * شريط الحالة بلون الهيدر — كالتطبيقات الأصلية — ويتبع الوضع الليلي:

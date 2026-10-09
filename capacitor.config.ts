@@ -27,8 +27,17 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
+    /*
+     * شاشة البداية تبقى حتى ترسم الصفحة نفسها: `NativeBridge` يخفيها لحظة
+     * تحميل التطبيق. كانت تختفي تلقائيًا بعد 500ms (الافتراضي) — قبل أن
+     * يصل الموقع من الخادم — فتظهر شاشة WebView بيضاء فارغة بينهما.
+     * `launchShowDuration` حدّ أقصى للأمان فقط: لو تعذّر التحميل (لا إنترنت)
+     * لا تبقى الشاشة معلّقة.
+     */
     SplashScreen: {
       launchAutoHide: true,
+      launchShowDuration: 6000,
+      launchFadeOutDuration: 200,
       backgroundColor: '#1156e0',
       androidSplashResourceName: 'splash',
       showSpinner: false,

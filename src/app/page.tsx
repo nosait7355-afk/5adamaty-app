@@ -24,6 +24,14 @@ export default function SplashPage() {
   const router = useRouter();
   const { data: user, isPending, isError } = useMe();
 
+  /*
+   * الوجهة الأغلب تُجلب بالتوازي مع فحص الجلسة (الذي قد يمرّ بتجديد
+   * التوكن)، بدل أن يبدأ تحميلها بعد انتهائه — أقصر انتظار عند فتح التطبيق.
+   */
+  useEffect(() => {
+    router.prefetch('/home');
+  }, [router]);
+
   useEffect(() => {
     if (isPending) return;
     // فشل الشبكة يوجّه لتسجيل الدخول بدل تعليق المستخدم على الشاشة

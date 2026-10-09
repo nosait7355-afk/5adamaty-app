@@ -153,6 +153,17 @@ export async function proxy(request: NextRequest) {
   }
 
   if (claims) {
+    /*
+     * فتح التطبيق بجلسة صالحة: مباشرة إلى صفحته بدل شاشة البداية (`/`) التي
+     * تطلب `/auth/me` ثم تحوّل — رحلتان للخادم أقل عند كل فتح. الإدارة
+     * مستثناة: وجهتها تعتمد على «معاينة الواجهة» المحفوظة على الجهاز
+     * (`isAdminPreviewStored`) ولا يراها الخادم. التوكن المنتهي يصل هنا بلا
+     * `claims` فتبقى شاشة البداية هي التي تجدّد الجلسة كما كانت.
+     */
+    if (pathname === '/' && claims.role !== 'ADMIN') {
+      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
+    }
+
     // مستخدم مسجّل يفتح صفحة ضيوف → نوجّهه لصفحته
     if (isGuestOnly) {
       const url = request.nextUrl.clone();

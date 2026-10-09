@@ -144,3 +144,29 @@ describe('الإدارة', () => {
     expect(redirectTo(await request('/admin/dashboard', 'ADMIN'))).toBeNull();
   });
 });
+
+describe('فتح التطبيق على «/» (شاشة البداية)', () => {
+  it('بجلسة صالحة يذهب مباشرة لصفحته — بلا شاشة بداية ولا طلب /auth/me', async () => {
+    expect(redirectTo(await request('/', 'CUSTOMER'))).toBe('/home');
+    expect(redirectTo(await request('/', 'PROVIDER'))).toBe('/home');
+  });
+
+  it('الزائر أو التوكن المنتهي يمرّ لشاشة البداية — هي التي تجدّد الجلسة', async () => {
+    expect(redirectTo(await request('/'))).toBeNull();
+  });
+
+  it('الإدارة تمرّ لشاشة البداية — وجهتها تعتمد على معاينة محفوظة على الجهاز', async () => {
+    expect(redirectTo(await request('/', 'ADMIN'))).toBeNull();
+  });
+});
+
+describe('الـCSP', () => {
+  it('🔒 يسمح بسكربت المظهر ببصمته، ولا يسمح بأي سكربت مضمَّن آخر', async () => {
+    const { THEME_SCRIPT_HASH } = await import('@/shared/theme');
+    const csp = (await request('/login')).headers.get('content-security-policy') ?? '';
+    const scriptSrc = csp.split(';').find((part) => part.trim().startsWith('script-src')) ?? '';
+
+    expect(scriptSrc).toContain(`'sha256-${THEME_SCRIPT_HASH}'`);
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+  });
+});
