@@ -131,78 +131,72 @@ describe('ProviderMiniCard (الصورة 06)', () => {
 /* ================================================================== */
 
 describe('FilterBar (الصورة 09)', () => {
+  /** الأقراص خارج الشيت — الشيت نفسه حوار له دوره. */
+  const chips = () => screen.getByRole('button', { name: /تصفية/ }).parentElement as HTMLElement;
+  const sheet = () => screen.getByRole('dialog', { name: 'تصفية النتائج' });
+
   it('يعرض «كل المناطق» و«الترتيب» الافتراضيين', () => {
     render(<FilterBar value={{ sort: 'rating' }} onChange={vi.fn()} />);
-    expect(screen.getByText('كل المناطق')).toBeInTheDocument();
-    expect(screen.getByText('الأعلى تقييمًا')).toBeInTheDocument();
+    expect(within(chips()).getByText('كل المناطق')).toBeInTheDocument();
+    expect(within(chips()).getByText('الأعلى تقييمًا')).toBeInTheDocument();
   });
 
-  it('يفتح لوحة المنطقة ويبلّغ بالاختيار', async () => {
-    const onChange = vi.fn();
-    render(<FilterBar value={{ sort: 'rating' }} onChange={onChange} />);
-
-    await userEvent.click(screen.getByText('كل المناطق'));
-    expect(screen.getByText('المنطقة')).toBeInTheDocument();
-
-    // المراكز الخمسة فقط — بلا أحياء فرعية
-    for (const city of ['الفيوم', 'سنورس', 'طامية', 'إطسا', 'إبشواي']) {
-      expect(screen.getByRole('button', { name: city })).toBeInTheDocument();
-    }
-    expect(screen.queryByRole('button', { name: 'دار الرماد' })).not.toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'سنورس' }));
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ area: 'سنورس' }));
-  });
-
-  it('لا يعرض قرص السعر إطلاقًا', () => {
+  it('أي قرص يفتح شيت الفلاتر بالمراكز الستة فقط', async () => {
     render(<FilterBar value={{ sort: 'rating' }} onChange={vi.fn()} />);
-    expect(screen.queryByText('السعر')).not.toBeInTheDocument();
+
+    await userEvent.click(within(chips()).getByText('كل المناطق'));
+    expect(sheet()).toHaveAttribute('open');
+
+    // مراكز الفيوم فقط — بلا أحياء فرعية
+    for (const city of ['الفيوم', 'سنورس', 'طامية', 'إطسا', 'إبشواي', 'يوسف الصديق']) {
+      expect(within(sheet()).getByRole('button', { name: city })).toBeInTheDocument();
+    }
+    expect(within(sheet()).queryByRole('button', { name: 'دار الرماد' })).not.toBeInTheDocument();
   });
 
-  it('يبلّغ بتغيير الترتيب', async () => {
+  it('الاختيار مسودة — لا يُطبَّق إلا بزر «عرض النتائج»', async () => {
     const onChange = vi.fn();
     render(<FilterBar value={{ sort: 'rating' }} onChange={onChange} />);
 
-    await userEvent.click(screen.getByText('الأعلى تقييمًا'));
-    await userEvent.click(screen.getByRole('button', { name: 'الأحدث' }));
+    await userEvent.click(screen.getByRole('button', { name: /تصفية/ }));
+    await userEvent.click(within(sheet()).getByRole('button', { name: 'سنورس' }));
+    await userEvent.click(within(sheet()).getByRole('button', { name: '4 فأعلى' }));
+    await userEvent.click(within(sheet()).getByRole('button', { name: 'الأحدث' }));
+    expect(onChange).not.toHaveBeenCalled();
 
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sort: 'newest' }));
+    await userEvent.click(within(sheet()).getByRole('button', { name: 'عرض النتائج' }));
+    expect(onChange).toHaveBeenCalledWith({ sort: 'newest', area: 'سنورس', minRating: 4 });
+    // الشيت المغلق يخرج من شجرة الوصول، فلا يُعثر عليه إلا بـ`hidden`
+    expect(screen.getByRole('dialog', { hidden: true })).not.toHaveAttribute('open');
   });
 
-  it('زر التصفية معطّل بلا فلاتر ويعرض عددها عند وجودها', () => {
+  it('إعادة الضبط تمسح المسودة وتعيد الترتيب الافتراضي', async () => {
+    const onChange = vi.fn();
+    render(<FilterBar value={{ sort: 'newest', area: 'الفيوم', minRating: 4 }} onChange={onChange} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /تصفية/ }));
+    await userEvent.click(within(sheet()).getByRole('button', { name: 'إعادة ضبط' }));
+    await userEvent.click(within(sheet()).getByRole('button', { name: 'عرض النتائج' }));
+
+    expect(onChange).toHaveBeenCalledWith({ sort: 'rating', area: undefined, minRating: undefined });
+  });
+
+  it('زر التصفية يعرض عدد الفلاتر المفعّلة', () => {
     const { rerender } = render(<FilterBar value={{ sort: 'rating' }} onChange={vi.fn()} />);
-    expect(screen.getByRole('button', { name: /تصفية/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /تصفية/ })).not.toHaveTextContent('·');
 
     rerender(
       <FilterBar value={{ sort: 'rating', area: 'الفيوم', minRating: 4 }} onChange={vi.fn()} />
     );
-    const reset = screen.getByRole('button', { name: /تصفية/ });
-    expect(reset).toBeEnabled();
-    expect(within(reset).getByText('(2)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /تصفية/ })).toHaveTextContent('· 2');
   });
 
-  it('زر التصفية يمسح كل الفلاتر ويعيد الترتيب الافتراضي', async () => {
-    const onChange = vi.fn();
-    render(
-      <FilterBar
-        value={{ sort: 'newest', area: 'الفيوم', minRating: 4 }}
-        onChange={onChange}
-      />
-    );
+  it('لا يعرض قرص السعر ولا أي خيار مسافة — المنطقة نصية فقط', async () => {
+    render(<FilterBar value={{ sort: 'rating' }} onChange={vi.fn()} />);
+    expect(screen.queryByText('السعر')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /تصفية/ }));
-    expect(onChange).toHaveBeenCalledWith({
-      area: undefined,
-      minRating: undefined,
-      sort: 'rating',
-    });
-  });
-
-  it('لا يعرض أي خيار مسافة أو نصف قطر — المنطقة نصية فقط', async () => {
-    render(<FilterBar value={{ sort: 'rating' }} onChange={vi.fn()} />);
-    await userEvent.click(screen.getByText('كل المناطق'));
-
-    expect(screen.queryByText(/كم|مسافة|الأقرب|نصف قطر/)).not.toBeInTheDocument();
+    expect(within(sheet()).queryByText(/السعر|كم|مسافة|الأقرب|نصف قطر/)).not.toBeInTheDocument();
   });
 });
 

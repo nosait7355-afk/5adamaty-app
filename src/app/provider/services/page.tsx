@@ -21,7 +21,9 @@ import {
   useMyServices,
   useUpdateMyService,
 } from '@/lib/queries/provider-services';
+import { ConfirmSheet } from '@/components/ui/confirm-sheet';
 import { ApiClientError } from '@/lib/api-client';
+import { toast } from '@/lib/toast';
 import { MAX_SERVICES_PER_PROVIDER } from '@/shared/schemas/provider.schema';
 import { COVERAGE_AREAS } from '@/shared/constants/fayoum-areas';
 import type { ServiceDto } from '@/server/services/provider-services.service';
@@ -107,8 +109,10 @@ export default function ProviderServicesPage() {
     try {
       if (editingId) {
         await updateMutation.mutateAsync({ id: editingId, patch: payload });
+        toast.success('اتحفظت التعديلات');
       } else {
         await createMutation.mutateAsync(payload);
+        toast.success('اتضافت الخدمة');
       }
       setMode('list');
     } catch (error) {
@@ -118,9 +122,25 @@ export default function ProviderServicesPage() {
     }
   };
 
-  const remove = async (id: string) => {
-    if (!window.confirm('حذف هذه الخدمة نهائيًا؟')) return;
-    await deleteMutation.mutateAsync(id).catch(() => undefined);
+  /*
+   * الخدمة المطلوب حذفها تبقى محفوظة بعد الإغلاق كي لا يفرغ العنوان أثناء
+   * حركة نزول الشيت؛ الفتح والإغلاق بحالة مستقلة.
+   */
+  const [pendingDelete, setPendingDelete] = useState<ServiceDto | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(pendingDelete.id);
+      toast.success('اتحذفت الخدمة');
+    } catch (error) {
+      toast.error(
+        error instanceof ApiClientError ? error.message : 'تعذّر حذف الخدمة. حاول مرة أخرى.'
+      );
+    } finally {
+      setDeleteOpen(false);
+    }
   };
 
   const ids = {
@@ -160,7 +180,10 @@ export default function ProviderServicesPage() {
                     key={service.id}
                     service={service}
                     onEdit={() => startEdit(service)}
-                    onDelete={() => void remove(service.id)}
+                    onDelete={() => {
+                      setPendingDelete(service);
+                      setDeleteOpen(true);
+                    }}
                     deleting={deleteMutation.isPending && deleteMutation.variables === service.id}
                   />
                 ))}
@@ -272,6 +295,17 @@ export default function ProviderServicesPage() {
           </>
         )}
       </PageContainer>
+
+      <ConfirmSheet
+        open={deleteOpen}
+        title={`تحذف «${pendingDelete?.title ?? ''}»؟`}
+        description="الخدمة هتختفي من ملفك ومن نتائج البحث، ومش هتقدر ترجّعها."
+        confirmLabel="حذف الخدمة"
+        icon={<Trash2 size={24} />}
+        loading={deleteMutation.isPending}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteOpen(false)}
+      />
 
       <BottomNav variant="provider" />
     </>

@@ -283,3 +283,81 @@
   );
   animation: shimmer 1.4s infinite;
 }
+
+/* ==========================================================================
+   Bottom Sheet — `<dialog>` أصلي ينزلق من أسفل الشاشة
+   الحركة بـ`@starting-style` و`allow-discrete`: الدخول والخروج يتحرّكان
+   بلا مكتبة ولا مؤقّتات. المتصفح الأقدم يفتح ويغلق فورًا بلا حركة فقط.
+   ========================================================================== */
+
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 520px;
+  max-height: min(88dvh, 100% - env(safe-area-inset-top, 0px) - 1.5rem);
+  /* خارج طبقات Tailwind، فالحشو هنا لا في `pb-safe` */
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
+  border: 0;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--color-surface);
+  color: var(--color-ink-900);
+  box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.12);
+  translate: 0 100%;
+  transition:
+    translate 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    overlay 0.32s allow-discrete,
+    display 0.32s allow-discrete;
+}
+.sheet[open] {
+  display: flex;
+  flex-direction: column;
+  translate: 0 0;
+}
+@starting-style {
+  .sheet[open] {
+    translate: 0 100%;
+  }
+}
+/* أثناء السحب بالإصبع يتبع الشيت الإصبع فورًا بلا انتقال */
+.sheet[data-dragging] {
+  transition: none;
+}
+
+.sheet::backdrop {
+  background-color: rgba(15, 23, 42, 0);
+  transition:
+    background-color 0.32s ease,
+    overlay 0.32s allow-discrete,
+    display 0.32s allow-discrete;
+}
+.sheet[open]::backdrop {
+  background-color: rgba(15, 23, 42, 0.45);
+}
+@starting-style {
+  .sheet[open]::backdrop {
+    background-color: rgba(15, 23, 42, 0);
+  }
+}
+
+/* الصفحة خلف الشيت لا تتمرّر — showModal لا يمنع ذلك وحده على الموبايل */
+html:has(.sheet[open]) {
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Toast — رسالة عابرة أعلى الشاشة
+   ========================================================================== */
+
+.toast {
+  transition:
+    translate 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease;
+}
+@starting-style {
+  .toast {
+    translate: 0 -120%;
+    opacity: 0;
+  }
+}

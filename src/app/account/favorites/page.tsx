@@ -10,7 +10,12 @@ import { Button, LinkButton } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { Rating } from '@/components/features/discovery/rating-stars';
-import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
+import { toast } from '@/lib/toast';
+import {
+  useFavorites,
+  useToggleFavorite,
+  type ToggleFavoriteInput,
+} from '@/lib/queries/account';
 
 /**
  * المفضلة — شاشة مشتقّة مبرَّرة (`UI_ANALYSIS §0.1`): عدّاد «المفضلة 12»
@@ -22,6 +27,18 @@ import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
 export default function FavoritesPage() {
   const favorites = useFavorites();
   const toggle = useToggleFavorite();
+
+  /**
+   * الإزالة فورية (متفائلة) مع «تراجع» في الـToast — بدل مؤشر تحميل على
+   * كل الأزرار معًا. التراجع يعيد العنصر بنفس بياناته إلى أعلى القائمة.
+   */
+  const remove = (input: ToggleFavoriteInput, undo: ToggleFavoriteInput) => {
+    const onError = () => toast.error('تعذّر تحديث المفضلة. حاول مرة أخرى.');
+    toggle.mutate(input, { onError });
+    toast.success('اتشالت من المفضلة', {
+      action: { label: 'تراجع', onClick: () => toggle.mutate(undo, { onError }) },
+    });
+  };
 
   if (favorites.isPending) {
     return (
@@ -105,8 +122,12 @@ export default function FavoritesPage() {
                           variant="ghost"
                           size="sm"
                           className="shrink-0 text-danger hover:bg-danger-bg"
-                          loading={toggle.isPending}
-                          onClick={() => void toggle.mutateAsync({ providerId: provider.id })}
+                          onClick={() =>
+                            remove(
+                              { providerId: provider.id },
+                              { providerId: provider.id, preview: provider }
+                            )
+                          }
                           aria-label={`إزالة ${provider.displayName} من المفضلة`}
                         >
                           <Heart size={18} className="fill-danger" />
@@ -141,8 +162,12 @@ export default function FavoritesPage() {
                           variant="ghost"
                           size="sm"
                           className="shrink-0 text-danger hover:bg-danger-bg"
-                          loading={toggle.isPending}
-                          onClick={() => void toggle.mutateAsync({ serviceId: service.id })}
+                          onClick={() =>
+                            remove(
+                              { serviceId: service.id },
+                              { serviceId: service.id, preview: service }
+                            )
+                          }
                           aria-label={`إزالة ${service.title} من المفضلة`}
                         >
                           <Heart size={18} className="fill-danger" />

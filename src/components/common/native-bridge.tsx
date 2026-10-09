@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { isRootPath, useSafeBack } from '@/lib/navigation-history';
+import { closeTopOverlay } from '@/lib/overlay-stack';
 
 /**
  * جسر Capacitor — لا يفعل شيئًا في المتصفح العادي.
@@ -51,6 +52,8 @@ export function NativeBridge() {
       // الشاشات الجذرية (الرئيسية وأخواتها) تُغلق التطبيق؛ غيرها يرجع للسابقة
       // أو — إن لم يوجد سجل — للرئيسية، بدل إغلاق التطبيق من صفحة داخلية.
       const backListener = await App.addListener('backButton', () => {
+        // طبقة مفتوحة (Bottom Sheet)؟ الرجوع يغلقها فقط ويبقى في الصفحة
+        if (closeTopOverlay()) return;
         if (isRootPath(window.location.pathname)) void App.exitApp();
         else safeBackRef.current();
       });

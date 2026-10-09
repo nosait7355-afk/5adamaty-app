@@ -21,6 +21,8 @@ const VARIANTS = {
     'bg-surface text-brand-600 border border-brand-600 hover:bg-brand-50 active:bg-brand-100',
   success: 'bg-success text-white hover:brightness-105 active:brightness-95',
   danger: 'bg-surface text-danger border border-danger hover:bg-danger-bg active:brightness-95',
+  // أحمر ممتلئ — لزر التأكيد النهائي لإجراء لا رجعة فيه (الحذف) داخل ConfirmSheet
+  destructive: 'bg-danger text-white hover:brightness-95 active:brightness-90',
   warning: 'bg-warning text-white hover:brightness-105 active:brightness-95',
   neutral: 'bg-surface text-ink-600 border border-border hover:bg-bg active:brightness-95',
   ghost: 'bg-transparent text-brand-600 hover:bg-brand-50',

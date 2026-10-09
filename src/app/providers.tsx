@@ -6,6 +6,7 @@ import { ServiceWorkerRegister } from '@/components/common/sw-register';
 import { NativeBridge } from '@/components/common/native-bridge';
 import { NavigationTracker } from '@/lib/navigation-history';
 import { AdminPreviewBar } from '@/components/layout/admin-preview-bar';
+import { Toaster } from '@/components/ui/toaster';
 
 /**
  * مزوّدو الحالة على مستوى التطبيق.
@@ -34,6 +35,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <NativeBridge />
       <NavigationTracker />
       {children}
+      <Toaster />
       {/* زر عائم يظهر لحساب الإدارة وحده أثناء تصفّح واجهة العميل */}
       <AdminPreviewBar />
     </QueryClientProvider>

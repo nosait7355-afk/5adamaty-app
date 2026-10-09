@@ -3,6 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   CalendarDays,
   ChevronLeft,
@@ -40,6 +41,8 @@ import {
 } from '@/lib/format';
 import { useProvider, useProviderReviews, useServices } from '@/lib/queries/discovery';
 import { useMe } from '@/lib/queries/auth';
+import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
+import { toast } from '@/lib/toast';
 import { useMyProviderProfile } from '@/lib/queries/provider';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProviderContactDto } from '@/server/services/discovery.service';
@@ -89,6 +92,75 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
       );
     } finally {
       setContactPending(null);
+    }
+  };
+
+  /* ---- المفضلة والمشاركة ---- */
+  const router = useRouter();
+  const favorites = useFavorites(Boolean(me.data));
+  const toggleFavorite = useToggleFavorite();
+  const isFavorite = favorites.data?.providers.some((item) => item.id === id) ?? false;
+
+  /** متفائل: القلب يمتلئ لحظة الضغط، ويعود كما كان إن فشل الطلب. */
+  const onFavorite = () => {
+    if (me.isPending) return;
+    if (!me.data) {
+      toast.info('سجّل دخولك علشان تحفظ في المفضلة', {
+        action: {
+          label: 'دخول',
+          onClick: () => router.push(`/login?next=${encodeURIComponent(`/providers/${id}`)}`),
+        },
+      });
+      return;
+    }
+    // قبل وصول القائمة لا نعرف حالة القلب — التبديل الآن قد يعكس النيّة
+    if (favorites.isPending) return;
+
+    const data = provider.data;
+    toggleFavorite.mutate(
+      {
+        providerId: id,
+        ...(data && {
+          preview: {
+            id,
+            displayName: data.displayName,
+            professionName: data.professionName,
+            ratingAvg: data.ratingAvg,
+            ratingCount: data.ratingCount,
+            area: data.area,
+          },
+        }),
+      },
+      { onError: () => toast.error('تعذّر تحديث المفضلة. حاول مرة أخرى.') }
+    );
+    toast.success(isFavorite ? 'اتشال من المفضلة' : 'اتضاف للمفضلة');
+  };
+
+  /**
+   * قائمة المشاركة الأصلية حيث يدعمها المتصفح (كروم أندرويد، سفاري)، وإلا
+   * نسخ الرابط. WebView أندرويد لا يدعم Web Share — مشاركة أصلية هناك
+   * تحتاج إضافة Capacitor (المرحلة 5).
+   */
+  const onShare = async () => {
+    const data = provider.data;
+    const url = `${window.location.origin}/providers/${id}`;
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: data?.displayName,
+          text: data ? `${data.displayName} على خدماتي الفيوم` : undefined,
+          url,
+        });
+      } catch {
+        // إلغاء المستخدم للقائمة يصل هنا كخطأ — ليس فشلًا يستحق رسالة
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('اتنسخ رابط الملف');
+    } catch {
+      toast.error('تعذّر نسخ الرابط');
     }
   };
 
@@ -143,8 +215,24 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
           )}
 
           <div className="absolute end-3 top-3 flex gap-2">
-            <ProfileIconButton label="مشاركة الملف" icon={<Share2 size={18} />} />
-            <ProfileIconButton label="إضافة إلى المفضلة" icon={<Heart size={18} />} />
+            <ProfileIconButton
+              label="مشاركة الملف"
+              icon={<Share2 size={18} />}
+              onClick={() => void onShare()}
+            />
+            {!isOwnProfile && (
+              <ProfileIconButton
+                label={isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
+                pressed={isFavorite}
+                icon={
+                  <Heart
+                    size={18}
+                    className={isFavorite ? 'fill-danger text-danger' : undefined}
+                  />
+                }
+                onClick={onFavorite}
+              />
+            )}
           </div>
 
           {data.gallery.length > 0 && (
@@ -402,13 +490,26 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
 
 /* ---- عناصر داخلية ---- */
 
-function ProfileIconButton({ label, icon }: { label: string; icon: React.ReactNode }) {
+function ProfileIconButton({
+  label,
+  icon,
+  pressed,
+  onClick,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  /** زر تبديل (المفضلة) — يُعلن حالته لقارئ الشاشة. */
+  pressed?: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={pressed}
       title={label}
-      className="flex size-9 items-center justify-center rounded-full bg-surface/90 text-ink-600 shadow-card transition-colors hover:text-brand-600"
+      onClick={onClick}
+      className="pressable flex size-9 items-center justify-center rounded-full bg-surface/90 text-ink-600 shadow-card hover:text-brand-600"
     >
       {icon}
     </button>
