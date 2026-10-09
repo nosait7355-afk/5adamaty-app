@@ -4,6 +4,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 import '@/styles/globals.css';
 import { AppProviders } from '@/app/providers';
+import { THEME_SCRIPT } from '@/shared/theme';
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -58,7 +59,15 @@ async function RequestTimeRendering() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={cairo.variable}>
+    // `suppressHydrationWarning`: سكربت المظهر يضع `data-theme` على هذا العنصر
+    // قبل الترطيب عمدًا، فيختلف عمّا رسمه الخادم — اختلاف متوقَّع لا خطأ
+    <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
+      <head>
+        {/* يطبّق المظهر المختار قبل أول رسم — مسموح في الـCSP ببصمته (shared/theme.ts) */}
+        {/* نص ثابت من الشيفرة بلا أي مدخل مستخدم — الحالة التي تُستثنى لها القاعدة */}
+        {/* eslint-disable-next-line react/no-danger */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <Suspense fallback={null}>
           <RequestTimeRendering />

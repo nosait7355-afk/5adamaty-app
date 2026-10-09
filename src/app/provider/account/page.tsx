@@ -26,6 +26,7 @@ import { MediaThumb } from '@/components/features/discovery/media-thumb';
 import { formatPhone } from '@/lib/format';
 import { useMyProviderProfile } from '@/lib/queries/provider';
 import { useLogout } from '@/lib/queries/auth';
+import { ThemeSwitcher } from '@/components/common/theme-switcher';
 
 /** حسابي — مقدم الخدمة. نسخة ما بعد الاعتماد من صفحة الملف/الإعدادات. */
 export default function ProviderAccountPage() {
@@ -88,6 +89,10 @@ export default function ProviderAccountPage() {
         <Card className="flex items-center justify-between gap-2">
           <span className="text-label font-semibold text-ink-600">حالة الحساب</span>
           <VerificationBadge status={verification.status} />
+        </Card>
+
+        <Card>
+          <ThemeSwitcher />
         </Card>
 
         {/* ---- قائمة الأدوات ---- */}

@@ -84,7 +84,7 @@
 }
 
 /* ==========================================================================
-   الوضع الليلي — يتبع إعداد الجهاز (المرحلة 5)
+   الوضع الليلي — تلقائي أو فاتح أو داكن (المرحلة 5)
 
    كل الأدوات المساعدة في Tailwind 4 تقرأ ألوان `@theme` كمتغيّرات CSS، فإعادة
    تعريفها هنا تقلب التطبيق كله دون لمس أي مكوّن. القاعدة في المكوّنات: لا
@@ -93,54 +93,55 @@
    ليس قلبًا آليًا للألوان: الأسطح درجات أزرق داكن لا أسود خالص (أريح للعين
    ولا «يبتلع» الظلال)، والأزرق أفتح قليلًا ليُقرأ نصًا على الداكن ويبقى
    خلفيةً لنص أبيض في الأزرار.
+
+   `data-theme` يضعه سكربت المظهر قبل أول رسم (shared/theme.ts) حسب اختيار
+   المستخدم في «حسابي ← المظهر»، أو حسب الهاتف إن كان الاختيار «تلقائي».
    ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-    --color-brand-50: #15233d;
-    --color-brand-100: #1b2d4f;
-    --color-brand-200: #29426f;
-    --color-brand-500: #5b93ff;
-    --color-brand-600: #3d7eff;
-    /* 700/800 خلفيات «مضغوطة» للأزرار — أعمق من 600 في الوضعين */
-    --color-brand-700: #2f6ae0;
-    --color-brand-800: #2457c2;
+  --color-brand-50: #15233d;
+  --color-brand-100: #1b2d4f;
+  --color-brand-200: #29426f;
+  --color-brand-500: #5b93ff;
+  --color-brand-600: #3d7eff;
+  /* 700/800 خلفيات «مضغوطة» للأزرار — أعمق من 600 في الوضعين */
+  --color-brand-700: #2f6ae0;
+  --color-brand-800: #2457c2;
 
-    --color-ink-900: #e8edf5;
-    --color-ink-700: #c6cfdc;
-    --color-ink-600: #a9b4c5;
-    --color-ink-400: #74819a;
-    --color-ink-300: #4b566b;
+  --color-ink-900: #e8edf5;
+  --color-ink-700: #c6cfdc;
+  --color-ink-600: #a9b4c5;
+  --color-ink-400: #74819a;
+  --color-ink-300: #4b566b;
 
-    --color-surface: #151b26;
-    --color-bg: #0b0f16;
-    --color-border: #253043;
+  --color-surface: #151b26;
+  --color-bg: #0b0f16;
+  --color-border: #253043;
 
-    --color-success: #22c55e;
-    --color-success-bg: #10291b;
-    --color-warning: #f5a524;
-    --color-warning-bg: #2e2210;
-    --color-danger: #f26b6b;
-    --color-danger-bg: #3a1b1d;
-    --color-info: #6ea0ff;
-    --color-info-bg: #15233d;
-    --color-purple: #a78bfa;
-    --color-purple-bg: #241c3d;
+  --color-success: #22c55e;
+  --color-success-bg: #10291b;
+  --color-warning: #f5a524;
+  --color-warning-bg: #2e2210;
+  --color-danger: #f26b6b;
+  --color-danger-bg: #3a1b1d;
+  --color-info: #6ea0ff;
+  --color-info-bg: #15233d;
+  --color-purple: #a78bfa;
+  --color-purple-bg: #241c3d;
 
-    --color-inverse: #e8edf5;
-    --color-on-inverse: #0f172a;
-    --color-inverse-accent: #1156e0;
+  --color-inverse: #e8edf5;
+  --color-on-inverse: #0f172a;
+  --color-inverse-accent: #1156e0;
 
-    /* الظلال الملوّنة الخفيفة لا تُرى على الداكن — أسود أعمق بدلها */
-    --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
-    --shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.45);
-    --shadow-brand: 0 6px 16px rgba(0, 0, 0, 0.4);
-    --shadow-nav: 0 -2px 12px rgba(0, 0, 0, 0.35);
+  /* الظلال الملوّنة الخفيفة لا تُرى على الداكن — أسود أعمق بدلها */
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-brand: 0 6px 16px rgba(0, 0, 0, 0.4);
+  --shadow-nav: 0 -2px 12px rgba(0, 0, 0, 0.35);
 
-    --skeleton-shine: rgba(255, 255, 255, 0.06);
-  }
+  --skeleton-shine: rgba(255, 255, 255, 0.06);
 }
 
 /* ==========================================================================

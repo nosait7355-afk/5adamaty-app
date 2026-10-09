@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { THEME_SCRIPT_HASH } from '@/shared/theme';
 
 /**
  * حارس المسارات على مستوى الحافة (Edge) — اصطلاح `proxy` في Next 16.
@@ -91,7 +92,8 @@ async function readClaims(request: NextRequest): Promise<TokenClaims | null> {
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'` +
+    // البصمة: سكربت المظهر المضمَّن الوحيد، الثابت النص (shared/theme.ts)
+    `script-src 'self' 'nonce-${nonce}' 'sha256-${THEME_SCRIPT_HASH}' 'strict-dynamic'` +
       (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''),
     // ملاحظة: nonce لا يغطي خاصية style="" المضمّنة (فرق style-src-attr عن
     // style-src في CSP3) — React يولّد `style={{...}}` كخاصية مضمّنة في

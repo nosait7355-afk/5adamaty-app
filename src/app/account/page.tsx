@@ -28,6 +28,7 @@ import { MediaThumb } from '@/components/features/discovery/media-thumb';
 import { formatNumber, formatPhone } from '@/lib/format';
 import { useAccountSummary } from '@/lib/queries/account';
 import { useLogout } from '@/lib/queries/auth';
+import { ThemeSwitcher } from '@/components/common/theme-switcher';
 
 /**
  * حسابي — الصورة 16.
@@ -147,6 +148,10 @@ export default function AccountPage() {
         <InfoAlert tone="info" title="وسائل الدفع">
           {stats.paymentMethodsNote}
         </InfoAlert>
+
+        <Card>
+          <ThemeSwitcher />
+        </Card>
 
         {/* ---- قائمة الأدوات ---- */}
         <Card className="flex flex-col p-0">

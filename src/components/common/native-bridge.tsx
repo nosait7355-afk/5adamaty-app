@@ -46,17 +46,22 @@ export function NativeBridge() {
        * يُلوَّن، فالمهم هناك لون الأيقونات وحده؛ لونه يظهر على الأقدم فقط.
        * الألوان = `--color-surface` في الوضعين (globals.css).
        */
-      const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const applyStatusBar = (dark: boolean) => {
+      const root = document.documentElement;
+      const applyStatusBar = () => {
+        const dark = root.getAttribute('data-theme') === 'dark';
         void StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => undefined);
         void StatusBar.setBackgroundColor({ color: dark ? '#151b26' : '#ffffff' }).catch(
           () => undefined
         );
       };
-      applyStatusBar(darkQuery.matches);
-      // تبديل الوضع من إعدادات الهاتف والتطبيق مفتوح
-      const onSchemeChange = (event: MediaQueryListEvent) => applyStatusBar(event.matches);
-      darkQuery.addEventListener('change', onSchemeChange);
+      applyStatusBar();
+      /*
+       * يتبع المظهر المطبَّق فعلًا (`data-theme` — shared/theme.ts) لا إعداد
+       * الهاتف وحده: اختيار «داكن» يدويًا من حسابي يقلب الشريط أيضًا، وكذلك
+       * تغيير وضع الهاتف والتطبيق مفتوح على «تلقائي».
+       */
+      const themeObserver = new MutationObserver(applyStatusBar);
+      themeObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
       // الشاشات الجذرية (الرئيسية وأخواتها) تُغلق التطبيق؛ غيرها يرجع للسابقة
       // أو — إن لم يوجد سجل — للرئيسية، بدل إغلاق التطبيق من صفحة داخلية.
@@ -69,7 +74,7 @@ export function NativeBridge() {
 
       cleanup = () => {
         void backListener.remove();
-        darkQuery.removeEventListener('change', onSchemeChange);
+        themeObserver.disconnect();
       };
     })();
 
