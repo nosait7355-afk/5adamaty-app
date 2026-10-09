@@ -192,7 +192,7 @@ export default function AccountPage() {
         </Button>
       </PageContainer>
 
-      <BottomNav badges={{ notifications: stats.unreadNotifications }} />
+      <BottomNav />
     </>
   );
 }

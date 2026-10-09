@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import {
   BadgeCheck,
@@ -16,17 +15,11 @@ import {
 import { AppHeader } from '@/components/layout/app-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageContainer, PageTitle } from '@/components/layout/page-container';
-import { Chip } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { formatRelativeTime } from '@/lib/format';
 import { useNotifications, useReadAllNotifications, useReadNotification } from '@/lib/queries/account';
-import {
-  NOTIFICATION_TABS,
-  NOTIFICATION_TAB_LABELS_AR,
-  type NotificationTab,
-} from '@/shared/constants/notifications';
 import { cn } from '@/lib/cn';
 import type { NotificationDto } from '@/server/services/account.service';
 
@@ -34,18 +27,16 @@ import type { NotificationDto } from '@/server/services/account.service';
  * الإشعارات — مقدم الخدمة.
  *
  * نفس المصدر والمنطق من صفحة إشعارات العميل (`/notifications`) — الإشعار
- * مرتبط بالمستخدم لا بدوره، فالتبويبات والتجميع الزمني مطابقان تمامًا.
- * الفرق الوحيد هو شريط التنقّل السفلي وأيقونات مقدم الخدمة.
+ * مرتبط بالمستخدم لا بدوره، فالتجميع الزمني مطابق تمامًا، وبلا تبويبات
+ * مثلها (انظر سبب إزالتها هناك). الفرق الوحيد هو شريط التنقّل السفلي
+ * وأيقونات مقدم الخدمة.
  */
 export default function ProviderNotificationsPage() {
-  const [tab, setTab] = useState<NotificationTab>('ALL');
-
-  const query = useNotifications(tab);
+  const query = useNotifications();
   const readOne = useReadNotification();
   const readAll = useReadAllNotifications();
 
   const items = query.data?.items ?? [];
-  const counts = query.data?.counts ?? {};
   const unreadTotal = query.data?.unreadTotal ?? 0;
 
   const groups = groupByDay(items);
@@ -56,21 +47,6 @@ export default function ProviderNotificationsPage() {
 
       <PageContainer className="flex flex-col gap-4">
         <PageTitle title="الإشعارات" subtitle="كل ما يخصّ طلباتك وحسابك" />
-
-        <div className="flex items-center justify-between gap-2">
-          <div className="scroll-x flex gap-2 pb-1">
-            {NOTIFICATION_TABS.map((entry) => (
-              <Chip
-                key={entry}
-                selected={tab === entry}
-                onClick={() => setTab(entry)}
-                count={counts[entry] ?? 0}
-              >
-                {NOTIFICATION_TAB_LABELS_AR[entry]}
-              </Chip>
-            ))}
-          </div>
-        </div>
 
         {unreadTotal > 0 && (
           <Button
@@ -122,7 +98,7 @@ export default function ProviderNotificationsPage() {
         )}
       </PageContainer>
 
-      <BottomNav variant="provider" badges={{ notifications: unreadTotal }} />
+      <BottomNav variant="provider" />
     </>
   );
 }

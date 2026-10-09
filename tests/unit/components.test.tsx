@@ -92,22 +92,22 @@ describe('Field', () => {
 });
 
 describe('BottomNav', () => {
-  it('يرسم 5 عناصر بترتيب RTL الصحيح للعميل', () => {
+  it('يرسم 4 عناصر بترتيب RTL الصحيح للعميل', () => {
     render(<BottomNav variant="customer" />);
 
     const items = screen.getAllByRole('listitem');
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(4);
 
     // الترتيب في المصفوفة = ترتيب القراءة من اليمين لليسار
     const labels = items.map((item) => within(item).getByRole('link').textContent);
-    expect(labels).toEqual(['التصنيفات', 'الإشعارات', 'الرئيسية', 'المفضلة', 'حسابي']);
+    expect(labels).toEqual(['الرئيسية', 'التصنيفات', 'المفضلة', 'حسابي']);
   });
 
   it('يرسم شريط المزوّد بلا طلبات ولا رسائل', () => {
     render(<BottomNav variant="provider" />);
 
     const labels = screen.getAllByRole('listitem').map((i) => within(i).getByRole('link').textContent);
-    expect(labels).toEqual(['الإشعارات', 'خدماتي', 'الرئيسية', 'ملفي', 'حسابي']);
+    expect(labels).toEqual(['الرئيسية', 'خدماتي', 'ملفي', 'حسابي']);
   });
 
   it('لا يشير أي عنصر إلى الطلبات أو الرسائل', () => {
@@ -117,9 +117,11 @@ describe('BottomNav', () => {
     expect(CUSTOMER_NAV.find((item) => item.key === 'favorites')?.href).toBe('/account/favorites');
   });
 
-  it('«الرئيسية» في الوسط في كلا الشريطين', () => {
-    expect(CUSTOMER_NAV[2]?.key).toBe('home');
-    expect(PROVIDER_NAV[2]?.key).toBe('home');
+  it('«الرئيسية» أولًا في كلا الشريطين، والإشعارات ليست تبويبًا (جرس الترويسة)', () => {
+    expect(CUSTOMER_NAV[0]?.key).toBe('home');
+    expect(PROVIDER_NAV[0]?.key).toBe('home');
+    expect(CUSTOMER_NAV.map((item) => item.key)).toEqual(['home', 'categories', 'favorites', 'account']);
+    expect(PROVIDER_NAV.map((item) => item.key)).toEqual(['home', 'services', 'profile', 'account']);
   });
 
   it('يعلّم العنصر النشط بـ aria-current', () => {
@@ -129,18 +131,18 @@ describe('BottomNav', () => {
   });
 
   it('يعرض شارة العدّاد غير المقروء', () => {
-    render(<BottomNav variant="customer" badges={{ notifications: 3 }} />);
+    render(<BottomNav variant="customer" badges={{ favorites: 3 }} />);
     expect(screen.getByLabelText('3 غير مقروء')).toHaveTextContent('3');
   });
 
   it('يخفي الشارة عند الصفر', () => {
-    render(<BottomNav variant="customer" badges={{ notifications: 0 }} />);
+    render(<BottomNav variant="customer" badges={{ favorites: 0 }} />);
     expect(screen.queryByLabelText(/غير مقروء/)).not.toBeInTheDocument();
   });
 
   it('لا يعرض أي شارة للعناصر بلا عدّاد', () => {
-    // انحدار: كانت النقطة الحمراء تظهر فوق كل العناصر الخمسة
-    render(<BottomNav variant="customer" badges={{ notifications: 3 }} />);
+    // انحدار: كانت النقطة الحمراء تظهر فوق كل العناصر
+    render(<BottomNav variant="customer" badges={{ favorites: 3 }} />);
     expect(screen.queryAllByLabelText('يوجد جديد')).toHaveLength(0);
     expect(screen.getAllByLabelText(/غير مقروء/)).toHaveLength(1);
   });
