@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { CatalogIcon } from '@/components/common/catalog-icon';
 import { CategoryArt } from '@/components/common/category-art';
 import { cn } from '@/lib/cn';
 import { formatServicesCount } from '@/lib/format';
 import { NAV_FORWARD } from '@/lib/view-transitions';
 import type { CategoryDto, ProfessionDto } from '@/server/services/catalog.service';
+import { ProfessionArt } from '@/components/common/profession-art';
 
 /**
  * صيغتان لعرض الكتالوج (شريط الرئيسية الدائري في `category-rail.tsx`):
@@ -68,9 +68,7 @@ export function ProfessionCard({ profession, categorySlug, className }: Professi
         className
       )}
     >
-      <span className="flex size-12 items-center justify-center rounded-field bg-brand-50 text-brand-600">
-        <CatalogIcon name={profession.icon} size={24} />
-      </span>
+      <ProfessionArt slug={profession.slug} icon={profession.icon} size={52} />
       <span className="line-clamp-1 w-full text-label font-bold text-ink-900">
         {profession.name}
       </span>

@@ -6,6 +6,7 @@ import { Rating } from './rating-stars';
 import { cn } from '@/lib/cn';
 import { NAV_FORWARD } from '@/lib/view-transitions';
 import type { ProviderCardDto } from '@/server/services/discovery.service';
+import { professionArtSrc } from '@/lib/profession-art';
 
 export interface ProviderMiniCardProps {
   provider: ProviderCardDto;
@@ -34,6 +35,7 @@ export function ProviderMiniCard({ provider, className }: ProviderMiniCardProps)
           alt={provider.displayName}
           size={72}
           iconName={provider.professionIcon}
+          fallbackArt={professionArtSrc(provider.professionSlug)}
           rounded="full"
         />
       </span>

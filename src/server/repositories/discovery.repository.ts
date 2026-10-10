@@ -227,6 +227,7 @@ const SERVICE_CARD_PROJECT = {
   categoryName: { $first: '$category.name' },
   categorySlug: { $first: '$category.slug' },
   professionName: { $first: '$profession.name' },
+  professionSlug: { $first: '$profession.slug' },
   professionIcon: { $first: '$profession.icon' },
   providerName: '$provider.displayName',
   providerRatingAvg: '$provider.ratingAvg',
@@ -290,6 +291,7 @@ export interface ServiceRow {
   categoryName?: string;
   categorySlug?: string;
   professionName?: string;
+  professionSlug?: string;
   professionIcon?: string;
   providerName?: string;
   providerBio?: string;

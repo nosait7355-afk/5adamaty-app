@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CatalogIcon } from '@/components/common/catalog-icon';
 import { Rating } from './rating-stars';
 import { useServices } from '@/lib/queries/discovery';
+import { ProfessionArt } from '@/components/common/profession-art';
 
 export interface PopularServicesProps {
   limit?: number;
@@ -47,9 +47,7 @@ export function PopularServices({ limit = 4 }: PopularServicesProps) {
               {index + 1}
             </span>
 
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-field bg-bg text-brand-600">
-              <CatalogIcon name={service.professionIcon} size={20} />
-            </span>
+            <ProfessionArt slug={service.professionSlug} icon={service.professionIcon} size={40} />
 
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="line-clamp-1 text-label font-bold text-ink-900">{service.title}</span>

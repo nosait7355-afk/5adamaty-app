@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="فني كمبيوتر">
+  <circle cx="48" cy="48" r="48" fill="#DCF1FD"/>
+  <rect x="18" y="22" width="60" height="40" rx="4" fill="#1E293B"/>
+  <rect x="22" y="26" width="52" height="30" rx="2" fill="#0EA5E9"/>
+  <rect x="42" y="62" width="12" height="8" fill="#94A3B8"/>
+  <rect x="32" y="70" width="32" height="4" rx="2" fill="#64748B"/>
+  <circle cx="48" cy="41" r="9" fill="#E0F2FE"/>
+  <circle cx="48" cy="41" r="4" fill="#0EA5E9"/>
+  <path d="M48 28v4M48 50v4M35 41h4M57 41h4M38.8 31.8l2.8 2.8M54.4 47.4l2.8 2.8M57.2 31.8l-2.8 2.8M41.6 47.4l-2.8 2.8" stroke="#E0F2FE" stroke-width="3" stroke-linecap="round"/>
+</svg>

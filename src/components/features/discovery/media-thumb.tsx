@@ -9,6 +9,8 @@ export interface MediaThumbProps {
   size: number;
   /** أيقونة المهنة — تُعرض بديلًا عند غياب الصورة بدل مربع رمادي فارغ. */
   iconName?: string | undefined;
+  /** رسمة التخصص (`professionArtSrc`) — تسبق الأيقونة حين لا توجد صورة. */
+  fallbackArt?: string | undefined;
   rounded?: 'card' | 'field' | 'full';
   className?: string;
   priority?: boolean;
@@ -31,6 +33,7 @@ export function MediaThumb({
   alt,
   size,
   iconName,
+  fallbackArt,
   rounded = 'field',
   className,
   priority = false,
@@ -54,6 +57,24 @@ export function MediaThumb({
           height={size}
           priority={priority}
           className="size-full object-cover"
+        />
+      ) : fallbackArt ? (
+        <Image
+          src={fallbackArt}
+          // زخرفية: اسم الخدمة أو مقدم الخدمة مكتوب بجوارها دائمًا
+          alt=""
+          width={size}
+          height={size}
+          unoptimized
+          className={cn(
+            'size-full',
+            /*
+             * الرسمة دائرة كاملة: في الحاوية المربعة تُكبَّر ×1.42 فتغطي دائرتُها
+             * الزوايا (نصف قطرها يصير 68 ≥ بُعد الزاوية 67.9 في إطار 96)، والرسمة
+             * نفسها (حتى ~32 من المركز ← 45 بعد التكبير) تبقى داخل الإطار (48).
+             */
+            rounded !== 'full' && 'scale-[1.42]'
+          )}
         />
       ) : (
         <span className="flex size-full items-center justify-center text-brand-600">

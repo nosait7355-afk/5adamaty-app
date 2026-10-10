@@ -14,7 +14,7 @@ import { Badge, Chip } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { InfoAlert } from '@/components/common/info-alert';
-import { CatalogIcon, CATALOG_ICON_NAMES } from '@/components/common/catalog-icon';
+import { CATALOG_ICON_NAMES } from '@/components/common/catalog-icon';
 import {
   useAdminCategories,
   useAdminProfessions,
@@ -33,6 +33,7 @@ import {
   type DocumentRequirement,
 } from '@/shared/constants/documents';
 import type { AdminProfessionDto } from '@/server/services/admin.service';
+import { ProfessionArt } from '@/components/common/profession-art';
 
 const ICON_OPTIONS = CATALOG_ICON_NAMES.map((name) => ({ value: name, label: name }));
 
@@ -146,9 +147,7 @@ function ProfessionRow({
     <Card className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-            <CatalogIcon name={profession.icon} size={20} />
-          </span>
+          <ProfessionArt slug={profession.slug} icon={profession.icon} size={44} />
           <div className="min-w-0">
             <h3 className="line-clamp-1 text-card-title font-bold text-ink-900">
               {profession.name}

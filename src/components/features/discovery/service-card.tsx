@@ -10,6 +10,7 @@ import { cn } from '@/lib/cn';
 import { NAV_FORWARD } from '@/lib/view-transitions';
 import { formatExperience } from '@/lib/format';
 import type { ServiceCardDto } from '@/server/services/discovery.service';
+import { professionArtSrc } from '@/lib/profession-art';
 
 export interface ServiceCardProps {
   service: ServiceCardDto;
@@ -66,6 +67,7 @@ export function ServiceCard({
           alt={service.title}
           size={120}
           iconName={service.professionIcon}
+          fallbackArt={professionArtSrc(service.professionSlug)}
           rounded="field"
         />
 

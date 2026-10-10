@@ -8,7 +8,6 @@ import { PageContainer } from '@/components/layout/page-container';
 import { Chip } from '@/components/ui/badge';
 import { ServiceCardSkeleton, Skeleton, SkeletonList } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
-import { CatalogIcon } from '@/components/common/catalog-icon';
 import { ProviderMiniCard } from '@/components/features/discovery/provider-mini-card';
 import { ServiceCard } from '@/components/features/discovery/service-card';
 import { SectionHeader } from '@/components/ui/card';
@@ -20,6 +19,7 @@ import { addRecentSearch, clearRecentSearches, useRecentSearches } from '@/lib/r
 import { NAV_FORWARD } from '@/lib/view-transitions';
 import { findArabic, includesArabic } from '@/shared/arabic';
 import type { ProfessionDto } from '@/server/services/catalog.service';
+import { ProfessionArt } from '@/components/common/profession-art';
 
 /**
  * شاشة البحث الكاملة — المرحلة 4.
@@ -218,9 +218,7 @@ function SearchScreen() {
                       onClick={() => remember(trimmed)}
                       className="pressable flex items-center gap-3 border-b border-border py-3"
                     >
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-50 text-brand-600">
-                        <CatalogIcon name={profession.icon} size={20} />
-                      </span>
+                      <ProfessionArt slug={profession.slug} icon={profession.icon} size={40} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-body font-semibold text-ink-900">
                           <Highlight text={profession.name} match={trimmed} />

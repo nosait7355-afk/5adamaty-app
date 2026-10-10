@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="مكافحة حشرات">
+  <circle cx="48" cy="48" r="48" fill="#E9F5DB"/>
+  <path d="M36 40l-8-6M60 40l8-6M34 50H24M62 50h10M36 60l-8 6M60 60l8 6M42 30l-4-6M54 30l4-6" stroke="#3F6212" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="48" cy="52" rx="13" ry="17" fill="#65A30D"/>
+  <circle cx="48" cy="34" r="7" fill="#4D7C0F"/>
+  <path d="M48 36v32" stroke="#3F6212" stroke-width="2"/>
+  <circle cx="48" cy="50" r="27" fill="none" stroke="#EF4444" stroke-width="5"/>
+  <path d="M29 31l38 38" stroke="#EF4444" stroke-width="5" stroke-linecap="round"/>
+</svg>

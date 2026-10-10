@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="منظّم مناسبات">
+  <circle cx="48" cy="48" r="48" fill="#FFEEDD"/>
+  <rect x="20" y="26" width="56" height="48" rx="6" fill="#FFFFFF"/>
+  <path d="M20 32a6 6 0 0 1 6-6h44a6 6 0 0 1 6 6v8H20Z" fill="#F97316"/>
+  <rect x="32" y="20" width="5" height="12" rx="2.5" fill="#9A3412"/>
+  <rect x="59" y="20" width="5" height="12" rx="2.5" fill="#9A3412"/>
+  <path d="M48 66s-12-7-12-14a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 7-12 14-12 14Z" fill="#EF4444"/>
+  <path d="M14 24l2 4 4 1-4 2-2 4-1-4-4-2 4-1ZM80 54l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5Z" fill="#F59E0B"/>
+</svg>

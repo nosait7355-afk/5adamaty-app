@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="سبّاك">
+  <circle cx="48" cy="48" r="48" fill="#DCEBFF"/>
+  <rect x="18" y="30" width="10" height="20" rx="2" fill="#94A3B8"/>
+  <path d="M28 34h26a12 12 0 0 1 12 12v6H56v-4a4 4 0 0 0-4-4H28Z" fill="#CBD5E1"/>
+  <rect x="54" y="52" width="14" height="5" rx="1.5" fill="#94A3B8"/>
+  <rect x="38" y="24" width="4" height="10" rx="1" fill="#64748B"/>
+  <rect x="31" y="21" width="18" height="5" rx="2.5" fill="#EF4444"/>
+  <path d="M61 62c0 0-6 8-6 12a6 6 0 0 0 12 0c0-4-6-12-6-12Z" fill="#3B82F6"/>
+  <ellipse cx="59" cy="73" rx="1.6" ry="2.6" fill="#BFDBFE"/>
+</svg>

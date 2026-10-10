@@ -40,6 +40,8 @@ export interface ProviderCardDto {
   categorySlug?: string;
   professionId: string;
   professionName?: string;
+  /** للرسمة الافتراضية حين لا توجد صورة (`professionArtSrc`). */
+  professionSlug?: string;
   professionIcon?: string;
   yearsOfExperience?: number;
   /** المنطقة الأولى — هي المعروضة بجانب 📍 في البطاقة. */
@@ -78,6 +80,8 @@ export interface ServiceCardDto {
   categorySlug?: string;
   professionId: string;
   professionName?: string;
+  /** للرسمة الافتراضية حين لا توجد صورة (`professionArtSrc`). */
+  professionSlug?: string;
   professionIcon?: string;
   provider: {
     id: string;
@@ -131,6 +135,7 @@ function toProviderCard(row: ProviderRow): ProviderCardDto {
     ...(row.categorySlug ? { categorySlug: row.categorySlug } : {}),
     professionId: String(row.professionId),
     ...(row.professionName ? { professionName: row.professionName } : {}),
+    ...(row.professionSlug ? { professionSlug: row.professionSlug } : {}),
     ...(row.professionIcon ? { professionIcon: row.professionIcon } : {}),
     ...(row.yearsOfExperience != null ? { yearsOfExperience: row.yearsOfExperience } : {}),
     ...(row.coverageAreas?.[0] ? { area: row.coverageAreas[0] } : {}),
@@ -176,6 +181,7 @@ function toServiceCard(row: ServiceRow): ServiceCardDto {
     ...(row.categorySlug ? { categorySlug: row.categorySlug } : {}),
     professionId: String(row.professionId),
     ...(row.professionName ? { professionName: row.professionName } : {}),
+    ...(row.professionSlug ? { professionSlug: row.professionSlug } : {}),
     ...(row.professionIcon ? { professionIcon: row.professionIcon } : {}),
     provider: {
       id: String(row.providerId),

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="فني أجهزة منزلية">
+  <circle cx="48" cy="48" r="48" fill="#E8EEF8"/>
+  <rect x="24" y="18" width="48" height="58" rx="6" fill="#FFFFFF"/>
+  <rect x="24" y="18" width="48" height="12" rx="6" fill="#CBD5E1"/>
+  <rect x="24" y="24" width="48" height="6" fill="#CBD5E1"/>
+  <circle cx="32" cy="24" r="2.4" fill="#22C55E"/>
+  <rect x="52" y="22" width="14" height="4" rx="2" fill="#94A3B8"/>
+  <circle cx="48" cy="52" r="15" fill="#475569"/>
+  <circle cx="48" cy="52" r="11" fill="#60A5FA"/>
+  <path d="M38 55c4-3 8 3 12 0s6-2 8-1" fill="none" stroke="#DBEAFE" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

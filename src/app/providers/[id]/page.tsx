@@ -40,6 +40,7 @@ import { haptic, shareLink } from '@/lib/native';
 import { useMyProviderProfile } from '@/lib/queries/provider';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProviderContactDto } from '@/server/services/discovery.service';
+import { professionArtSrc } from '@/lib/profession-art';
 
 /**
  * ملف مقدم الخدمة — الصورة 10.
@@ -170,6 +171,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
   const data = provider.data;
   // ضعف العرض المعروض تقريبًا — شاشات الهواتف كثيفة البكسل
   const heroImage = cloudinaryUrl(data.gallery[0], { width: 800, height: 520 });
+  const heroArt = professionArtSrc(data.professionSlug);
   const reviewsCount = Math.max(reviewsTotal, data.ratingCount);
 
   return (
@@ -206,9 +208,21 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             className="object-cover"
           />
         ) : (
-          // بلا صور أعمال: أيقونة المهنة على لون العلامة بدل مربع فارغ
-          <span className="flex size-full items-center justify-center bg-linear-to-b from-brand-500 to-brand-700 text-white/90">
-            <CatalogIcon name={data.professionIcon} size={88} strokeWidth={1.1} />
+          // بلا صور أعمال: رسمة التخصص (أو أيقونته) على لون العلامة بدل مربع فارغ
+          <span className="flex size-full items-center justify-center bg-linear-to-b from-brand-500 to-brand-700 pt-[env(safe-area-inset-top,0px)] text-white/90">
+            {heroArt ? (
+              <Image
+                src={heroArt}
+                alt=""
+                width={128}
+                height={128}
+                unoptimized
+                priority
+                className="size-32 drop-shadow-lg"
+              />
+            ) : (
+              <CatalogIcon name={data.professionIcon} size={88} strokeWidth={1.1} />
+            )}
           </span>
         )}
 
@@ -241,6 +255,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
             alt={data.displayName}
             size={84}
             iconName={data.professionIcon}
+            fallbackArt={professionArtSrc(data.professionSlug)}
             rounded="full"
             className="-mt-11 ring-4 ring-surface"
           />

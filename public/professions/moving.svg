@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="نقل عفش">
+  <circle cx="48" cy="48" r="48" fill="#FFEEDD"/>
+  <ellipse cx="48" cy="72" rx="32" ry="3" fill="#9A3412" opacity=".14"/>
+  <rect x="14" y="34" width="44" height="30" rx="3" fill="#F97316"/>
+  <path d="M58 42h12l10 11v11H58Z" fill="#FB923C"/>
+  <path d="M62 45h7l6 7H62Z" fill="#BFDBFE"/>
+  <rect x="20" y="22" width="14" height="12" rx="1.5" fill="#D97706"/>
+  <rect x="36" y="26" width="12" height="8" rx="1.5" fill="#F59E0B"/>
+  <path d="M27 22v12M42 26v8" stroke="#FDE68A" stroke-width="2"/>
+  <circle cx="28" cy="66" r="7" fill="#1F2937"/>
+  <circle cx="68" cy="66" r="7" fill="#1F2937"/>
+  <circle cx="28" cy="66" r="2.6" fill="#D1D5DB"/>
+  <circle cx="68" cy="66" r="2.6" fill="#D1D5DB"/>
+</svg>
