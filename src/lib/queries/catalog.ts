@@ -8,6 +8,7 @@ import type {
   DocumentRequirementDto,
   ProfessionDto,
 } from '@/server/services/catalog.service';
+import type { PublicBannerDto } from '@/server/services/banner.service';
 
 /** التصنيفات الرئيسية — الصورة 08. */
 export function useCategories() {
@@ -15,6 +16,15 @@ export function useCategories() {
     queryKey: queryKeys.categories.all,
     queryFn: async () => (await api.get<CategoryDto[]>('/categories')).data,
     // الكتالوج نادر التغيّر — نطيل صلاحيته لتقليل الطلبات
+    staleTime: 10 * 60_000,
+  });
+}
+
+/** بانرات الرئيسية — تديرها الإدارة من لوحة التحكم. */
+export function useBanners() {
+  return useQuery({
+    queryKey: queryKeys.banners.all,
+    queryFn: async () => (await api.get<PublicBannerDto[]>('/banners')).data,
     staleTime: 10 * 60_000,
   });
 }

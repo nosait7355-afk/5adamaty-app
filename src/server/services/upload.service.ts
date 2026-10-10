@@ -38,6 +38,7 @@ const PURPOSE_ROLES: Record<UploadPurpose, ReadonlyArray<SessionUser['role']>> =
   MESSAGE_ATTACHMENT: ['CUSTOMER', 'PROVIDER', 'ADMIN'],
   PROVIDER_PORTFOLIO_VIDEO: ['PROVIDER', 'ADMIN'],
   CATEGORY_IMAGE: ['ADMIN'],
+  BANNER_IMAGE: ['ADMIN'],
 };
 
 export interface SignatureRequest {

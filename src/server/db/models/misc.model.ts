@@ -53,6 +53,8 @@ export const AUDIT_ACTIONS = [
   'ACCOUNT_DELETED',
   // بلاغات المستخدمين — سياسة Google Play للمحتوى
   'REPORT_RESOLVED',
+  // بانرات الرئيسية
+  'BANNER_CHANGED',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

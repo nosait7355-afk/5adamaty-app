@@ -22,6 +22,7 @@ export { Address, type AddressDocument } from './address.model';
 export { Notification, type NotificationDocument } from './notification.model';
 export { Thread, Message, type ThreadDocument, type MessageDocument } from './message.model';
 export { Report, type ReportDocument } from './report.model';
+export { Banner, type BannerDocument } from './banner.model';
 export {
   Setting,
   AuditLog,

@@ -21,6 +21,8 @@ import type {
   UpsertSettingInput,
 } from '@/shared/schemas/admin.schema';
 import type { AdminReportDto } from '@/server/services/report.service';
+import type { AdminBannerDto } from '@/server/services/banner.service';
+import type { CreateBannerInput, UpdateBannerInput } from '@/shared/schemas/banner.schema';
 import type { ResolveReportInput } from '@/shared/schemas/report.schema';
 
 /**
@@ -356,5 +358,54 @@ export function useResolveReport() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
     },
+  });
+}
+
+/* ================================================================== */
+/* بانرات الرئيسية                                                     */
+/* ================================================================== */
+
+export function useAdminBanners() {
+  return useQuery({
+    queryKey: queryKeys.admin.banners,
+    queryFn: async () => (await api.get<AdminBannerDto[]>('/admin/banners')).data,
+  });
+}
+
+/** أي تغيير يظهر في الرئيسية أيضًا — نبطل المفتاحين معًا. */
+function useInvalidateBanners() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.admin.banners });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.banners.all });
+  };
+}
+
+export function useCreateBanner() {
+  const invalidate = useInvalidateBanners();
+  return useMutation({
+    mutationFn: async (input: CreateBannerInput) =>
+      (await api.post<AdminBannerDto>('/admin/banners', input)).data,
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateBanner() {
+  const invalidate = useInvalidateBanners();
+  return useMutation({
+    mutationFn: async (input: { bannerId: string } & UpdateBannerInput) => {
+      const { bannerId, ...body } = input;
+      return (await api.patch<AdminBannerDto>(`/admin/banners/${bannerId}`, body)).data;
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteBanner() {
+  const invalidate = useInvalidateBanners();
+  return useMutation({
+    mutationFn: async (bannerId: string) =>
+      (await api.delete<{ deleted: boolean }>(`/admin/banners/${bannerId}`)).data,
+    onSuccess: invalidate,
   });
 }

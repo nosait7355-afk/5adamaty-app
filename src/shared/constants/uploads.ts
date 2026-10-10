@@ -16,6 +16,7 @@ export const UPLOAD_PURPOSES = [
   'MESSAGE_ATTACHMENT',
   'PROVIDER_PORTFOLIO_VIDEO',
   'CATEGORY_IMAGE',
+  'BANNER_IMAGE',
 ] as const;
 
 export type UploadPurpose = (typeof UPLOAD_PURPOSES)[number];
@@ -108,6 +109,15 @@ export const UPLOAD_RULES: Record<UploadPurpose, UploadRule> = {
     accept: IMAGE_MIME_TYPES,
     maxSizeMB: 2,
     folder: 'khadamaty/categories',
+    accessMode: 'public',
+    resourceType: 'image',
+    maxFiles: 1,
+  },
+  /** صورة بانر الرئيسية — ترفعها الإدارة بدل الرسمة المضمّنة. */
+  BANNER_IMAGE: {
+    accept: IMAGE_MIME_TYPES,
+    maxSizeMB: 2,
+    folder: 'khadamaty/banners',
     accessMode: 'public',
     resourceType: 'image',
     maxFiles: 1,

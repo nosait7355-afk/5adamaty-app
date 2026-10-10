@@ -3,17 +3,19 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { LinkButton } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/cn';
+import type { BannerTone } from '@/shared/constants/banners';
 
 export interface PromoSlide {
   title: string;
   description: string;
   ctaLabel: string;
   href: string;
-  /** رسمة الشريحة (`public/banners/*.svg`) — في نهاية السطر بجوار النص. */
+  /** رسمة الشريحة (`public/banners/*.svg` أو صورة رفعتها الإدارة) — في نهاية السطر. */
   image?: string;
   /** لون خلفية الشريحة — يميّز الشرائح عن بعضها أثناء التبديل. */
-  tone?: 'brand' | 'success';
+  tone?: BannerTone;
 }
 
 export interface PromoBannerProps {
@@ -21,10 +23,12 @@ export interface PromoBannerProps {
   className?: string;
 }
 
-const TONES = {
+const TONES: Record<BannerTone, string> = {
   brand: 'bg-brand-50',
   success: 'bg-success-bg',
-} as const;
+  warning: 'bg-warning-bg',
+  purple: 'bg-purple-bg',
+};
 
 /**
  * بانر الرئيسية — الصورة 06.
@@ -81,7 +85,7 @@ export function PromoBanner({ slides, className }: PromoBannerProps) {
             height={120}
             unoptimized
             priority={index === 0}
-            className="w-[44%] max-w-[10.5rem] shrink-0 animate-[banner-in_400ms_ease-out]"
+            className="max-h-[7.5rem] w-[44%] max-w-[10.5rem] shrink-0 object-contain animate-[banner-in_400ms_ease-out]"
           />
         )}
       </div>
@@ -90,7 +94,7 @@ export function PromoBanner({ slides, className }: PromoBannerProps) {
         <div className="flex items-center justify-center gap-1.5">
           {slides.map((entry, dotIndex) => (
             <button
-              key={entry.title}
+              key={`${dotIndex}-${entry.title}`}
               type="button"
               onClick={() => setIndex(dotIndex)}
               aria-label={`العرض ${dotIndex + 1}`}
@@ -105,4 +109,9 @@ export function PromoBanner({ slides, className }: PromoBannerProps) {
       )}
     </section>
   );
+}
+
+/** بنفس ارتفاع البانر كي لا تقفز الصفحة حين تصل البيانات. */
+export function PromoBannerSkeleton() {
+  return <Skeleton className="h-[9.5rem] w-full rounded-card" />;
 }

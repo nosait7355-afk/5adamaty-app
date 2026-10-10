@@ -10,6 +10,10 @@ export const queryKeys = {
     detail: (slug: string) => ['categories', slug] as const,
   },
 
+  banners: {
+    all: ['banners'] as const,
+  },
+
   professions: {
     byCategory: (categoryId: string) => ['professions', { categoryId }] as const,
     documentRequirements: (professionId: string) =>
@@ -69,5 +73,6 @@ export const queryKeys = {
     settings: ['admin', 'settings'] as const,
     auditLogs: (filters: Record<string, unknown>) => ['admin', 'audit-logs', filters] as const,
     reports: (filters: Record<string, unknown>) => ['admin', 'reports', filters] as const,
+    banners: ['admin', 'banners'] as const,
   },
 } as const;
