@@ -89,7 +89,7 @@ afterEach(async () => {
   await Category.findByIdAndUpdate(categoryId, { $set: { image: null } });
 });
 
-function patch(body: unknown, token = adminToken): Promise<Response> {
+async function patch(body: unknown, token = adminToken): Promise<Response> {
   const request = new Request(`http://localhost:3000/api/v1/admin/categories/${categoryId}`, {
     method: 'PATCH',
     headers: {
