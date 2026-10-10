@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CitySkyline } from '@/components/features/auth/city-skyline';
+import Image from 'next/image';
 import { LinkButton } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 
@@ -10,6 +10,10 @@ export interface PromoSlide {
   description: string;
   ctaLabel: string;
   href: string;
+  /** رسمة الشريحة (`public/banners/*.svg`) — في نهاية السطر بجوار النص. */
+  image?: string;
+  /** لون خلفية الشريحة — يميّز الشرائح عن بعضها أثناء التبديل. */
+  tone?: 'brand' | 'success';
 }
 
 export interface PromoBannerProps {
@@ -17,11 +21,17 @@ export interface PromoBannerProps {
   className?: string;
 }
 
+const TONES = {
+  brand: 'bg-brand-50',
+  success: 'bg-success-bg',
+} as const;
+
 /**
  * بانر الرئيسية — الصورة 06.
  *
- * بطاقة `--brand-50` radius 16، النص في بداية السطر ورسم المدينة في نهايته،
- * زر صغير أسفل النص، ونقاط carousel تحت البطاقة.
+ * بطاقة بلون الشريحة: النص والزر في بداية السطر، ورسمة الشريحة في نهايته
+ * (بدل رسم المدينة الباهت خلف النص، الذي لم يكن يقول شيئًا عن العرض).
+ * ارتفاع ثابت للبطاقة كي لا تقفز الصفحة حين تتبدّل شريحتان بطولي نص مختلفين.
  *
  * التبديل التلقائي يتوقف احترامًا لـ`prefers-reduced-motion`: الحركة
  * التلقائية بلا تحكّم مصدر إزعاج لمن ضبط النظام على تقليل الحركة.
@@ -46,16 +56,34 @@ export function PromoBanner({ slides, className }: PromoBannerProps) {
 
   return (
     <section className={cn('flex flex-col gap-2', className)} aria-label="عروض">
-      <div className="relative overflow-hidden rounded-card bg-brand-50 p-4">
-        <div className="relative z-10 max-w-[62%]">
-          <h2 className="text-card-title font-extrabold text-ink-900">{slide.title}</h2>
-          <p className="mt-1 text-meta text-ink-600">{slide.description}</p>
+      <div
+        className={cn(
+          'flex min-h-[9.5rem] items-center gap-2 overflow-hidden rounded-card p-4 transition-colors duration-500',
+          TONES[slide.tone ?? 'brand']
+        )}
+      >
+        <div className="flex min-w-0 flex-1 flex-col items-start">
+          <h2 className="text-card-title font-extrabold leading-snug text-ink-900">{slide.title}</h2>
+          <p className="mt-1 line-clamp-3 text-meta text-ink-600">{slide.description}</p>
           <LinkButton href={slide.href} size="sm" className="mt-3">
             {slide.ctaLabel}
           </LinkButton>
         </div>
 
-        <CitySkyline className="pointer-events-none absolute -bottom-2 start-auto end-0 z-0 w-[46%] opacity-80" />
+        {slide.image && (
+          <Image
+            // المفتاح يعيد تشغيل حركة الظهور مع كل شريحة
+            key={slide.image}
+            src={slide.image}
+            // زخرفية: العنوان بجوارها يقول ما تقوله
+            alt=""
+            width={140}
+            height={120}
+            unoptimized
+            priority={index === 0}
+            className="w-[44%] max-w-[10.5rem] shrink-0 animate-[banner-in_400ms_ease-out]"
+          />
+        )}
       </div>
 
       {slides.length > 1 && (

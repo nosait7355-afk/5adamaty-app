@@ -13,7 +13,7 @@ import {
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { CategoryRail, CategoryRailSkeleton } from '@/components/features/discovery/category-rail';
 import { HomeHeader } from '@/components/features/discovery/home-header';
-import { PromoBanner } from '@/components/features/discovery/promo-banner';
+import { PromoBanner, type PromoSlide } from '@/components/features/discovery/promo-banner';
 import { ProviderMiniCard } from '@/components/features/discovery/provider-mini-card';
 import { SearchLauncher } from '@/components/features/discovery/search-launcher';
 import { ServiceCard } from '@/components/features/discovery/service-card';
@@ -36,14 +36,18 @@ const PROMO_SLIDES = [
     description: 'اعثر على سبّاك أو كهربائي أو طبيب وتواصل معه مباشرة بالهاتف أو واتساب.',
     ctaLabel: 'تصفّح التصنيفات',
     href: '/categories',
+    image: '/banners/all-services.svg',
+    tone: 'brand',
   },
   {
     title: 'التواصل والدفع مباشر',
     description: 'نحن وسيط إعلانات فقط — تتفق على السعر وتدفع لمقدم الخدمة مباشرة.',
     ctaLabel: 'اعرف أكثر',
     href: '/help',
+    image: '/banners/direct-contact.svg',
+    tone: 'success',
   },
-];
+] satisfies PromoSlide[];
 
 export default function HomePage() {
   const nav = useDiscoveryNav();

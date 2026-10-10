@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, renderHook, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { CategoryRail } from '@/components/features/discovery/category-rail';
+import { PromoBanner } from '@/components/features/discovery/promo-banner';
 import { ProviderMiniCard } from '@/components/features/discovery/provider-mini-card';
 import { SearchLauncher } from '@/components/features/discovery/search-launcher';
 import {
@@ -110,5 +112,54 @@ describe('عمليات البحث السابقة', () => {
     act(() => clearRecentSearches());
     expect(result.current).toEqual([]);
     expect(window.localStorage.getItem('khadamaty:recent-searches')).toBeNull();
+  });
+});
+
+describe('PromoBanner — بانر الرئيسية بالرسومات', () => {
+  // jsdom بلا matchMedia — البانر يسأله عن «تقليل الحركة» قبل التبديل التلقائي
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const slides = [
+    {
+      title: 'كل خدمات الفيوم في مكان واحد',
+      description: 'وصف',
+      ctaLabel: 'تصفّح التصنيفات',
+      href: '/categories',
+      image: '/banners/all-services.svg',
+      tone: 'brand' as const,
+    },
+    {
+      title: 'التواصل والدفع مباشر',
+      description: 'وصف',
+      ctaLabel: 'اعرف أكثر',
+      href: '/help',
+      image: '/banners/direct-contact.svg',
+      tone: 'success' as const,
+    },
+  ];
+
+  it('كل شريحة برسمتها الزخرفية ولون خلفيتها', async () => {
+    const { container } = render(<PromoBanner slides={slides} />);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('/banners/all-services.svg');
+    expect(container.querySelector('img')).toHaveAttribute('alt', '');
+    expect(container.querySelector('.bg-brand-50')).not.toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'العرض 2' }));
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('/banners/direct-contact.svg');
+    expect(container.querySelector('.bg-success-bg')).not.toBeNull();
+    expect(screen.getByRole('link', { name: 'اعرف أكثر' })).toHaveAttribute('href', '/help');
+  });
+
+  it('رسومات البانر موجودة في public', async () => {
+    const { existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    for (const slide of slides) {
+      expect(existsSync(join(process.cwd(), 'public', slide.image)), slide.image).toBe(true);
+    }
   });
 });
