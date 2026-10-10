@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { badRequest, conflict, forbidden, notFound, unprocessable } from '@/server/lib/errors';
 import { logger } from '@/server/lib/logger';
+import { deleteAsset } from '@/server/lib/cloudinary';
+import { verifyAndBuildMediaRef } from './upload.service';
 import { writeAuditLog, createNotification } from '@/server/repositories/provider.repository';
 import {
   broadcastNotificationRecords,
@@ -190,6 +192,8 @@ export interface AdminCategoryDto {
   description: string;
   icon: string;
   color?: string;
+  /** رابط الصورة المرفوعة — غيابها يعني الرسمة الافتراضية أو الأيقونة. */
+  image?: string;
   order: number;
   isActive: boolean;
   servicesCount: number;
@@ -202,6 +206,7 @@ function toAdminCategoryDto(category: {
   description: string;
   icon: string;
   color?: string;
+  image?: { url: string } | null;
   order: number;
   isActive: boolean;
   servicesCount: number;
@@ -213,6 +218,7 @@ function toAdminCategoryDto(category: {
     description: category.description,
     icon: category.icon,
     ...(category.color ? { color: category.color } : {}),
+    ...(category.image?.url ? { image: category.image.url } : {}),
     order: category.order,
     isActive: category.isActive,
     servicesCount: category.servicesCount,
@@ -295,8 +301,35 @@ export async function updateCategory(
   if (input.order !== undefined) patch.order = input.order;
   if (input.isActive !== undefined) patch.isActive = input.isActive;
 
+  /*
+   * صورة التصنيف: البيانات من Cloudinary نفسها لا مما أرسله المتصفح، والملف
+   * يجب أن يكون في مجلد هذا المدير (`verifyAndBuildMediaRef`). `null` يزيلها
+   * فتعود الرسمة الافتراضية.
+   */
+  if (input.imagePublicId !== undefined) {
+    patch.image =
+      input.imagePublicId === null
+        ? null
+        : await verifyAndBuildMediaRef({
+            user: { id: actor.id, role: 'ADMIN', status: 'ACTIVE' },
+            purpose: 'CATEGORY_IMAGE',
+            publicId: input.imagePublicId,
+          });
+  }
+
   const updated = await updateCategoryRecord(categoryId, patch);
   if (!updated) throw notFound('التصنيف غير موجود.');
+
+  // الصورة القديمة بلا مرجع بعد الاستبدال أو الإزالة — تُحذف كي لا تتراكم
+  // أصول يتيمة مدفوعة. بعد نجاح الحفظ فقط، وفشلها لا يُفشل التعديل.
+  const previousImage = existing.image;
+  if (
+    input.imagePublicId !== undefined &&
+    previousImage?.publicId &&
+    previousImage.publicId !== input.imagePublicId
+  ) {
+    void deleteAsset({ publicId: previousImage.publicId }).catch(() => undefined);
+  }
 
   await writeAuditLog({
     actorId: actor.id,

@@ -107,6 +107,8 @@ export function useUpdateCategory() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'professions'] });
+      // الصورة والاسم يظهران في واجهة العميل أيضًا (الرئيسية وشاشة التصنيفات)
+      void queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
     },
   });
 }

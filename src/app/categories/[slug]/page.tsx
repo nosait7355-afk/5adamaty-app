@@ -14,6 +14,7 @@ import { ProfessionCard } from '@/components/features/discovery/category-cards';
 import { SearchBox } from '@/components/features/discovery/search-box';
 import { useCategories, useProfessions } from '@/lib/queries/catalog';
 import { useDiscoveryNav } from '@/lib/queries/auth';
+import { CategoryArt } from '@/components/common/category-art';
 
 /**
  * المهن داخل تصنيف — الصورة 07.
@@ -48,9 +49,13 @@ export default function CategoryProfessionsPage({
             </>
           ) : (
             <>
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                <CatalogIcon name={category?.icon} size={28} />
-              </span>
+              {category ? (
+                <CategoryArt category={category} size={56} priority />
+              ) : (
+                <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                  <CatalogIcon name={undefined} size={28} />
+                </span>
+              )}
               <div className="min-w-0">
                 <h1 className="text-section font-extrabold text-ink-900">
                   {category?.name ?? 'التصنيف'}

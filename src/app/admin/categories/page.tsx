@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useId, useRef, useState } from 'react';
+import { ImagePlus, Plus, RotateCcw, X } from 'lucide-react';
 import { AdminShell, AdminPageHeader } from '@/components/layout/admin-shell';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonClassName } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { CategoryArt } from '@/components/common/category-art';
+import { UploadError, uploadFile } from '@/lib/upload-client';
+import { toast } from '@/lib/toast';
+import { UPLOAD_RULES } from '@/shared/constants/uploads';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/common/states';
 import { InfoAlert } from '@/components/common/info-alert';
-import { CatalogIcon, CATALOG_ICON_NAMES } from '@/components/common/catalog-icon';
+import { CATALOG_ICON_NAMES } from '@/components/common/catalog-icon';
 import {
   useAdminCategories,
   useCreateCategory,
@@ -81,9 +86,7 @@ function CategoryRow({ category }: { category: AdminCategoryDto }) {
     <Card className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-            <CatalogIcon name={category.icon} size={20} />
-          </span>
+          <CategoryArt category={category} size={44} />
           <div className="min-w-0">
             <h3 className="line-clamp-1 text-card-title font-bold text-ink-900">{category.name}</h3>
             <p className="line-clamp-2 text-badge text-ink-400">{category.description}</p>
@@ -181,6 +184,8 @@ function CategoryForm({
         />
       </Field>
 
+      {existing && <CategoryImageField category={existing} />}
+
       <Field label="الأيقونة" required htmlFor="cat-icon">
         <Select id="cat-icon" options={ICON_OPTIONS} value={icon} onChange={(e) => setIcon(e.target.value)} />
       </Field>
@@ -201,5 +206,101 @@ function CategoryForm({
         حفظ
       </Button>
     </Card>
+  );
+}
+
+/**
+ * صورة التصنيف — تُحفظ فور الرفع، مستقلة عن زر «حفظ» بقية الحقول.
+ *
+ * الملف يرتفع من المتصفح مباشرة إلى Cloudinary (غرض `CATEGORY_IMAGE`، للإدارة
+ * فقط، صور نقطية حتى 2MB)، ثم يتحقق الخادم منه عند Cloudinary قبل ربطه.
+ * «الرسمة الافتراضية» تزيل الصورة فتعود الرسمة المضمّنة (أو الأيقونة).
+ */
+function CategoryImageField({ category }: { category: AdminCategoryDto }) {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const update = useUpdateCategory();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const rule = UPLOAD_RULES.CATEGORY_IMAGE;
+
+  const busy = uploading || update.isPending;
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
+    setError('');
+    setUploading(true);
+    try {
+      const asset = await uploadFile({ file, purpose: 'CATEGORY_IMAGE' });
+      await update.mutateAsync({ categoryId: category.id, imagePublicId: asset.publicId });
+      toast.success('حُفظت صورة التصنيف');
+    } catch (caught) {
+      setError(
+        caught instanceof UploadError || caught instanceof ApiClientError
+          ? caught.message
+          : 'تعذّر رفع الصورة. حاول مرة أخرى.'
+      );
+    } finally {
+      setUploading(false);
+      // نفس الملف يمكن اختياره مرة أخرى بعد خطأ
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const reset = async () => {
+    setError('');
+    try {
+      await update.mutateAsync({ categoryId: category.id, imagePublicId: null });
+      toast.success('عادت الرسمة الافتراضية');
+    } catch (caught) {
+      setError(caught instanceof ApiClientError ? caught.message : 'تعذّر الحفظ.');
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-label font-semibold text-ink-900">صورة التصنيف</span>
+      <div className="flex items-center gap-3">
+        <CategoryArt category={category} size={64} />
+        <div className="flex flex-wrap gap-2">
+          <input
+            ref={inputRef}
+            id={inputId}
+            type="file"
+            accept={rule.accept.join(',')}
+            className="sr-only"
+            disabled={busy}
+            onChange={(event) => void onFile(event.target.files?.[0])}
+          />
+          <label
+            htmlFor={inputId}
+            className={buttonClassName({
+              variant: 'secondary',
+              size: 'sm',
+              className: busy ? 'pointer-events-none opacity-50' : 'cursor-pointer',
+            })}
+          >
+            {uploading ? <Spinner size={14} /> : <ImagePlus size={16} aria-hidden="true" />}
+            {category.image ? 'تغيير الصورة' : 'رفع صورة'}
+          </label>
+          {category.image && (
+            <Button
+              size="sm"
+              variant="neutral"
+              disabled={busy}
+              onClick={() => void reset()}
+              iconStart={<RotateCcw size={16} />}
+            >
+              الرسمة الافتراضية
+            </Button>
+          )}
+        </div>
+      </div>
+      <p className="text-badge text-ink-400">
+        JPG أو PNG أو WEBP حتى {rule.maxSizeMB}MB — مربعة ويفضّل 256×256 أو أكبر. تُعرض داخل
+        دائرة.
+      </p>
+      {error && <InfoAlert tone="danger">{error}</InfoAlert>}
+    </div>
   );
 }

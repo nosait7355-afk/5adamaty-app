@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { objectIdSchema, paginationSchema, safeString, slugSchema } from './common.schema';
+import { publicIdSchema } from './upload.schema';
 import { USER_ROLES, USER_STATUSES } from '@/shared/constants/roles';
 import { DOCUMENT_ACCEPTED_MIME, DOCUMENT_KEYS, PROFESSION_KINDS } from '@/shared/constants/documents';
 import { NOTIFICATION_TYPES } from '@/shared/constants/notifications';
@@ -54,7 +55,15 @@ export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 
 export const updateCategorySchema = createCategorySchema
   .partial()
-  .extend({ isActive: z.boolean().optional() })
+  .extend({
+    isActive: z.boolean().optional(),
+    /**
+     * صورة التصنيف بعد رفعها مباشرة إلى Cloudinary (غرض `CATEGORY_IMAGE`).
+     * `null` يزيلها فتعود الرسمة الافتراضية. الخادم يتحقق من الملف عند
+     * Cloudinary نفسها ومن أنه في مجلد هذا المدير (`verifyAndBuildMediaRef`).
+     */
+    imagePublicId: publicIdSchema.nullable().optional(),
+  })
   .strict();
 
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;

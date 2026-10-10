@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { CatalogIcon } from '@/components/common/catalog-icon';
+import { CategoryArt } from '@/components/common/category-art';
 import { cn } from '@/lib/cn';
 import { formatServicesCount } from '@/lib/format';
 import { NAV_FORWARD } from '@/lib/view-transitions';
@@ -33,11 +34,10 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
       {/*
         الدائرة 84px في التصميم الأصلي مقاسة على بطاقة أعرض؛ في شبكة 3×3
         على عرض 375px يتبقى ~109px للبطاقة، فتُصغَّر إلى 64px حتى لا تدفع
-        الحشو خارج البطاقة. النسب البصرية محفوظة.
+        الحشو خارج البطاقة. النسب البصرية محفوظة. الدائرة صورة التصنيف
+        (صورة الإدارة أو الرسمة الافتراضية) — `CategoryArt`.
       */}
-      <span className="flex size-16 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-        <CatalogIcon name={category.icon} size={28} />
-      </span>
+      <CategoryArt category={category} size={64} />
 
       <h3 className="line-clamp-2 text-meta font-bold text-ink-900">{category.name}</h3>
       <p className="line-clamp-2 text-[11px] leading-tight text-ink-400">{category.description}</p>

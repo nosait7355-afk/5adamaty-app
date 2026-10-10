@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="خدمات سيارات">
+  <circle cx="48" cy="48" r="48" fill="#FFE5DA"/>
+  <ellipse cx="48" cy="72" rx="32" ry="3.5" fill="#B91C1C" opacity=".14"/>
+  <path d="M30 44 35.5 33.5A5 5 0 0 1 40 31h16a5 5 0 0 1 4.4 2.6L66 44Z" fill="#EF4444"/>
+  <path d="M36 43 39.6 35.7A2 2 0 0 1 41.4 34.6H47V43ZM50 43v-8.4h5.4a2 2 0 0 1 1.8 1.1L61 43Z" fill="#BFDBFE"/>
+  <rect x="17" y="42" width="62" height="20" rx="7" fill="#EF4444"/>
+  <rect x="17" y="50" width="62" height="4" fill="#DC2626"/>
+  <rect x="19" y="45" width="7" height="4" rx="2" fill="#FDE68A"/>
+  <rect x="70" y="45" width="7" height="4" rx="2" fill="#FECACA"/>
+  <circle cx="31" cy="62" r="8" fill="#1F2937"/>
+  <circle cx="65" cy="62" r="8" fill="#1F2937"/>
+  <circle cx="31" cy="62" r="3.2" fill="#D1D5DB"/>
+  <circle cx="65" cy="62" r="3.2" fill="#D1D5DB"/>
+</svg>

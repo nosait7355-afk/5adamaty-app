@@ -15,6 +15,7 @@ export const UPLOAD_PURPOSES = [
   'PROVIDER_DOCUMENT',
   'MESSAGE_ATTACHMENT',
   'PROVIDER_PORTFOLIO_VIDEO',
+  'CATEGORY_IMAGE',
 ] as const;
 
 export type UploadPurpose = (typeof UPLOAD_PURPOSES)[number];
@@ -98,6 +99,18 @@ export const UPLOAD_RULES: Record<UploadPurpose, UploadRule> = {
     accessMode: 'public',
     resourceType: 'video',
     maxFiles: 3,
+  },
+  /**
+   * صورة التصنيف — ترفعها الإدارة لتحلّ محل الرسمة الافتراضية المضمّنة
+   * (public/categories). صور نقطية فقط: SVG محظور أصلًا (FORBIDDEN_MIME_TYPES).
+   */
+  CATEGORY_IMAGE: {
+    accept: IMAGE_MIME_TYPES,
+    maxSizeMB: 2,
+    folder: 'khadamaty/categories',
+    accessMode: 'public',
+    resourceType: 'image',
+    maxFiles: 1,
   },
   SERVICE_IMAGE: {
     accept: IMAGE_MIME_TYPES,

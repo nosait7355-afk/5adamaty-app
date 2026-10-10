@@ -18,6 +18,8 @@ export interface CategoryDto {
   description: string;
   icon: string;
   color?: string;
+  /** صورة رفعتها الإدارة — الواجهة تختار البديل عند غيابها (`categoryArt`). */
+  image?: string;
   servicesCount: number;
 }
 
@@ -54,6 +56,7 @@ function toCategoryDto(doc: CategoryLean): CategoryDto {
     description: doc.description,
     icon: doc.icon,
     ...(doc.color ? { color: doc.color } : {}),
+    ...(doc.image?.url ? { image: doc.image.url } : {}),
     servicesCount: doc.servicesCount,
   };
 }

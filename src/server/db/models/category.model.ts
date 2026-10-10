@@ -1,5 +1,5 @@
 import { Schema, type Types } from 'mongoose';
-import { baseSchemaOptions, defineModel } from './shared';
+import { baseSchemaOptions, defineModel, mediaRefSchema, type MediaRef } from './shared';
 
 export interface CategoryDocument {
   _id: Types.ObjectId;
@@ -9,6 +9,11 @@ export interface CategoryDocument {
   /** اسم أيقونة lucide — يُحوَّل لمكوّن في الواجهة. */
   icon: string;
   color?: string;
+  /**
+   * صورة ترفعها الإدارة (Cloudinary). بدونها تُعرض الرسمة الافتراضية
+   * المضمّنة للتصنيفات الأساسية (public/categories)، ثم الأيقونة.
+   */
+  image?: MediaRef;
   order: number;
   isActive: boolean;
   /** عدّاد مشتق يُحدَّث بـ$inc — أرخص من count() عند كل قراءة. */
@@ -30,6 +35,7 @@ const categorySchema = new Schema<CategoryDocument>(
     description: { type: String, required: true, trim: true, maxlength: 200 },
     icon: { type: String, required: true, trim: true, maxlength: 40 },
     color: { type: String, trim: true, maxlength: 20 },
+    image: { type: mediaRefSchema, required: false },
     order: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
     servicesCount: { type: Number, default: 0, min: 0 },
