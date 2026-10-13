@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalPage, LegalSection } from '@/components/features/legal/legal-page';
 import { APP_NAME_AR, SUPPORT_EMAIL } from '@/shared/constants/legal';
+import { NATIVE_APP_ID, NATIVE_APP_NAME_AR } from '@/shared/constants/native-app';
 
 export const metadata: Metadata = { title: 'سياسة الخصوصية' };
 
@@ -14,6 +15,16 @@ export const metadata: Metadata = { title: 'سياسة الخصوصية' };
 export default function PrivacyPage() {
   return (
     <LegalPage title="سياسة الخصوصية">
+      <LegalSection title="نطاق هذه السياسة">
+        <p>
+          تسري هذه السياسة على موقع «{APP_NAME_AR}» وعلى تطبيق أندرويد «{NATIVE_APP_NAME_AR}» (
+          <span className="num" dir="ltr">
+            {NATIVE_APP_ID}
+          </span>
+          ) على Google Play. الاثنان يستخدمان نفس الحساب ونفس الخادم، فكل ما يلي ينطبق عليهما معًا.
+        </p>
+      </LegalSection>
+
       <LegalSection title="1. البيانات التي نجمعها">
         <p>
           <strong>عند إنشاء الحساب:</strong> الاسم، البريد الإلكتروني، المنطقة والمدينة، وكلمة
@@ -35,8 +46,10 @@ export default function PrivacyPage() {
         </p>
         <p>
           <strong>بيانات تقنية:</strong> عنوان IP ونوع الجهاز أو المتصفح، في جلسات الدخول وسجلات
-          الأمان — لحماية الحسابات ومنع إساءة الاستخدام. نستخدم كوكيز الجلسة الضرورية لتسجيل الدخول
-          فقط، ولا نستخدم أي أدوات إعلانات أو تتبّع.
+          الأمان — لحماية الحسابات ومنع إساءة الاستخدام. في الموقع نستخدم كوكيز الجلسة الضرورية
+          لتسجيل الدخول فقط. في تطبيق «{NATIVE_APP_NAME_AR}» يُحفظ رمز الجلسة في التخزين المشفّر على
+          جهازك، ويُمسح منه ويُلغى من خوادمنا عند تسجيل الخروج. لا نستخدم أي أدوات إعلانات أو تتبّع
+          أو معرّف إعلاني.
         </p>
       </LegalSection>
 

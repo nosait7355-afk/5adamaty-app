@@ -29,12 +29,15 @@ export interface GoogleProfile {
 /** يعيد `null` لأي توكن غير صالح — لا يرمي، حتى يترجمه المستدعي لرسالة موحّدة. */
 export async function verifyGoogleIdToken(idToken: string): Promise<GoogleProfile | null> {
   const env = getEnv();
-  if (!env.GOOGLE_CLIENT_ID) return null;
+  const audiences = [env.GOOGLE_CLIENT_ID, ...(env.GOOGLE_EXTRA_CLIENT_IDS ?? [])].filter(
+    (id): id is string => Boolean(id)
+  );
+  if (audiences.length === 0) return null;
 
   try {
     const { payload } = await jwtVerify(idToken, getJwks(), {
       issuer: GOOGLE_ISSUERS,
-      audience: env.GOOGLE_CLIENT_ID,
+      audience: audiences,
     });
 
     const sub = typeof payload.sub === 'string' ? payload.sub : undefined;

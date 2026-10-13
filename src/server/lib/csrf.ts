@@ -1,6 +1,7 @@
 import { forbidden } from './errors';
 import { getEnv, isProduction } from './env';
 import { logger } from './logger';
+import { NATIVE_APP_ORIGINS } from '@/shared/constants/native-app';
 
 /**
  * حماية CSRF بفحص المصدر (ARCHITECTURE §7).
@@ -12,13 +13,11 @@ import { logger } from './logger';
  * التطبيق يعمل أيضًا داخل Capacitor على أندرويد، فمصادره مسموحة صراحةً.
  */
 
-const CAPACITOR_ORIGINS = ['capacitor://localhost', 'http://localhost', 'https://localhost'];
-
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 function allowedOrigins(): string[] {
   const env = getEnv();
-  const origins = [env.APP_URL, ...CAPACITOR_ORIGINS];
+  const origins: string[] = [env.APP_URL, ...NATIVE_APP_ORIGINS];
 
   if (!isProduction) {
     origins.push('http://localhost:3000', 'http://localhost:3100', 'http://127.0.0.1:3000');

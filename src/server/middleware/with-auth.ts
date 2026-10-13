@@ -7,8 +7,9 @@ import type { UserRole } from '@/shared/constants/roles';
 /**
  * سياق الجلسة وحُرّاس الأدوار.
  *
- * التوكن يُقرأ من كوكي httpOnly فقط — لا من رأس Authorization ولا من
- * معامل استعلام، حتى لا يُسرَّب في السجلات أو الـReferer.
+ * التوكن يُقرأ من `Authorization: Bearer` (تطبيق «خدمات الفيوم» — انظر
+ * `session-transport.ts`) أو من كوكي httpOnly (الموقع). لا من معامل
+ * استعلام أبدًا، حتى لا يُسرَّب في السجلات أو الـReferer.
  */
 
 export interface SessionUser {
@@ -17,9 +18,15 @@ export interface SessionUser {
   status: string;
 }
 
+function readBearerToken(request: Request): string | null {
+  const match = request.headers.get('authorization')?.match(/^Bearer\s+(\S+)$/i);
+  return match?.[1] ?? null;
+}
+
 /** يقرأ الجلسة إن وُجدت. لا يرمي — يعيد null. */
 export async function getSession(request: Request): Promise<SessionUser | null> {
-  const token = readTokenFromRequest(request, ACCESS_COOKIE);
+  // الرأس الصريح أولًا: طلب يحمل Bearer قصد هذه الجلسة لا كوكي عالقة
+  const token = readBearerToken(request) ?? readTokenFromRequest(request, ACCESS_COOKIE);
   if (!token) return null;
 
   const claims = await verifyAccessToken(token);

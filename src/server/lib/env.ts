@@ -75,6 +75,20 @@ const serverEnvSchema = z.object({
    * اختياري: بدونه يفشل مسار جوجل بوضوح، وتبقى بقية المصادقة تعمل.
    */
   GOOGLE_CLIENT_ID: optionalString(z.string().min(1)),
+
+  /**
+   * عملاء Web إضافيون مقبولون كـ`aud` — تطبيق «خدمات الفيوم» منشور من حساب
+   * آخر، فقد يصدر `idToken` من مشروع Google Cloud مختلف. مفصولة بفواصل.
+   */
+  GOOGLE_EXTRA_CLIENT_IDS: z
+    .string()
+    .optional()
+    .transform((value) =>
+      value
+        ?.split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    ),
 });
 
 const clientEnvSchema = z.object({

@@ -2,11 +2,11 @@ import { withErrorHandler } from '@/server/middleware/with-error-handler';
 import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-limit';
 import { assertSameOrigin } from '@/server/lib/csrf';
 import {
-  REFRESH_COOKIE,
-  clearSessionCookies,
-  readTokenFromRequest,
-  setSessionCookies,
-} from '@/server/lib/cookies';
+  deliverSession,
+  endClientSession,
+  readPresentedRefreshToken,
+  withSession,
+} from '@/server/lib/session-transport';
 import { ok } from '@/server/lib/api-response';
 import { unauthorized } from '@/server/lib/errors';
 import { refreshSession } from '@/server/services/auth.service';
@@ -18,14 +18,18 @@ export const dynamic = 'force-dynamic';
  * يدوّر توكن التحديث ويصدر توكن وصول جديدًا.
  *
  * إعادة استخدام توكن مُدوَّر تُبطل **كل** جلسات المستخدم — كشف سرقة التوكن.
+ *
+ * الموقع: التوكن من الكوكي. التطبيق: من الجسم `{ refreshToken }` ويستلم
+ * الزوج الجديد في `session` — ويجب أن يستبدل المحفوظ فورًا، فالقديم صار
+ * مُبطَلًا وإعادة تقديمه تُنهي كل جلساته.
  */
 export const POST = withErrorHandler(async (request) => {
   assertSameOrigin(request);
   enforceRateLimit(request, RATE_LIMITS.WRITE, 'refresh');
 
-  const refreshToken = readTokenFromRequest(request, REFRESH_COOKIE);
+  const refreshToken = await readPresentedRefreshToken(request);
   if (!refreshToken) {
-    await clearSessionCookies();
+    await endClientSession(request);
     throw unauthorized('انتهت الجلسة. برجاء تسجيل الدخول مرة أخرى.');
   }
 
@@ -35,11 +39,11 @@ export const POST = withErrorHandler(async (request) => {
     });
 
     // الكوكي الجديدة دائمة — الجلسة كانت «تذكرني» أصلًا إن وصل التوكن
-    await setSessionCookies({ ...tokens, remember: true });
-    return ok({ user });
+    const session = await deliverSession(request, tokens, { remember: true });
+    return ok(withSession({ user }, session));
   } catch (error) {
     // أي فشل تحديث ينظّف الكوكيز حتى لا يعلق العميل في حلقة إعادة محاولة
-    await clearSessionCookies();
+    await endClientSession(request);
     throw error;
   }
 });

@@ -4,7 +4,7 @@ import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-lim
 import { requireProviderWorkspace } from '@/server/middleware/with-auth';
 import { getClientIdentifier } from '@/server/middleware/with-rate-limit';
 import { assertSameOrigin } from '@/server/lib/csrf';
-import { setSessionCookies } from '@/server/lib/cookies';
+import { deliverSession, withSession } from '@/server/lib/session-transport';
 import { ok } from '@/server/lib/api-response';
 import { submitVerificationSchema } from '@/shared/schemas/provider.schema';
 import { submitVerification } from '@/server/services/provider.service';
@@ -32,7 +32,8 @@ export const POST = withErrorHandler(async (request) => {
   });
 
   // تغيّر الدور يبطل توكن الوصول القائم — نستبدله قبل أن تعود الاستجابة
-  if (tokens) await setSessionCookies({ ...tokens, remember: true });
+  // (التطبيق يجد التوكنين الجديدين في `session` داخل الرد)
+  const session = tokens ? await deliverSession(request, tokens, { remember: true }) : null;
 
-  return ok(profile);
+  return ok(withSession(profile, session));
 });

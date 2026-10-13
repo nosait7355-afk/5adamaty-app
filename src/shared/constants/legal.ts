@@ -25,4 +25,4 @@ export const SUPPORT_EMAIL = 'nosait7355@gmail.com';
  * استُبدل قبل النشر على Google Play.
  */
 export const SUPPORT_PHONE = '+201001191006';
-export const LEGAL_LAST_UPDATED = '24 سبتمبر 2026';
+export const LEGAL_LAST_UPDATED = '13 أكتوبر 2026';

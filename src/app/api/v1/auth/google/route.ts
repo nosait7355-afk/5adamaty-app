@@ -2,7 +2,7 @@ import { withErrorHandler } from '@/server/middleware/with-error-handler';
 import { validateBody } from '@/server/middleware/with-validation';
 import { enforceRateLimit, RATE_LIMITS } from '@/server/middleware/with-rate-limit';
 import { assertSameOrigin } from '@/server/lib/csrf';
-import { setSessionCookies } from '@/server/lib/cookies';
+import { deliverSession, withSession } from '@/server/lib/session-transport';
 import { ok } from '@/server/lib/api-response';
 import { googleAuthSchema } from '@/shared/schemas/auth.schema';
 import { loginWithGoogle } from '@/server/services/auth.service';
@@ -26,7 +26,7 @@ export const POST = withErrorHandler(async (request) => {
     { allowCreate: input.intent === 'register' }
   );
 
-  await setSessionCookies({ ...tokens, remember: true });
+  const session = await deliverSession(request, tokens, { remember: true });
 
-  return ok({ user });
+  return ok(withSession({ user }, session));
 });

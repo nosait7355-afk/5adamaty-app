@@ -147,12 +147,11 @@ describe('استخراج الجلسة', () => {
     expect(await getSession(await requestWithToken(refresh))).toBeNull();
   });
 
-  it('لا يقرأ التوكن من رأس Authorization', async () => {
+  it('لا يقرأ التوكن من معامل استعلام', async () => {
     const token = await signAccessToken({ userId: 'u1', role: 'CUSTOMER', status: 'ACTIVE' });
-    const request = new Request('http://localhost:3000/x', {
-      headers: { authorization: `Bearer ${token}` },
-    });
-    // الكوكي httpOnly هي المصدر الوحيد
+    const request = new Request(`http://localhost:3000/x?token=${token}&access_token=${token}`);
+    // الكوكي (الموقع) وBearer (التطبيق — tests/unit/native-session.test.ts) فقط:
+    // التوكن في الرابط يتسرّب للسجلات والـReferer
     expect(await getSession(request)).toBeNull();
   });
 

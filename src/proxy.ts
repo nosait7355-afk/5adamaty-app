@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { THEME_SCRIPT_HASH } from '@/shared/theme';
+import { NATIVE_APP_ORIGINS, NATIVE_CLIENT_HEADER } from '@/shared/constants/native-app';
 
 /**
  * حارس المسارات على مستوى الحافة (Edge) — اصطلاح `proxy` في Next 16.
@@ -113,8 +114,50 @@ function buildCsp(nonce: string): string {
   ].join('; ');
 }
 
+/**
+ * CORS للـAPI — لتطبيق «خدمات الفيوم» فقط.
+ *
+ * واجهته محمَّلة من `https://localhost` داخل الـAPK، فطلباته للـAPI
+ * عابرة للمصدر. قائمة مسموحة صريحة لا `*`، وبلا
+ * `Access-Control-Allow-Credentials`: التطبيق يصادق بـ`Authorization`
+ * لا بالكوكيز، فلا يستطيع أي مصدر آخر أن يركب جلسة متصفح عبر CORS.
+ *
+ * الموقع نفسه من نفس المصدر فلا يتأثر بشيء هنا.
+ */
+const CORS_ORIGINS: readonly string[] = [
+  ...NATIVE_APP_ORIGINS,
+  ...(process.env.NODE_ENV === 'production' ? [] : ['http://localhost:3000', 'http://localhost:5173']),
+];
+
+function handleApiCors(request: NextRequest): NextResponse {
+  const origin = request.headers.get('origin');
+  const allowed = origin !== null && CORS_ORIGINS.includes(origin);
+
+  const headers = new Headers({ Vary: 'Origin' });
+  if (allowed) {
+    headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    headers.set(
+      'Access-Control-Allow-Headers',
+      `Content-Type, Authorization, ${NATIVE_CLIENT_HEADER}`
+    );
+    headers.set('Access-Control-Max-Age', '600');
+  }
+
+  // Preflight يُجاب هنا ولا يصل للمسار. مصدر غير مسموح يستلم 204 بلا
+  // رؤوس السماح فيحجبه المتصفح.
+  if (request.method === 'OPTIONS') return new NextResponse(null, { status: 204, headers });
+
+  const response = NextResponse.next();
+  headers.forEach((value, key) => response.headers.set(key, value));
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // الـAPI لها حُرّاسها الخاصة — هنا CORS فقط، بلا توجيه ولا CSP
+  if (pathname.startsWith('/api/')) return handleApiCors(request);
+
   const claims = await readClaims(request);
 
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
@@ -205,6 +248,6 @@ function homeFor(claims: TokenClaims): string {
 }
 
 export const config = {
-  /* نستثني الأصول الثابتة والـAPI — الـAPI لها حُرّاسها الخاصة. */
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|logo.png|.*\\.(?:png|jpg|svg|webp)$).*)'],
+  /* نستثني الأصول الثابتة. الـAPI تمرّ لأجل CORS فقط (`handleApiCors`). */
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo.png|.*\\.(?:png|jpg|svg|webp)$).*)'],
 };
