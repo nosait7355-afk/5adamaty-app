@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -81,6 +82,8 @@ export default defineConfig(({ mode }) => {
       // `src/shared/brand.ts`: اسم هذا التطبيق، وروابط المشاركة للموقع لا لـlocalhost
       'process.env.NEXT_PUBLIC_BRAND_NAME': JSON.stringify(NATIVE_APP_NAME_AR),
       'process.env.NEXT_PUBLIC_SITE_URL': JSON.stringify(apiOrigin),
+      // Push يعمل فقط حين يوجد ملف Firebase — بدونه يُسقط register() التطبيق (src/push.tsx)
+      __PUSH_ENABLED__: JSON.stringify(existsSync(here('android/app/google-services.json'))),
     },
     build: {
       outDir: here('dist'),

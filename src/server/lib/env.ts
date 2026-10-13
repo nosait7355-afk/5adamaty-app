@@ -84,6 +84,15 @@ const serverEnvSchema = z.object({
    * بصمات SHA-256 لمفاتيح توقيع تطبيق «خدمات الفيوم» — لـassetlinks.json
    * (روابط الموقع تفتح في التطبيق). بصيغة AA:BB:… مفصولة بفواصل.
    */
+  /**
+   * Firebase Cloud Messaging — حساب خدمة (Firebase ← Project settings ←
+   * Service accounts ← Generate new private key). الثلاثة معًا أو لا شيء:
+   * بدونها لا Push، والإشعارات الداخلية تعمل كما هي.
+   */
+  FIREBASE_PROJECT_ID: optionalString(z.string().min(1)),
+  FIREBASE_CLIENT_EMAIL: optionalString(z.string().email()),
+  FIREBASE_PRIVATE_KEY: optionalString(z.string().min(1)),
+
   ANDROID_APP_SHA256_FINGERPRINTS: z
     .string()
     .optional()

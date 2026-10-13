@@ -20,6 +20,7 @@ import {
 } from '@/server/db/models';
 import { refreshProviderRating } from '@/server/repositories/account.repository';
 import { writeAuditLog } from '@/server/repositories/provider.repository';
+import { removeDevicesOfUser } from '@/server/services/push.service';
 import type { MediaRef } from '@/server/db/models/shared';
 import type { DeleteAccountInput } from '@/shared/schemas/account.schema';
 import type { SessionUser } from '@/server/middleware/with-auth';
@@ -105,6 +106,7 @@ export async function deleteMyAccount(
     Message.deleteMany({ threadId: mongoose.trusted({ $in: threadIds }) }),
     Thread.deleteMany({ _id: mongoose.trusted({ $in: threadIds }) }),
   ]);
+  await removeDevicesOfUser(userId);
   await User.deleteOne({ _id: userId });
 
   await writeAuditLog({

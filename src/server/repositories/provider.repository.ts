@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { connectToDatabase } from '@/server/db/mongoose';
+import { pushToUsers } from '@/server/services/push.service';
 import { logger } from '@/server/lib/logger';
 import {
   AuditLog,
@@ -271,5 +272,12 @@ export async function createNotification(entry: {
     entityType: entry.entityType,
     ...(entry.entityId ? { entityId: new Types.ObjectId(entry.entityId) } : {}),
     ...(entry.actionUrl ? { actionUrl: entry.actionUrl } : {}),
+  });
+
+  // نفس الإشعار على شاشة الجهاز (تطبيق «خدمات الفيوم») — أفضل جهد، لا يرمي
+  await pushToUsers([entry.userId], {
+    title: entry.title,
+    body: entry.body,
+    actionUrl: entry.actionUrl,
   });
 }

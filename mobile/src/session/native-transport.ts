@@ -1,6 +1,7 @@
 import type { ApiTransport } from '@/lib/api-client';
 import type { NativeSession } from '@/server/lib/session-transport';
 import { NATIVE_CLIENT_HEADER, NATIVE_CLIENT_VALUE } from '@/shared/constants/native-app';
+import { forgetPushToken, storedPushToken } from '../push';
 import { clearSession, getAccessToken, getRefreshToken, saveSession } from './token-vault';
 
 /**
@@ -34,6 +35,23 @@ function bare(path: string): string {
   return path.split('?')[0] ?? path;
 }
 
+/**
+ * قبل الخروج: الجهاز يتوقف عن استلام إشعارات هذا الحساب. طلب مباشر لا عبر
+ * `api` (نحن داخل تحضير طلب آخر)، وفشله لا يمنع الخروج — الرمز يُستبدل عند
+ * دخول الحساب التالي، أو تحذفه مدة الصلاحية.
+ */
+async function unregisterPushDevice(apiOrigin: string, headers: Record<string, string>) {
+  const token = storedPushToken();
+  if (!token || !headers.Authorization) return;
+  forgetPushToken();
+  await fetch(`${apiOrigin}/api/v1/me/devices`, {
+    method: 'DELETE',
+    credentials: 'omit',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  }).catch(() => undefined);
+}
+
 export function createNativeTransport(apiOrigin: string): ApiTransport {
   return {
     baseUrl: `${apiOrigin}/api/v1`,
@@ -53,7 +71,10 @@ export function createNativeTransport(apiOrigin: string): ApiTransport {
       const refreshToken = await getRefreshToken();
       // الخروج يمسح الجهاز قبل الإرسال: لو فشل الطلب (لا إنترنت) لا يعود
       // المستخدم مسجّلًا عند الفتح التالي. الخادم يُبطل التوكن حين يصله.
-      if (bare(path) === '/auth/logout') await clearSession();
+      if (bare(path) === '/auth/logout') {
+        await unregisterPushDevice(apiOrigin, nextHeaders);
+        await clearSession();
+      }
       return {
         headers: nextHeaders,
         body: refreshToken ? { ...(isRecord(body) ? body : {}), refreshToken } : body,

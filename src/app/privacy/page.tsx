@@ -51,6 +51,12 @@ export default function PrivacyPage() {
           جهازك، ويُمسح منه ويُلغى من خوادمنا عند تسجيل الخروج. لا نستخدم أي أدوات إعلانات أو تتبّع
           أو معرّف إعلاني.
         </p>
+        <p>
+          <strong>رمز الإشعارات (التطبيق فقط):</strong> إن سمحت بالإشعارات في تطبيق «{NATIVE_APP_NAME_AR}»
+          نحفظ رمزًا يخص جهازك من Firebase Cloud Messaging، لنرسل إليه إشعارات حسابك فقط. يُحذف عند تسجيل
+          الخروج أو حذف الحساب، وتلقائيًا بعد 90 يومًا من آخر استخدام. يمكنك إيقاف الإشعارات في أي وقت من
+          إعدادات الهاتف.
+        </p>
       </LegalSection>
 
       <LegalSection title="2. كيف نستخدم البيانات">
@@ -100,7 +106,8 @@ export default function PrivacyPage() {
             <strong>Resend:</strong> إرسال رسائل البريد الإلكتروني.
           </li>
           <li>
-            <strong>Google:</strong> تسجيل الدخول بحساب جوجل لمن يختاره.
+            <strong>Google:</strong> تسجيل الدخول بحساب جوجل لمن يختاره، وتوصيل إشعارات التطبيق (Firebase
+            Cloud Messaging) لمن سمح بها.
           </li>
         </ul>
       </LegalSection>

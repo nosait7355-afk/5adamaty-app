@@ -31,4 +31,13 @@ npm run mobile:open    # فتح Android Studio
    Play App Signing في الحساب الجديد. لو العميل في مشروع Google Cloud آخر، أضف
    Web Client ID الخاص به في `GOOGLE_EXTRA_CLIENT_IDS` على Vercel.
 4. **الهوية البصرية:** `../assets/splash.png` يحمل اسم «خدماتي الفيوم» — يحتاج نسخة بالاسم الجديد.
-5. **Play Console:** رابط الخصوصية `/privacy` ورابط الحذف `/delete-account` (يذكران التطبيق بالاسم).
+5. **الإشعارات (اختياري — بدونها تعمل الإشعارات داخل التطبيق فقط):**
+   - مشروع Firebase ← أضف تطبيق Android بالمعرّف `com.khadamat.fayoum` ← نزّل
+     `google-services.json` إلى `mobile/android/app/` (مستبعد من git). وجوده وقت
+     `npm run mobile:sync` يفعّل Push تلقائيًا؛ بدونه لا يُستدعى `register()` أصلًا.
+   - Project settings ← Service accounts ← Generate new private key، ثم على Vercel:
+     `FIREBASE_PROJECT_ID` و`FIREBASE_CLIENT_EMAIL` و`FIREBASE_PRIVATE_KEY`.
+6. **روابط الموقع تفتح في التطبيق:** بصمة SHA-256 لمفتاح Play App Signing (Play Console ←
+   App integrity) في `ANDROID_APP_SHA256_FINGERPRINTS` على Vercel. تحقّق من
+   `https://5adamaty-app.vercel.app/.well-known/assetlinks.json`.
+7. **Play Console:** رابط الخصوصية `/privacy` ورابط الحذف `/delete-account` (يذكران التطبيق بالاسم).

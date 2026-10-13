@@ -23,6 +23,7 @@ export { Notification, type NotificationDocument } from './notification.model';
 export { Thread, Message, type ThreadDocument, type MessageDocument } from './message.model';
 export { Report, type ReportDocument } from './report.model';
 export { Banner, type BannerDocument } from './banner.model';
+export { DeviceToken, type DeviceTokenDocument } from './device-token.model';
 export {
   Setting,
   AuditLog,

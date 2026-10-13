@@ -1,5 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 import { connectToDatabase } from '@/server/db/mongoose';
+import { pushToUsers } from '@/server/services/push.service';
 import {
   AuditLog,
   Notification,
@@ -346,6 +347,11 @@ export async function broadcastNotificationRecords(params: {
       ...(params.actionUrl ? { actionUrl: params.actionUrl } : {}),
     })),
     { ordered: false }
+  );
+
+  await pushToUsers(
+    recipients.map((user) => user._id),
+    { title: params.title, body: params.body, actionUrl: params.actionUrl }
   );
 
   return recipients.length;
