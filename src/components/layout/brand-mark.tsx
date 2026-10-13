@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/cn';
+import { BRAND_NAME } from '@/shared/brand';
 
 export interface BrandMarkProps {
   /** يخفي النص ويُبقي الأيقونة فقط. */
@@ -18,7 +19,7 @@ export function BrandMark({ iconOnly = false, size = 40, className, priority = f
     <div className={cn('flex shrink-0 items-center gap-2', className)}>
       <Image
         src="/logo.png"
-        alt="خدماتي الفيوم"
+        alt={BRAND_NAME}
         width={size}
         height={size}
         priority={priority}
@@ -29,7 +30,7 @@ export function BrandMark({ iconOnly = false, size = 40, className, priority = f
         // وإلا تداخل الاسم مع منتقي المنطقة وزر الرجوع في الترويسة.
         <div className="hidden leading-tight min-[380px]:block">
           <p className="whitespace-nowrap text-card-title font-extrabold text-brand-600">
-            خدماتي الفيوم
+            {BRAND_NAME}
           </p>
           <p className="whitespace-nowrap text-[10px] text-ink-400">كل الخدمات في مكان واحد</p>
         </div>

@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/shared/brand';
 /**
  * حالات الطلب — State Machine (ARCHITECTURE §4).
  * جدول الانتقالات نفسه يُنفَّذ في Phase 7 داخل `src/server/policies/order-state-machine.ts`.
@@ -51,4 +52,4 @@ export type PaymentMethod = typeof PAYMENT_METHOD;
 
 export const PAYMENT_METHOD_LABEL_AR = 'كاش (دفع مباشر بينكما)';
 export const PAYMENT_NOTICE_AR =
-  'لا يوجد دفع أونلاين في تطبيق خدماتي الفيوم. يتم الدفع مباشرة بينك وبين العميل خارج التطبيق.';
+  `لا يوجد دفع أونلاين في تطبيق ${BRAND_NAME}. يتم الدفع مباشرة بينك وبين العميل خارج التطبيق.`;

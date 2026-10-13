@@ -41,6 +41,7 @@ import { useMyProviderProfile } from '@/lib/queries/provider';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProviderContactDto } from '@/server/services/discovery.service';
 import { professionArtSrc } from '@/lib/profession-art';
+import { BRAND_NAME, publicUrl } from '@/shared/brand';
 
 /**
  * ملف مقدم الخدمة — الصورة 10.
@@ -137,8 +138,8 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
     const data = provider.data;
     const result = await shareLink({
       title: data?.displayName,
-      text: data ? `${data.displayName} على خدماتي الفيوم` : undefined,
-      url: `${window.location.origin}/providers/${id}`,
+      text: data ? `${data.displayName} على ${BRAND_NAME}` : undefined,
+      url: publicUrl(`/providers/${id}`),
     });
     if (result === 'copied') toast.success('نُسخ رابط الملف');
     else if (result === 'failed') toast.error('تعذّر نسخ الرابط');

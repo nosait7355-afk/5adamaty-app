@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalPage, LegalSection } from '@/components/features/legal/legal-page';
-import { APP_NAME_AR } from '@/shared/constants/legal';
+import { BRAND_NAME } from '@/shared/brand';
 
 export const metadata: Metadata = { title: 'الشروط والأحكام' };
 
@@ -10,7 +10,7 @@ export default function TermsPage() {
     <LegalPage title="الشروط والأحكام">
       <LegalSection title="1. طبيعة الخدمة">
         <p>
-          «{APP_NAME_AR}» دليل إعلانات لمقدمي الخدمات في محافظة الفيوم. نحن{' '}
+          «{BRAND_NAME}» دليل إعلانات لمقدمي الخدمات في محافظة الفيوم. نحن{' '}
           <strong>وسيط إعلانات فقط</strong>: نعرض بيانات يقدّمها مقدمو الخدمات، ونتيح للمستخدم
           التواصل معهم مباشرة بالهاتف أو واتساب.
         </p>

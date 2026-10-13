@@ -29,6 +29,7 @@ import { formatNumber, formatPhone } from '@/lib/format';
 import { useAccountSummary } from '@/lib/queries/account';
 import { useLogout } from '@/lib/queries/auth';
 import { ThemeSwitcher } from '@/components/common/theme-switcher';
+import { publicUrl } from '@/shared/brand';
 
 /**
  * حسابي — الصورة 16.
@@ -175,7 +176,7 @@ export default function AccountPage() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => void navigator.clipboard?.writeText(window.location.origin)}
+            onClick={() => void navigator.clipboard?.writeText(publicUrl())}
           >
             مشاركة
           </Button>

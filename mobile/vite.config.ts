@@ -3,6 +3,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { THEME_SCRIPT, THEME_SCRIPT_HASH } from '../src/shared/theme';
+import { NATIVE_APP_NAME_AR } from '../src/shared/constants/native-app';
 
 /**
  * بناء واجهة تطبيق «خدمات الفيوم» — نفس صفحات `src/app` ومكوّناتها،
@@ -77,6 +78,9 @@ export default defineConfig(({ mode }) => {
       'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
       'process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID': JSON.stringify(env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ''),
       'process.env.APP_URL': JSON.stringify(apiOrigin),
+      // `src/shared/brand.ts`: اسم هذا التطبيق، وروابط المشاركة للموقع لا لـlocalhost
+      'process.env.NEXT_PUBLIC_BRAND_NAME': JSON.stringify(NATIVE_APP_NAME_AR),
+      'process.env.NEXT_PUBLIC_SITE_URL': JSON.stringify(apiOrigin),
     },
     build: {
       outDir: here('dist'),

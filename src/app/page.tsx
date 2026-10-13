@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { BrandWave, CitySkyline } from '@/components/features/auth/city-skyline';
 import { resolveHomeRoute, useMe } from '@/lib/queries/auth';
 import { isAdminPreviewStored } from '@/lib/admin-preview';
+import { BRAND_NAME } from '@/shared/brand';
 
 /**
  * شاشة البداية — الصورة 01.
@@ -51,7 +52,7 @@ export default function SplashPage() {
         <BrandIcon size={156} priority />
 
         <h1 className="mt-2 text-[2.125rem] font-extrabold leading-tight text-brand-600">
-          خدماتي الفيوم
+          {BRAND_NAME}
         </h1>
 
         <div className="mt-2 flex items-center gap-3">

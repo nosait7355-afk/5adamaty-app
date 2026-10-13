@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn';
 import { BrandIcon } from '@/components/layout/brand-icon';
 import { CitySkyline } from './city-skyline';
 import { LegalLinks } from '@/components/features/legal/legal-page';
+import { BRAND_NAME } from '@/shared/brand';
 
 export interface AuthShellProps {
   title: string;
@@ -62,7 +63,7 @@ export function AuthShell({
         <div className="flex flex-col items-center pt-10">
           <BrandIcon size={92} priority />
           <h1 className="mt-1 text-[1.75rem] font-extrabold leading-tight text-brand-600">
-            خدماتي الفيوم
+            {BRAND_NAME}
           </h1>
           <div className="mt-1 flex items-center gap-2">
             <span className="h-px w-8 bg-brand-500" aria-hidden="true" />

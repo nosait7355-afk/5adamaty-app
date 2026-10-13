@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { BrandWave, CitySkyline } from '@/components/features/auth/city-skyline';
 import { cn } from '@/lib/cn';
 import { useSafeBack } from '@/lib/navigation-history';
+import { BRAND_NAME } from '@/shared/brand';
 
 type AccountKind = 'CUSTOMER' | 'PROVIDER';
 
@@ -55,7 +56,7 @@ export default function RoleSelectPage() {
 
           <div className="relative flex flex-col items-center">
             <BrandIcon size={104} priority />
-            <p className="mt-1 text-[1.75rem] font-extrabold text-brand-600">خدماتي الفيوم</p>
+            <p className="mt-1 text-[1.75rem] font-extrabold text-brand-600">{BRAND_NAME}</p>
           </div>
         </div>
 
