@@ -35,9 +35,10 @@ export default function SplashPage() {
 
   useEffect(() => {
     if (isPending) return;
-    // فشل الشبكة يوجّه لتسجيل الدخول بدل تعليق المستخدم على الشاشة
+    // فشل الشبكة يوجّه لتسجيل الدخول بدل تعليق المستخدم على الشاشة — إلا إن
+    // كانت هويته محفوظة من قبل (التطبيق بلا إنترنت، `mobile/src/offline-cache.ts`)
     router.replace(
-      isError
+      isError && !user
         ? '/login'
         : resolveHomeRoute(user ?? null, { adminPreview: isAdminPreviewStored() })
     );
