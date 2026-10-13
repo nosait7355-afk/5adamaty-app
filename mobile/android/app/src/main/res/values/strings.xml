@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">خدمات الفيوم</string>
+    <string name="title_activity_main">خدمات الفيوم</string>
+    <string name="package_name">com.khadamat.fayoum</string>
+    <string name="custom_url_scheme">com.khadamat.fayoum</string>
+</resources>

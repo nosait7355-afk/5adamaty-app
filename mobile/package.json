@@ -1,0 +1,19 @@
+{
+  "name": "khadamat-fayoum-app",
+  "private": true,
+  "description": "تطبيق «خدمات الفيوم» — الحزم مثبّتة في جذر المستودع؛ هذا الملف يعرّف إضافات Capacitor لـcap sync فقط. لا تشغّل npm install هنا.",
+  "dependencies": {
+    "@aparajita/capacitor-secure-storage": "^8.0.1",
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.1",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
+    "@capgo/capacitor-social-login": "8.5.7"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.1"
+  }
+}

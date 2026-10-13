@@ -35,6 +35,15 @@ android/app/release/
 *.keystore
 *.jks
 android/keystore.properties
+
+# تطبيق «خدمات الفيوم» (mobile/) — نفس القواعد لمشروعه المستقل
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/release/
+mobile/android/keystore.properties
+mobile/android/app/google-services.json
 *.apk
 *.aab
 

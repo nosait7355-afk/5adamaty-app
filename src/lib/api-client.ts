@@ -1,7 +1,36 @@
 import type { ApiFailure, ApiMeta, ApiResponse } from '@/server/lib/api-response';
 import type { ErrorCode, FieldErrors } from '@/server/lib/errors';
 
-const BASE_URL = '/api/v1';
+/**
+ * كيف يصل العميل للـAPI ويصادق.
+ *
+ * الافتراضي هو الموقع: نفس المصدر، وكوكيز httpOnly يديرها المتصفح.
+ * تطبيق «خدمات الفيوم» (`mobile/`) يستبدله عند الإقلاع بـ`setApiTransport`:
+ * عنوان الخادم كاملًا، و`Authorization: Bearer`، وتوكن تحديث من التخزين
+ * المشفّر — دون أن تعرف الصفحات والاستعلامات أي فرق.
+ */
+export interface ApiTransport {
+  /** `/api/v1` للموقع، أو `https://…/api/v1` للتطبيق. */
+  baseUrl: string;
+  credentials: RequestCredentials;
+  /** رؤوس وجسم إضافيان قبل كل طلب (التوكن، توكن التحديث للخروج والتجديد). */
+  prepare?(
+    path: string,
+    request: { method: string; headers: Record<string, string>; body: unknown }
+  ): Promise<{ headers: Record<string, string>; body: unknown }>;
+  /** بيانات كل رد ناجح — يلتقط منها `session` ويعيدها بدونه. */
+  receive?(path: string, method: string, data: unknown): Promise<unknown>;
+  /** تعذّر تجديد الجلسة: انتهت فعلًا. */
+  onSessionExpired?(): Promise<void>;
+}
+
+const WEB_TRANSPORT: ApiTransport = { baseUrl: '/api/v1', credentials: 'same-origin' };
+
+let transport: ApiTransport = WEB_TRANSPORT;
+
+export function setApiTransport(next: ApiTransport): void {
+  transport = next;
+}
 
 /** خطأ صادر عن الـAPI بشكل الاستجابة الموحّد. */
 export class ApiClientError extends Error {
@@ -55,7 +84,13 @@ async function refreshSession(): Promise<boolean> {
   if (!refreshInFlight) {
     refreshInFlight = rawFetch('/auth/refresh', { method: 'POST' })
       .then(() => true)
-      .catch(() => false)
+      .catch(async (error: unknown) => {
+        // رفض صريح من الخادم = الجلسة انتهت. انقطاع الشبكة ليس كذلك
+        const rejected =
+          error instanceof ApiClientError && (error.httpStatus === 401 || error.httpStatus === 403);
+        if (rejected) await transport.onSessionExpired?.();
+        return false;
+      })
       .finally(() => {
         refreshInFlight = null;
       });
@@ -66,8 +101,9 @@ async function refreshSession(): Promise<boolean> {
 /**
  * عميل الـAPI.
  *
- * `credentials: 'same-origin'` ضروري لإرسال كوكيز الجلسة httpOnly.
- * لا يُخزَّن أي توكن في localStorage إطلاقًا (ARCHITECTURE §7).
+ * الموقع: `credentials: 'same-origin'` ضروري لإرسال كوكيز الجلسة httpOnly.
+ * لا يُخزَّن أي توكن في localStorage إطلاقًا (ARCHITECTURE §7) — والتطبيق
+ * يحفظه في التخزين المشفّر عبر `ApiTransport`.
  *
  * توكن الوصول عمره 15 دقيقة فقط (`ACCESS_TOKEN_TTL_SECONDS`). بلا هذا،
  * أي طلب بعد 15 دقيقة من آخر تفاعل كان يعيد 401 ويُطرد المستخدم لشاشة
@@ -93,9 +129,19 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 }
 
 async function rawFetch<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
-  const { body, query, headers, ...rest } = options;
+  const { body: rawBody, query, headers: rawHeaders, ...rest } = options;
+  const method = (rest.method ?? 'GET').toUpperCase();
 
-  const url = new URL(`${BASE_URL}${path}`, getOrigin());
+  const prepared = transport.prepare
+    ? await transport.prepare(path, {
+        method,
+        headers: Object.fromEntries(new Headers(rawHeaders).entries()),
+        body: rawBody,
+      })
+    : { headers: rawHeaders, body: rawBody };
+  const { body, headers } = prepared;
+
+  const url = new URL(`${transport.baseUrl}${path}`, getOrigin());
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null && value !== '') {
@@ -107,7 +153,7 @@ async function rawFetch<T>(path: string, options: RequestOptions = {}): Promise<
   let response: Response;
   try {
     response = await fetch(url.toString(), {
-      credentials: 'same-origin',
+      credentials: transport.credentials,
       headers: {
         Accept: 'application/json',
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
@@ -145,7 +191,10 @@ async function rawFetch<T>(path: string, options: RequestOptions = {}): Promise<
     });
   }
 
-  return { data: payload.data, ...(payload.meta ? { meta: payload.meta } : {}) };
+  const data = transport.receive
+    ? ((await transport.receive(path, method, payload.data)) as T)
+    : payload.data;
+  return { data, ...(payload.meta ? { meta: payload.meta } : {}) };
 }
 
 export const api = {

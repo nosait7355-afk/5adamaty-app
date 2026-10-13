@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { THEME_SCRIPT_HASH } from '@/shared/theme';
 import { NATIVE_APP_ORIGINS, NATIVE_CLIENT_HEADER } from '@/shared/constants/native-app';
+import { isProtectedPath, resolveRouteRedirect, type RouteClaims } from '@/shared/route-access';
 
 /**
  * حارس المسارات على مستوى الحافة (Edge) — اصطلاح `proxy` في Next 16.
@@ -15,50 +16,15 @@ import { NATIVE_APP_ORIGINS, NATIVE_CLIENT_HEADER } from '@/shared/constants/nat
  *
  * ملاحظة: نستخدم `jose` لا مكتبات Node لأن Edge Runtime لا يوفّر `crypto`
  * الخاص بـNode.
+ *
+ * قواعد الوصول نفسها في `shared/route-access.ts` — يطبّقها تطبيق «خدمات
+ * الفيوم» أيضًا على الجهاز (`mobile/src/route-guard.tsx`).
  */
 
 const ACCESS_COOKIE = 'kf_at';
 
-/** مسارات يجب أن يكون المستخدم مسجّلًا للوصول إليها. */
-const PROTECTED_PREFIXES = [
-  '/home',
-  '/account',
-  '/notifications',
-  '/categories',
-  '/services',
-  '/providers',
-  '/search',
-  '/provider',
-  '/admin',
-];
-
-/** مسارات لا معنى لها بعد تسجيل الدخول. */
-const GUEST_ONLY = ['/login', '/register', '/role-select', '/forgot-password', '/reset-password'];
-
-/**
- * استثناء من قاعدة «صفحات الضيوف».
- *
- * معالج تسجيل مقدم الخدمة يعبر حدّ المصادقة في منتصفه: الحساب يُنشأ بعد
- * الخطوة 2/4 ليصير رفع المستندات ممكنًا، فالخطوتان 3 و4 تُنفَّذان والمستخدم
- * **مسجّل دخوله**. لولا هذا الاستثناء لطُرد من معالجه فور إنشاء حسابه.
- */
-const GUEST_ONLY_EXCEPTIONS = ['/register/provider'];
-
-/**
- * مطابقة مسار على بادئة **بحدود مقطعية**.
- *
- * `startsWith` المجرّدة تطابق `/providers/123` على البادئة `/provider`،
- * فتحوّل صفحة ملف مقدم الخدمة (العامة لكل عميل) إلى مساحة المزوّد وتطرد
- * العميل منها. الشرط هنا: تطابق تام، أو بادئة يتلوها `/`.
- */
-function matchesPrefix(pathname: string, prefix: string): boolean {
-  return pathname === prefix || pathname.startsWith(`${prefix}/`);
-}
-
-interface TokenClaims {
+interface TokenClaims extends RouteClaims {
   sub: string;
-  role: 'CUSTOMER' | 'PROVIDER' | 'ADMIN';
-  status: string;
 }
 
 async function readClaims(request: NextRequest): Promise<TokenClaims | null> {
@@ -170,7 +136,7 @@ export async function proxy(request: NextRequest) {
     return response;
   };
 
-  const isProtected = PROTECTED_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix));
+  const isProtected = isProtectedPath(pathname);
 
   /*
    * صفحة محمية بـ`Cache-Control: no-store` لا يضعها المتصفح في bfcache
@@ -182,69 +148,10 @@ export async function proxy(request: NextRequest) {
     if (isProtected) response.headers.set('Cache-Control', 'no-store, must-revalidate');
     return response;
   };
-  const isGuestOnly =
-    GUEST_ONLY.some((prefix) => matchesPrefix(pathname, prefix)) &&
-    !GUEST_ONLY_EXCEPTIONS.some((prefix) => matchesPrefix(pathname, prefix));
-
-  // زائر يحاول فتح صفحة محمية
-  if (isProtected && !claims) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    // نحفظ الوجهة ليعود إليها بعد الدخول
-    url.searchParams.set('next', pathname);
-    return withCsp(NextResponse.redirect(url));
-  }
-
-  if (claims) {
-    /*
-     * فتح التطبيق بجلسة صالحة: مباشرة إلى صفحته بدل شاشة البداية (`/`) التي
-     * تطلب `/auth/me` ثم تحوّل — رحلتان للخادم أقل عند كل فتح. الإدارة
-     * مستثناة: وجهتها تعتمد على «معاينة الواجهة» المحفوظة على الجهاز
-     * (`isAdminPreviewStored`) ولا يراها الخادم. التوكن المنتهي يصل هنا بلا
-     * `claims` فتبقى شاشة البداية هي التي تجدّد الجلسة كما كانت.
-     */
-    if (pathname === '/' && claims.role !== 'ADMIN') {
-      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
-    }
-
-    // مستخدم مسجّل يفتح صفحة ضيوف → نوجّهه لصفحته
-    if (isGuestOnly) {
-      const url = request.nextUrl.clone();
-      url.pathname = homeFor(claims);
-      url.search = '';
-      return withCsp(NextResponse.redirect(url));
-    }
-
-    // عزل المساحات حسب الدور
-    if (matchesPrefix(pathname, '/admin') && claims.role !== 'ADMIN') {
-      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
-    }
-    if (matchesPrefix(pathname, '/provider') && claims.role === 'CUSTOMER') {
-      return withCsp(NextResponse.redirect(new URL('/home', request.url)));
-    }
-    /*
-     * `/account/become-provider` تحويل العميل إلى مقدم خدمة — مساحة عميل
-     * لا مساحة مزوّد، فلا يحتاج استثناءً من الحارس أعلاه. لكن من أتمّ
-     * التحويل لم يعد له ما يفعله هنا.
-     */
-    if (matchesPrefix(pathname, '/account/become-provider') && claims.role !== 'CUSTOMER') {
-      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
-    }
-    // معالج تسجيل المزوّد مفتوح للزائر ولمقدم الخدمة فقط — لا لعميل مسجّل
-    if (matchesPrefix(pathname, '/register/provider') && claims.role !== 'PROVIDER') {
-      return withCsp(NextResponse.redirect(new URL(homeFor(claims), request.url)));
-    }
-  }
+  const target = resolveRouteRedirect(pathname, claims);
+  if (target) return withCsp(NextResponse.redirect(new URL(target, request.url)));
 
   return withNoStore(withCsp(NextResponse.next({ request: { headers: requestHeaders } })));
-}
-
-function homeFor(claims: TokenClaims): string {
-  if (claims.role === 'ADMIN') return '/admin/dashboard';
-  if (claims.role === 'PROVIDER') {
-    return claims.status === 'ACTIVE' ? '/home' : '/provider/pending-review';
-  }
-  return '/home';
 }
 
 export const config = {

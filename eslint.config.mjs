@@ -4,7 +4,7 @@ import nextTypescript from 'eslint-config-next/typescript';
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
   {
-    ignores: ['.next/**', 'node_modules/**', 'android/**', 'next-env.d.ts', 'coverage/**'],
+    ignores: ['.next/**', 'node_modules/**', 'android/**', 'mobile/android/**', 'mobile/dist/**', 'next-env.d.ts', 'coverage/**'],
   },
   ...nextCoreWebVitals,
   ...nextTypescript,

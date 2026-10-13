@@ -19,9 +19,14 @@
     "db:migrate-coverage": "tsx scripts/migrate-coverage.mts",
     "db:dev": "node scripts/dev-db.mjs",
     "verify": "npm run typecheck && npm run lint && npm run check:constraints && npm run test && npm run build",
-    "check:cloudinary": "node scripts/check-cloudinary.mjs"
+    "check:cloudinary": "node scripts/check-cloudinary.mjs",
+    "mobile:dev": "vite --config mobile/vite.config.ts",
+    "mobile:build": "vite build --config mobile/vite.config.ts",
+    "mobile:sync": "npm run mobile:build && cd mobile && cap sync android",
+    "mobile:open": "cd mobile && cap open android"
   },
   "dependencies": {
+    "@aparajita/capacitor-secure-storage": "^8.0.1",
     "@capacitor/android": "^8.5.1",
     "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.5.1",
@@ -32,6 +37,7 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
     "@capgo/capacitor-social-login": "8.5.7",
+    "@fontsource/cairo": "^5.3.0",
     "@hookform/resolvers": "^5.9.1",
     "@node-rs/argon2": "^2.2.0",
     "@tanstack/react-query": "^5.62.7",
@@ -43,6 +49,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.87.0",
+    "react-router": "^8.4.0",
     "resend": "^6.26.0",
     "tailwind-merge": "^2.5.5",
     "zod": "^3.24.1",
@@ -52,6 +59,7 @@
     "@capacitor/assets": "^3.0.5",
     "@eslint/eslintrc": "^3.3.7",
     "@tailwindcss/postcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.6.7",
@@ -68,7 +76,7 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.23.13",
     "typescript": "^5.7.2",
-    "vite": "^8.2.2",
+    "vite": "^8.3.4",
     "vitest": "^4.1.11"
   },
   "engines": {
