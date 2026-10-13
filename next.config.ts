@@ -48,6 +48,10 @@ const nextConfig: NextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
+  async rewrites() {
+    // Android App Links — الملف يُبنى من متغير بيئة (src/app/api/v1/app-links)
+    return [{ source: '/.well-known/assetlinks.json', destination: '/api/v1/app-links' }];
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

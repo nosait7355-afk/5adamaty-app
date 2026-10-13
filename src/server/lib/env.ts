@@ -80,6 +80,20 @@ const serverEnvSchema = z.object({
    * عملاء Web إضافيون مقبولون كـ`aud` — تطبيق «خدمات الفيوم» منشور من حساب
    * آخر، فقد يصدر `idToken` من مشروع Google Cloud مختلف. مفصولة بفواصل.
    */
+  /**
+   * بصمات SHA-256 لمفاتيح توقيع تطبيق «خدمات الفيوم» — لـassetlinks.json
+   * (روابط الموقع تفتح في التطبيق). بصيغة AA:BB:… مفصولة بفواصل.
+   */
+  ANDROID_APP_SHA256_FINGERPRINTS: z
+    .string()
+    .optional()
+    .transform((value) =>
+      value
+        ?.split(',')
+        .map((item) => item.trim().toUpperCase())
+        .filter((item) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(item))
+    ),
+
   GOOGLE_EXTRA_CLIENT_IDS: z
     .string()
     .optional()

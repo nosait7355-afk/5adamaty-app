@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { NavigationTracker } from '@/lib/navigation-history';
 import GlobalError from '@/app/error';
 import Loading from '@/app/loading';
+import { DeepLinks } from './deep-links';
 import { RouteGuard } from './route-guard';
 import { routes } from './routes';
 import { OFFLINE_MAX_AGE_MS, offlinePersister, shouldPersistQuery } from './offline-cache';
@@ -23,6 +24,7 @@ function Shell() {
     <>
       <NativeBridge />
       <NavigationTracker />
+      <DeepLinks />
       <RouteGuard>
         <Suspense fallback={<Loading />}>
           <Outlet />
