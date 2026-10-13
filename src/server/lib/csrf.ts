@@ -20,7 +20,8 @@ function allowedOrigins(): string[] {
   const origins: string[] = [env.APP_URL, ...NATIVE_APP_ORIGINS];
 
   if (!isProduction) {
-    origins.push('http://localhost:3000', 'http://localhost:3100', 'http://127.0.0.1:3000');
+    // 5173: واجهة تطبيق «خدمات الفيوم» في المتصفح (npm run mobile:dev)
+    origins.push('http://localhost:3000', 'http://localhost:3100', 'http://127.0.0.1:3000', 'http://localhost:5173');
   }
   return origins;
 }

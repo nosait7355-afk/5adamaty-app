@@ -4,15 +4,34 @@
     {
       "name": "khadamaty-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
     },
     {
       "name": "khadamat-mobile",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "mobile:dev"],
+      "runtimeArgs": [
+        "run",
+        "mobile:dev"
+      ],
       "port": 5173
+    },
+    {
+      "name": "khadamaty-dev-localdb",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "env": {
+        "MONGODB_URI": "mongodb://127.0.0.1:27077/",
+        "MONGODB_DB_NAME": "khadamaty_localtest"
+      }
     }
   ]
 }
