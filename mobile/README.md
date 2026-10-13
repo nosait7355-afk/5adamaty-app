@@ -19,6 +19,18 @@ npm run mobile:sync    # بناء + نسخ إلى android/
 npm run mobile:open    # فتح Android Studio
 ```
 
+### البناء على ويندوز
+
+Java لا يقرأ المسار العربي للمشروع (`G:\الكلية\...`)، فيُبنى من حرف قرص مؤقت (PowerShell):
+
+```powershell
+subst K: "G:\الكلية\مواقع الكترونيه\5damaty elfyom"
+Set-Location K:\mobile\android
+.\gradlew.bat assembleDebug    # تجريبي: app/build/outputs/apk/debug/app-debug.apk
+.\gradlew.bat bundleRelease    # للمتجر (يحتاج keystore.properties): app/build/outputs/bundle/release/
+subst K: /d
+```
+
 ⚠️ لا تشغّل `npm install` داخل `mobile/` — الحزم في الجذر، و`package.json` هنا يعرّف
 إضافات Capacitor لـ`cap sync` فقط.
 
