@@ -1,8 +1,19 @@
 'use client';
 
-import { ViewTransition, useEffect, useRef, type ReactNode } from 'react';
+import * as React from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { usePageTitleStore } from '@/lib/page-title';
 import { cn } from '@/lib/cn';
+
+/**
+ * `<ViewTransition>` موجود في نسخة React المضمَّنة في Next فقط (canary).
+ * تطبيق «خدمات الفيوم» يبني بـReact المستقرة حيث هو `undefined` — فتُعرض
+ * الصفحة كما هي بلا حركة انتقال بدل أن تنهار بخطأ «Element type is invalid».
+ */
+function NoTransition({ children }: { children?: ReactNode }) {
+  return <>{children}</>;
+}
+const ViewTransition = (React.ViewTransition as typeof React.ViewTransition | undefined) ?? NoTransition;
 
 export interface PageContainerProps {
   children: ReactNode;

@@ -1,5 +1,6 @@
 import { forwardRef, type AnchorHTMLAttributes, type ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
+import { publicUrl } from '@/shared/brand';
 
 /**
  * بديل `next/link` داخل التطبيق. الروابط الداخلية تنتقل بـreact-router،
@@ -43,6 +44,12 @@ const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
 ) {
   const path = toPath(href);
   if (EXTERNAL.test(path)) return <a ref={ref} href={path} {...rest} />;
+  /*
+   * رابط داخلي في نافذة جديدة (الشروط من داخل نموذج تسجيل): لا نوافذ في
+   * التطبيق، والتنقّل داخله يُضيّع النموذج المملوء — فنفتح نسخة الموقع في
+   * المتصفح ويبقى النموذج كما هو.
+   */
+  if (rest.target === '_blank') return <a ref={ref} href={publicUrl(path)} rel="noopener noreferrer" {...rest} />;
   return <RouterLink ref={ref} to={path} {...(replace ? { replace } : {})} {...rest} />;
 });
 

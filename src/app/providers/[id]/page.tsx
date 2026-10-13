@@ -36,7 +36,7 @@ import { useProvider, useProviderReviews, useServices } from '@/lib/queries/disc
 import { useMe } from '@/lib/queries/auth';
 import { useFavorites, useToggleFavorite } from '@/lib/queries/account';
 import { toast } from '@/lib/toast';
-import { haptic, shareLink } from '@/lib/native';
+import { haptic, shareLink, openExternal } from '@/lib/native';
 import { useMyProviderProfile } from '@/lib/queries/provider';
 import { api, ApiClientError } from '@/lib/api-client';
 import type { ProviderContactDto } from '@/server/services/discovery.service';
@@ -81,7 +81,7 @@ export default function ProviderProfilePage({ params }: { params: Promise<{ id: 
         return;
       }
       if (channel === 'call') window.location.href = url;
-      else window.open(url, '_blank', 'noopener,noreferrer');
+      else await openExternal(url);
     } catch (error) {
       setContactError(
         error instanceof ApiClientError ? error.message : 'تعذّر فتح التواصل. حاول مرة أخرى.'

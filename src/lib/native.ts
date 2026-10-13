@@ -100,3 +100,28 @@ export async function shareLink(content: ShareContent): Promise<ShareResult> {
     return 'failed';
   }
 }
+
+/**
+ * يفتح رابطًا خارج التطبيق (واتساب، موقع آخر).
+ *
+ * في المتصفح: تبويب جديد. داخل أندرويد لا نوافذ، و`window.open` لا يُعتمد
+ * عليه في WebView — التنقّل نفسه إلى نطاق خارجي يعترضه Capacitor ويسلّمه
+ * للنظام (واتساب أو المتصفح)، والتطبيق يبقى في مكانه.
+ */
+export async function openExternal(url: string): Promise<void> {
+  if (await isNative()) {
+    window.location.href = url;
+    return;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+async function isNative(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+}
